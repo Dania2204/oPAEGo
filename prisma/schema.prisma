@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  DRIVER
+  USER
+}
+
+enum DeliveryStatus {
+  PENDIENTE_ASIGNACION
+  ASIGNADO
+  EN_CAMINO
+  EN_PUERTA_COLEGIO
+  ENTREGADO
+  RECHAZADO
+}
+
+enum DeliveryEventType {
+  CREADO
+  ASIGNADO_CONDUCTOR
+  ACEPTADO_CONDUCTOR
+  RECHAZADO_CONDUCTOR
+  LLEGADA_COLEGIO
+  ACEPTADO_COLEGIO
+  RECHAZADO_COLEGIO
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  school  School?
+  driver  Driver?
+  sessions Session[]
+  createdDeliveries Delivery[] @relation("CreatedByUser")
+  events  DeliveryEvent[] @relation("EventActorUser")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries Delivery[]
+}
+
+model Driver {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  vehicleType     String?
+  phone           String?
+  isAvailable     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries      Delivery[]
+  locationPings   DeliveryLocationPing[]
+}
+
+model Delivery {
+  id             String          @id @default(cuid())
+  code           String          @unique
+  mealCount      Int
+  originName     String
+  destinationName String
+  status         DeliveryStatus  @default(PENDIENTE_ASIGNACION)
+  observations   String?
+
+  schoolId       String
+  driverId       String?
+  createdById    String
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  acceptedAt     DateTime?
+  deliveredAt    DateTime?
+  rejectedAt     DateTime?
+
+  school         School          @relation(fields: [schoolId], references: [id])
+  driver         Driver?         @relation(fields: [driverId], references: [id])
+  createdBy      User            @relation("CreatedByUser", fields: [createdById], references: [id])
+  locationPings  DeliveryLocationPing[]
+  events         DeliveryEvent[]
+}
+
+model DeliveryLocationPing {
+  id          String    @id @default(cuid())
+  deliveryId  String
+  driverId    String
+  latitude    Decimal   @db.Decimal(10, 7)
+  longitude   Decimal   @db.Decimal(10, 7)
+  speedKmh    Decimal?  @db.Decimal(6, 2)
+  headingDeg  Int?
+  recordedAt  DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  delivery    Delivery  @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  driver      Driver    @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryId, recordedAt])
+  @@index([driverId, recordedAt])
+}
+
+model DeliveryEvent {
+  id          String            @id @default(cuid())
+  deliveryId  String
+  actorUserId String?
+  eventType   DeliveryEventType
+  note        String?
+  createdAt   DateTime          @default(now())
+
+  delivery    Delivery          @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  actorUser   User?             @relation("EventActorUser", fields: [actorUserId], references: [id])
+
+  @@index([deliveryId, createdAt])
+}

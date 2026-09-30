@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pae-go-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pae_go
+      POSTGRES_USER: pae_user
+      POSTGRES_PASSWORD: pae_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
