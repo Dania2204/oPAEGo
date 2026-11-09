@@ -37,8 +37,10 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
 - Arranque rápido sin Docker: `DATABASE_URL=sqlite:///db.sqlite3` + `migrate` + `seed_demo`
   (con SQLite puede salir "database is locked" en POSTs concurrentes; es artefacto de SQLite).
 - En esta máquina Postgres nativo ocupa 5432 y 5433 → el contenedor usa **5434**.
-- `TEST_DATABASE_URL` hace correr pytest contra PostgreSQL (así lo hace el CI, `.github/workflows/ci.yml`:
-  ruff + makemigrations --check + pytest, Python 3.13).
+- `TEST_DATABASE_URL` hace correr pytest contra PostgreSQL. CI (`.github/workflows/ci.yml`,
+  Python 3.13): ruff; makemigrations --check + pytest con `--cov-fail-under=85` sobre PostgreSQL;
+  pip-audit `--strict` + `check --deploy` con settings de prod. También CodeQL, Dependabot y
+  `cd.yml` (despliega a Railway tras CI verde en `main`; necesita el secreto `RAILWAY_TOKEN`).
 - Credenciales demo: `admin@paego.local`, `conductor1..6@paego.local`, `institucion1..10@paego.local`,
   `conductor.prueba@paego.local`; contraseña `Paego2026!`.
 - Despliegue: Railway, `railway up --service web` desde `backend/` (sin git). Los comandos de
@@ -90,6 +92,7 @@ Mapas: MapLibre GL 5.6 + OpenFreeMap, estilo `estiloPaego` en `static/js/mapas.j
 
 ## Reglas del usuario
 
-- **No ejecutar `git add/commit/push/pull`** en este proyecto: el usuario versiona a mano. Solo
-  comandos git de lectura.
+- Git: commits en ramas de feature (no en `main`), Conventional Commits en español, autor Steven,
+  nunca atribución a Claude (hook `commit-msg`). Preguntar antes de `git push` o abrir PR.
+- Nunca commitear `bd/` (Anexo 6A de SIMAT con datos de estudiantes; está en `.gitignore`).
 - Interfaz, código y mensajes en español.
