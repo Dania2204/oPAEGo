@@ -1,0 +1,7 @@
+{% if pagina.paginator.num_pages > 1 %}
+<nav class="paginacion" aria-label="Paginación">
+  <span class="num">{{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+  {% if pagina.has_previous %}<a class="boton sec chico" href="{{ request.path }}?{% if parametros %}{{ parametros }}&{% endif %}pagina={{ pagina.previous_page_number }}"{% if objetivo %} hx-get="{{ request.path }}?{% if parametros %}{{ parametros }}&{% endif %}pagina={{ pagina.previous_page_number }}" hx-target="#{{ objetivo }}" hx-push-url="true"{% endif %}>Anterior</a>{% endif %}
+  {% if pagina.has_next %}<a class="boton sec chico" href="{{ request.path }}?{% if parametros %}{{ parametros }}&{% endif %}pagina={{ pagina.next_page_number }}"{% if objetivo %} hx-get="{{ request.path }}?{% if parametros %}{{ parametros }}&{% endif %}pagina={{ pagina.next_page_number }}" hx-target="#{{ objetivo }}" hx-push-url="true"{% endif %}>Siguiente</a>{% endif %}
+</nav>
+{% endif %}

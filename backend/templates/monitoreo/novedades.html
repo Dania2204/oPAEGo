@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Novedades{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Novedades</h1>
+    <div class="sub">Reportadas por conductores en el trayecto (RF-23) e instituciones al recibir (RF-28)</div>
+  </div>
+</div>
+
+<div class="bloque">
+  <nav class="pestanas" aria-label="Filtrar por estado">
+    <a href="?estado=pendientes{% if tipo %}&tipo={{ tipo }}{% endif %}" {% if estado == "pendientes" %}aria-current="true"{% endif %}>Sin atender</a>
+    <a href="?estado=todas{% if tipo %}&tipo={{ tipo }}{% endif %}" {% if estado == "todas" %}aria-current="true"{% endif %}>Todas</a>
+    <form method="get" style="margin-left:auto;align-self:center;padding:6px 0">
+      <input type="hidden" name="estado" value="{{ estado }}">
+      <label class="oculto-visual" for="filtro-tipo">Tipo</label>
+      <select id="filtro-tipo" name="tipo" onchange="this.form.submit()" style="min-height:30px;padding:3px 8px">
+        <option value="">Todos los tipos</option>
+        {% for v, n in tipos %}<option value="{{ v }}" {% if tipo == v %}selected{% endif %}>{{ n }}</option>{% endfor %}
+      </select>
+    </form>
+  </nav>
+  <div class="bandeja">
+    <div class="lista" id="bandeja" hx-get="{{ request.path }}?{{ parametros }}" hx-trigger="novedades-actualizadas from:body" hx-swap="innerHTML">
+      {% include "monitoreo/_bandeja.html" %}
+    </div>
+    <div class="detalle" id="novedad-detalle" aria-live="polite">
+      {% include "monitoreo/_novedad.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

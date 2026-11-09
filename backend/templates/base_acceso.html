@@ -1,0 +1,42 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#3366cc">
+  <title>{% block titulo %}Ingresar{% endblock %} · PAEGo</title>
+  <link rel="manifest" href="{% url 'manifest' %}">
+  <link rel="icon" href="{% static 'img/icono.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/componentes.css' %}">
+</head>
+<body>
+  <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+  <main class="acceso-pagina">
+    <section class="acceso-info" aria-label="Sobre PAEGo">
+      <div>
+        <div class="marca-acceso"><img src="{% static 'img/icono.svg' %}" alt="" width="44" height="44">PAEGo</div>
+        <p class="entidad-nombre">{{ paego.ENTIDAD }} · {{ paego.DEPENDENCIA }}</p>
+        <h1>Gestión y monitoreo del Programa de Alimentación Escolar</h1>
+        <p>PAEGo registra cada envío de alimentos desde la bodega hasta la institución educativa: quién lo lleva, por dónde va y quién lo recibe.</p>
+        <ul>
+          <li>Seguimiento de los vehículos en tiempo real.</li>
+          <li>Confirmación de recepción con código de verificación y evidencia.</li>
+          <li>Historial completo e inalterable para auditoría y rendición de cuentas.</li>
+        </ul>
+      </div>
+      <p class="entidad-nombre">Plataforma de uso exclusivo de la entidad administradora del PAE.</p>
+    </section>
+    <section class="acceso-form">
+      {% if messages %}
+        <div style="margin-bottom:var(--s4);display:grid;gap:var(--s2)">{% for m in messages %}<div class="nota {% if m.tags == 'error' %}error{% elif m.tags == 'success' %}ok{% else %}info{% endif %}">{{ m }}</div>{% endfor %}</div>
+      {% endif %}
+      {% block contenido %}{% endblock %}
+    </section>
+  </main>
+</body>
+</html>

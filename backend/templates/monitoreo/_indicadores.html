@@ -1,0 +1,90 @@
+<p class="tenue" style="margin-bottom:var(--s3)">
+  Del {{ desde|date:"j \d\e F"|lower }} al {{ hasta|date:"j \d\e F \d\e Y"|lower }} ·
+  <b class="num" style="color:var(--tinta)">{{ total.total_entregas }}</b> entregas de {{ total.total_envios }} envíos.
+  Los porcentajes se calculan sobre las entregas realizadas.
+</p>
+
+<div class="cifras">
+  <div class="cifra">
+    <span class="nombre">Entregas con registro completo</span>
+    <span class="valor">{% if total.porcentaje_registro_completo is not None %}{{ total.porcentaje_registro_completo|floatformat:1 }} %{% else %}—{% endif %}</span>
+    <span class="formula">{{ total.entregas_registro_completo }} de {{ total.total_entregas }} · fecha, hora, responsable, ubicación y evidencia</span>
+    <canvas data-serie="registro_completo" data-unidad="%" aria-label="Tendencia semanal de entregas con registro completo" role="img"></canvas>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Entregas a tiempo</span>
+    <span class="valor">{% if total.porcentaje_a_tiempo is not None %}{{ total.porcentaje_a_tiempo|floatformat:1 }} %{% else %}—{% endif %}</span>
+    <span class="formula">{{ total.entregas_a_tiempo }} de {{ total.total_entregas }} · tolerancia de {{ paego.TOLERANCIA_ENTREGA_MIN }} min</span>
+    <canvas data-serie="a_tiempo" data-unidad="%" aria-label="Tendencia semanal de entregas a tiempo" role="img"></canvas>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Entregas con evidencia verificable</span>
+    <span class="valor">{% if total.porcentaje_con_evidencia is not None %}{{ total.porcentaje_con_evidencia|floatformat:1 }} %{% else %}—{% endif %}</span>
+    <span class="formula">{{ total.entregas_con_evidencia }} de {{ total.total_entregas }} · código y huella SHA-256 íntegros</span>
+    <canvas data-serie="con_evidencia" data-unidad="%" aria-label="Tendencia semanal de entregas con evidencia" role="img"></canvas>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Novedades registradas</span>
+    <span class="valor">{{ total.novedades }}</span>
+    <span class="formula">{% for tipo, n in total.novedades_por_tipo.items %}{% if n %}{{ tipo }} {{ n }} · {% endif %}{% endfor %}conteo del periodo</span>
+    <canvas data-serie="novedades" data-unidad="" aria-label="Novedades por semana" role="img"></canvas>
+  </div>
+</div>
+
+<details class="bloque separado">
+  <summary class="bloque-cabeza" style="cursor:pointer"><h2 style="display:inline">Datos por semana</h2></summary>
+  <div class="tabla-scroll">
+    <table>
+      <thead><tr><th>Semana desde</th><th class="der">Entregas</th><th class="der">Registro completo</th><th class="der">A tiempo</th><th class="der">Con evidencia</th><th class="der">Novedades</th></tr></thead>
+      <tbody>
+        {% for s in serie %}
+          <tr><td class="num">{{ s.semana }}</td><td class="der num">{{ s.entregas }}</td>
+            <td class="der num">{% if s.registro_completo is not None %}{{ s.registro_completo }} %{% else %}—{% endif %}</td>
+            <td class="der num">{% if s.a_tiempo is not None %}{{ s.a_tiempo }} %{% else %}—{% endif %}</td>
+            <td class="der num">{% if s.con_evidencia is not None %}{{ s.con_evidencia }} %{% else %}—{% endif %}</td>
+            <td class="der num">{{ s.novedades }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>
+
+<div class="separado" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:var(--s4)">
+  <section class="bloque" style="margin:0">
+    <div class="bloque-cabeza"><h2>Por institución</h2></div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Institución</th><th class="der">Entregas</th><th class="der">A tiempo</th><th class="der">Completo</th><th class="der">Evidencia</th><th class="der">Novedades</th></tr></thead>
+        <tbody>
+          {% for institucion, k in por_institucion %}
+            <tr><td>{{ institucion }}</td><td class="der num">{{ k.total_entregas }}</td>
+              <td class="der num">{% if k.porcentaje_a_tiempo is not None %}{{ k.porcentaje_a_tiempo }} %{% else %}—{% endif %}</td>
+              <td class="der num">{% if k.porcentaje_registro_completo is not None %}{{ k.porcentaje_registro_completo }} %{% else %}—{% endif %}</td>
+              <td class="der num">{% if k.porcentaje_con_evidencia is not None %}{{ k.porcentaje_con_evidencia }} %{% else %}—{% endif %}</td>
+              <td class="der num">{{ k.novedades }}</td></tr>
+          {% empty %}<tr><td colspan="6" class="vacio">Sin envíos en el periodo.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="bloque" style="margin:0">
+    <div class="bloque-cabeza"><h2>Por conductor</h2></div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Conductor</th><th class="der">Entregas</th><th class="der">A tiempo</th><th class="der">Completo</th><th class="der">Evidencia</th><th class="der">Novedades</th></tr></thead>
+        <tbody>
+          {% for conductor, k in por_conductor %}
+            <tr><td>{{ conductor.usuario.get_full_name }}</td><td class="der num">{{ k.total_entregas }}</td>
+              <td class="der num">{% if k.porcentaje_a_tiempo is not None %}{{ k.porcentaje_a_tiempo }} %{% else %}—{% endif %}</td>
+              <td class="der num">{% if k.porcentaje_registro_completo is not None %}{{ k.porcentaje_registro_completo }} %{% else %}—{% endif %}</td>
+              <td class="der num">{% if k.porcentaje_con_evidencia is not None %}{{ k.porcentaje_con_evidencia }} %{% else %}—{% endif %}</td>
+              <td class="der num">{{ k.novedades }}</td></tr>
+          {% empty %}<tr><td colspan="6" class="vacio">Sin envíos en el periodo.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<p class="tenue" style="font-size:var(--t-xs);margin-top:var(--s2)">Los porcentajes por institución y por conductor se calculan sobre sus propias entregas. «—» indica que no hubo entregas.</p>
+
+<script type="application/json" id="serie-indicadores">{{ serie_json|safe }}</script>

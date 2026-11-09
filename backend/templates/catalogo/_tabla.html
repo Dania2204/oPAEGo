@@ -1,0 +1,23 @@
+<div class="tabla-scroll">
+  <table>
+    <thead><tr>{% for _, titulo in cfg.columnas %}<th>{{ titulo }}</th>{% endfor %}<th>Estado</th><th class="der"><span class="oculto-visual">Acciones</span></th></tr></thead>
+    <tbody>
+    {% for fila in filas %}
+      <tr class="clic{% if not fila.objeto.activo %} inactivo{% endif %}" hx-get="{% url 'catalogo:editar' modulo fila.objeto.pk %}" hx-target="#panel-contenido" hx-push-url="true">
+        {% for celda in fila.celdas %}<td>{% if forloop.first %}<strong style="font-weight:500">{{ celda|default:"—" }}</strong>{% else %}{{ celda|default:"—" }}{% endif %}</td>{% endfor %}
+        <td>{% if fila.objeto.activo %}<span class="marca-texto ok">Activo</span>{% else %}<span class="marca-texto tenue">Desactivado</span>{% endif %}</td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="{% url 'catalogo:estado' modulo fila.objeto.pk %}" class="en-linea"
+                hx-post="{% url 'catalogo:estado' modulo fila.objeto.pk %}" hx-swap="none">
+            {% csrf_token %}
+            <button class="boton chico {% if fila.objeto.activo %}peligro{% else %}sec{% endif %}" type="submit">{% if fila.objeto.activo %}Desactivar{% else %}Reactivar{% endif %}</button>
+          </form>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="{{ cfg.columnas|length|add:2 }}" class="vacio">{% if q %}Sin resultados para «{{ q }}».{% else %}Aún no hay registros. <a href="{% url 'catalogo:nuevo' modulo %}">Registrar {{ cfg.singular }} →</a>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "_paginacion.html" with objetivo="resultados" %}

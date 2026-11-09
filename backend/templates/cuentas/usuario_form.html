@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}{% if objeto %}Editar{% else %}Nuevo{% endif %} administrador{% endblock %}
+{% block contenido %}
+<p style="margin-bottom:var(--s3)"><a href="{% url 'cuentas:usuarios' %}">← Usuarios</a></p>
+<div class="bloque" style="max-width:640px;display:flex;flex-direction:column">
+  {% include "cuentas/_usuario_form.html" %}
+</div>
+{% endblock %}

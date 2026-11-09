@@ -1,0 +1,28 @@
+{% extends "base_acceso.html" %}
+{% block titulo %}Ingresar{% endblock %}
+{% block contenido %}
+<h2>Ingresar a PAEGo</h2>
+<p class="sub">Use el correo y la contraseña asignados por la entidad.</p>
+<form method="post" class="formulario" novalidate>
+  {% csrf_token %}
+  {% include "_errores.html" %}
+  {% include "_campo.html" with campo=form.email %}
+  {% include "_campo.html" with campo=form.password %}
+  {# En el celular es fácil escribir mal la contraseña sin verla (mayúscula, signos). #}
+  <label class="casilla" style="margin-top:calc(-1 * var(--s2))">
+    <input type="checkbox" onchange="document.getElementById('{{ form.password.id_for_label }}').type = this.checked ? 'text' : 'password'">
+    <span>Mostrar contraseña</span>
+  </label>
+  {% include "_campo.html" with campo=form.acepta_datos %}
+  <details class="politica">
+    <summary>Leer la política de tratamiento de datos</summary>
+    <p style="margin-top:var(--s2)">PAEGo trata los datos personales de administradores, conductores y responsables de recepción
+      (nombre, documento, contacto y ubicación durante las entregas) con la única finalidad de gestionar, monitorear
+      y auditar la entrega de alimentos del PAE, conforme a la Ley 1581 de 2012. El acceso está restringido por rol y
+      los datos no se comparten con terceros. Puede solicitar la consulta, corrección o supresión de sus datos ante la
+      entidad administradora. Solo se pide aceptar la primera vez.</p>
+  </details>
+  <button class="boton" type="submit" style="width:100%">Ingresar</button>
+  <a href="{% url 'cuentas:restablecer' %}" style="font-size:var(--t-sm)">¿Olvidó su contraseña?</a>
+</form>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base_acceso.html" %}
+{% block titulo %}Acceso restringido{% endblock %}
+{% block contenido %}
+<h2>Esta plataforma es para la entidad</h2>
+<p class="sub">Los conductores y las instituciones educativas usan la aplicación móvil de PAEGo.</p>
+<form method="post" action="{% url 'cuentas:logout' %}">{% csrf_token %}<button class="boton" type="submit">Cerrar sesión</button></form>
+{% endblock %}

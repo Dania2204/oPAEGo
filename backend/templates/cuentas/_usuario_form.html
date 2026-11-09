@@ -1,0 +1,28 @@
+<form method="post" class="formulario" novalidate style="display:contents"
+      action="{% if objeto %}{% url 'cuentas:usuario_editar' objeto.pk %}{% else %}{% url 'cuentas:usuario_nuevo' %}{% endif %}"
+      {% if en_panel %}hx-post="{% if objeto %}{% url 'cuentas:usuario_editar' objeto.pk %}{% else %}{% url 'cuentas:usuario_nuevo' %}{% endif %}" hx-target="#panel-contenido"{% endif %}>
+  <div class="panel-cabeza">
+    <div>
+      <h2>{% if objeto %}{{ objeto.get_full_name }}{% else %}Nuevo administrador{% endif %}</h2>
+      <div class="sub">Acceso a la plataforma web de la entidad.</div>
+    </div>
+    {% if en_panel %}<button type="button" class="boton texto chico cerrar" onclick="Alpine.store('panel').cerrar()" aria-label="Cerrar panel">
+      <svg class="icono" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.8"><use href="#i-cerrar"/></svg></button>{% endif %}
+  </div>
+  <div class="panel-cuerpo">
+    {% csrf_token %}
+    {% include "_errores.html" %}
+    <div class="campos">
+      {% include "_campo.html" with campo=form.first_name %}
+      {% include "_campo.html" with campo=form.last_name %}
+      {% include "_campo.html" with campo=form.email ancho=True %}
+      {% include "_campo.html" with campo=form.telefono %}
+      {% include "_campo.html" with campo=form.password %}
+    </div>
+  </div>
+  <div class="panel-pie">
+    {% if en_panel %}<button type="button" class="boton texto" onclick="Alpine.store('panel').cerrar()">Cancelar</button>
+    {% else %}<a class="boton texto" href="{% url 'cuentas:usuarios' %}">Cancelar</a>{% endif %}
+    <button class="boton" type="submit">Guardar</button>
+  </div>
+</form>

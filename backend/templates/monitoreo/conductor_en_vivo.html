@@ -1,0 +1,48 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3366cc">
+  <title>Conductor · PAEGo</title>
+  <link rel="icon" href="{% static 'img/icono.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/componentes.css' %}">
+</head>
+<body class="conductor-pagina">
+  <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+
+  {# Modo de prueba: más adelante esta pantalla la reemplaza la app móvil del conductor. #}
+  <div id="mapa-conductor" class="conductor-mapa" role="img" aria-label="Mapa con su posición actual"></div>
+
+  <section class="conductor-hoja" aria-live="polite">
+    <div class="quien">
+      <strong>{{ conductor.usuario.get_full_name }}</strong>
+      <span>{% if vehiculo %}{{ vehiculo.placa }}{% else %}Sin vehículo asignado{% endif %}</span>
+    </div>
+    <div id="estado" class="conductor-estado">Preparando la ubicación…</div>
+    <div id="detalle" class="conductor-detalle"></div>
+    <button id="alternar" type="button" class="boton grande">Compartir mi ubicación</button>
+    <div class="pie">
+      <span>Modo de prueba. La entidad ve su posición mientras la sesión esté abierta.</span>
+      <form method="post" action="{% url 'cuentas:logout' %}">{% csrf_token %}<button class="boton texto chico" type="submit">Cerrar sesión</button></form>
+    </div>
+  </section>
+
+  <script>
+    window.PAEGO_CONDUCTOR = {
+      urlPosicion: "{% url 'api:monitoreo_mi_posicion' %}",
+      urlLogin: "{% url 'cuentas:login' %}",
+      csrf: "{{ csrf_token }}",
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+  <script src="{% static 'js/mapas.js' %}"></script>
+  <script src="{% static 'js/conductor.js' %}"></script>
+</body>
+</html>

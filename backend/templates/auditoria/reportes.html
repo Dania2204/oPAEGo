@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Reportes</h1>
+    <div class="sub">Envíos por periodo, institución y conductor, exportables a PDF y Excel (RF-36, RF-37)</div>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="{% url 'auditoria:reportes' %}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    {% for campo in filtros %}<div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label|capfirst }}</label>{{ campo }}</div>{% endfor %}
+    <button class="boton sec chico" type="submit">Generar</button>
+  </form>
+  <div id="resultados">{% include "auditoria/_reporte.html" %}</div>
+</div>
+{% endblock %}

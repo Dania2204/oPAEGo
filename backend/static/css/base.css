@@ -1,0 +1,204 @@
+/* PAEGo — base: tipografía, estructura, formularios y tablas. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: var(--t-md);
+  line-height: 1.45;
+  color: var(--tinta);
+  background: var(--fondo);
+}
+h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.25; color: var(--tinta); }
+h1 { font-size: var(--t-xl); }
+h2 { font-size: var(--t-lg); }
+h3 { font-size: var(--t-md); }
+p { margin: 0 0 var(--s3); }
+a { color: var(--accion); text-underline-offset: 2px; }
+a:hover { color: var(--accion-hover); }
+small, .tenue { color: var(--tinta-3); }
+.num, time, td.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: var(--t-sm); }
+.oculto-visual { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[x-cloak] { display: none !important; }
+
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- barra GOV.CO y cabecera de entidad ---------- */
+.govco {
+  height: var(--alto-govco);
+  background: var(--govco-azul);
+  display: flex; align-items: center;
+  padding: 0 var(--s4);
+}
+.govco a { color: #fff; font-weight: 600; font-size: var(--t-sm); text-decoration: none; letter-spacing: .02em; display: inline-flex; align-items: center; gap: 8px; }
+.govco a::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-sizing: border-box; }
+.govco a:hover { text-decoration: underline; color: #fff; }
+
+.cabecera {
+  height: var(--alto-cabecera);
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  display: flex; align-items: center; gap: var(--s4);
+  padding: 0 var(--s4);
+  position: sticky; top: 0; z-index: 30;
+}
+.cabecera .entidad { display: flex; align-items: center; gap: 10px; line-height: 1.2; min-width: 0; text-decoration: none; }
+.cabecera .entidad .marca { width: 32px; height: 32px; flex: none; border-radius: var(--r-panel); }
+.cabecera .entidad .nombres { display: flex; flex-direction: column; min-width: 0; }
+.cabecera .entidad strong { font-size: var(--t-lg); color: var(--govco-azul-oscuro); letter-spacing: -.01em; }
+.cabecera .entidad .nombres > span { font-size: var(--t-xs); color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cabecera .fecha { color: var(--tinta-2); font-size: var(--t-sm); margin-left: auto; }
+.boton-menu { display: none; }
+
+/* ---------- estructura ---------- */
+.app {
+  --col-nav: var(--ancho-nav);
+  display: grid; grid-template-columns: var(--col-nav) minmax(0, 1fr);
+  min-height: calc(100vh - var(--alto-govco) - var(--alto-cabecera));
+  /* La columna del menú llega siempre hasta el final de la página. */
+  background: linear-gradient(to right, var(--superficie) calc(var(--col-nav) - 1px), var(--borde) 0, var(--borde) var(--col-nav), transparent 0);
+}
+.app.nav-compacta { --col-nav: 56px; }
+
+.nav {
+  background: var(--superficie);
+  border-right: 1px solid var(--borde);
+  padding: var(--s2) 0 var(--s5);
+  position: sticky; top: var(--alto-cabecera);
+  height: calc(100vh - var(--alto-cabecera));
+  overflow-y: auto;
+}
+.nav .grupo { padding: var(--s4) var(--s4) 6px calc(var(--s4) + 2px); font-size: var(--t-xs); color: var(--tinta-3); font-weight: 500; }
+.nav a {
+  display: flex; align-items: center; gap: var(--s2);
+  position: relative;
+  padding: 8px var(--s3); margin: 1px var(--s2);
+  border-radius: var(--r-control);
+  color: var(--tinta-2); text-decoration: none; font-size: var(--t-base);
+}
+.nav a:hover { background: var(--fondo); color: var(--tinta); }
+.nav a[aria-current="page"] { background: var(--accion-suave); color: var(--govco-azul-oscuro); font-weight: 600; }
+.nav a[aria-current="page"]::before { content: ""; position: absolute; left: calc(-1 * var(--s2)); top: 6px; bottom: 6px; width: 3px; border-radius: 0 2px 2px 0; background: var(--accion); }
+.nav a .cuenta { margin-left: auto; font-size: var(--t-xs); font-weight: 600; color: #fff; background: var(--e-novedad); border-radius: 10px; padding: 0 7px; line-height: 18px; }
+.nav a .cuenta.aviso { background: var(--e-transito); }
+.nav .icono { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; }
+.app.nav-compacta .nav .grupo, .app.nav-compacta .nav .texto, .app.nav-compacta .nav .cuenta { display: none; }
+.app.nav-compacta .nav a { justify-content: center; padding: 8px 0; }
+.nav .plegar { margin: var(--s4) var(--s2) 0; width: calc(100% - var(--s4)); justify-content: center; }
+
+.principal { padding: var(--s5) var(--s6) var(--s6); min-width: 0; max-width: 1600px; }
+.titulo-pagina { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3) var(--s4); margin-bottom: var(--s5); }
+.titulo-pagina h1 { letter-spacing: -.015em; }
+.titulo-pagina .sub { color: var(--tinta-3); font-size: var(--t-base); margin-top: 4px; }
+.titulo-pagina .acciones { margin-left: auto; }
+
+/* ---------- bloques ---------- */
+.bloque { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-panel); box-shadow: var(--sombra-bloque); }
+.bloque + .bloque { margin-top: var(--s4); }
+.bloque-cabeza { display: flex; align-items: center; gap: var(--s3); padding: 14px var(--s4); border-bottom: 1px solid var(--borde); }
+.bloque-cabeza h2 { font-size: var(--t-md); }
+.bloque-cabeza .acciones { margin-left: auto; }
+.bloque-cuerpo { padding: var(--s4); }
+.separado { margin-top: var(--s4); }
+
+/* ---------- formularios ---------- */
+form.formulario { display: grid; gap: var(--s4); }
+.campos { display: grid; gap: var(--s3) var(--s4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.campo.ancho { grid-column: 1 / -1; }
+label, .etiqueta-campo { font-size: var(--t-sm); font-weight: 500; color: var(--tinta-2); }
+.campo .obligatorio { color: var(--error); }
+input, select, textarea {
+  font: inherit; font-size: var(--t-base); color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--r-control);
+  padding: 7px 10px; width: 100%; min-height: 36px;
+}
+textarea { min-height: 64px; resize: vertical; }
+input:hover, select:hover, textarea:hover { border-color: var(--tinta-3); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accion); box-shadow: 0 0 0 3px var(--accion-suave); }
+input[type="checkbox"], input[type="radio"] { width: 16px; height: 16px; min-height: 0; padding: 0; accent-color: var(--accion); }
+.campo .ayuda { font-size: var(--t-xs); color: var(--tinta-3); }
+.errorlist { list-style: none; margin: 0; padding: 0; color: var(--error); font-size: var(--t-sm); }
+.campo.con-error input, .campo.con-error select, .campo.con-error textarea { border-color: var(--error); }
+.casilla { display: flex; align-items: flex-start; gap: var(--s2); font-weight: 400; color: var(--tinta-2); }
+.casilla input { margin-top: 2px; }
+
+/* ---------- botones ---------- */
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font: inherit; font-size: var(--t-base); font-weight: 500; line-height: 1;
+  min-height: 38px; padding: 0 16px;
+  border: 1px solid var(--accion); border-radius: var(--r-control);
+  transition: background-color .12s, border-color .12s, color .12s;
+  background: var(--accion); color: #fff; text-decoration: none; cursor: pointer; white-space: nowrap;
+}
+.boton:hover { background: var(--accion-hover); border-color: var(--accion-hover); color: #fff; }
+.boton.sec { background: var(--superficie); color: var(--accion); border-color: var(--borde-fuerte); }
+.boton.sec:hover { background: var(--accion-suave); border-color: var(--accion); color: var(--govco-azul-oscuro); }
+.boton.texto { background: none; border-color: transparent; color: var(--accion); padding: 0 8px; }
+.boton.texto:hover { background: var(--accion-suave); }
+.boton.peligro { background: var(--superficie); color: var(--error); border-color: #e3a5af; }
+.boton.peligro:hover { background: var(--error-fondo); border-color: var(--error); color: var(--error); }
+.boton.peligro.lleno { background: var(--error); color: #fff; border-color: var(--error); }
+.boton.chico { min-height: 30px; padding: 0 10px; font-size: var(--t-sm); }
+.boton:disabled, .boton[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.boton .atajo { font-size: var(--t-xs); opacity: .75; border: 1px solid currentColor; border-radius: 3px; padding: 1px 4px; }
+.acciones { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+form.en-linea { display: inline; margin: 0; }
+
+/* ---------- tablas ---------- */
+.tabla-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--t-base); }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+th { font-size: var(--t-xs); font-weight: 600; color: var(--tinta-3); background: var(--superficie-2); white-space: nowrap; position: sticky; top: 0; padding-top: 10px; padding-bottom: 10px; }
+td { height: 48px; }
+tbody tr:last-child td { border-bottom: 0; }
+tr.clic { cursor: pointer; }
+tr.clic:hover td { background: var(--superficie-2); }
+tr.seleccionada td { background: var(--accion-suave); }
+tr.seleccionada td:first-child { box-shadow: inset 3px 0 0 var(--accion); }
+tr.inactivo td { color: var(--tinta-3); }
+td.der, th.der { text-align: right; white-space: nowrap; }
+.celda-doble { display: flex; flex-direction: column; line-height: 1.25; }
+.celda-doble small { font-size: var(--t-xs); }
+.celda-doble a strong { white-space: nowrap; }
+
+/* ---------- avisos (mensajes) ---------- */
+.avisos { position: fixed; left: 50%; bottom: var(--s5); transform: translateX(-50%); z-index: 80; display: grid; gap: var(--s2); width: min(520px, calc(100vw - 32px)); }
+.aviso {
+  display: flex; gap: var(--s3); align-items: flex-start;
+  padding: 10px 14px; border-radius: var(--r-panel);
+  background: var(--tinta); color: #fff; font-size: var(--t-base); box-shadow: var(--sombra-menu);
+}
+.aviso.error { background: var(--error); }
+.aviso button { margin-left: auto; background: none; border: 0; color: inherit; cursor: pointer; font-size: var(--t-lg); line-height: 1; }
+.nota { padding: 10px 14px; border-radius: var(--r-control); font-size: var(--t-base); }
+.nota.error { background: var(--error-fondo); color: var(--error); }
+.nota.aviso-amarillo { background: var(--aviso-fondo); color: var(--aviso); }
+.nota.info { background: var(--info-fondo); color: var(--govco-azul-oscuro); }
+.nota.ok { background: var(--ok-fondo); color: var(--ok); }
+
+.vacio { padding: var(--s6) var(--s4); text-align: center; color: var(--tinta-3); }
+.vacio a { font-weight: 500; }
+
+.paginacion { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); padding: var(--s3) var(--s4); border-top: 1px solid var(--borde); font-size: var(--t-sm); color: var(--tinta-3); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 980px) {
+  .app, .app.nav-compacta { grid-template-columns: 1fr; background: none; }
+  .nav { position: fixed; z-index: 40; top: calc(var(--alto-govco) + var(--alto-cabecera)); left: 0; width: 260px; height: auto; bottom: 0; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--sombra-menu); }
+  .nav.abierta { transform: none; }
+  .boton-menu { display: inline-flex; }
+  .cabecera .fecha, .boton .atajo { display: none; }
+  .cabecera .entidad .nombres > span { max-width: 38vw; }
+  .principal { padding: var(--s4); }
+  .cabecera .entidad .marca { width: 28px; height: 28px; }
+  .campos { grid-template-columns: 1fr; }
+}

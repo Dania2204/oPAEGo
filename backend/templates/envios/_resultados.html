@@ -1,0 +1,34 @@
+{% if es_parcial %}<input type="hidden" name="vista" id="vista-actual" value="{{ vista }}" hx-swap-oob="true">{% endif %}
+<nav class="pestanas" aria-label="Vistas de envíos">
+  {% for clave, nombre, n in pestanas %}
+    <a href="{{ request.path }}?vista={{ clave }}{% if parametros_sin_vista %}&{{ parametros_sin_vista }}{% endif %}"
+       hx-get="{{ request.path }}?vista={{ clave }}{% if parametros_sin_vista %}&{{ parametros_sin_vista }}{% endif %}" hx-target="#resultados" hx-push-url="true"
+       {% if vista == clave %}aria-current="true"{% endif %}>{{ nombre }}<span class="n">{{ n }}</span></a>
+  {% endfor %}
+  {% if hay_filtros %}<a href="{% url 'envios:lista' %}?vista={{ vista }}" style="margin-left:auto" class="limpiar">Quitar filtros</a>{% endif %}
+</nav>
+<div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Programado</th><th>Envío</th><th>Conductor</th><th>Estado</th><th>Entrega</th></tr></thead>
+    <tbody>
+    {% for envio in pagina %}
+      <tr class="clic" hx-get="{% url 'envios:detalle' envio.pk %}" hx-target="#panel-contenido" hx-push-url="true">
+        <td class="num"><span class="celda-doble">{{ envio.programado_para|date:"d/m/Y" }}<small class="tenue">{{ envio.programado_para|date:"H:i" }}</small></span></td>
+        <td><span class="celda-doble"><a href="{% url 'envios:detalle' envio.pk %}" onclick="event.preventDefault()"><strong>{{ envio.codigo }}</strong></a><small class="tenue">{{ envio.institucion }}</small></span></td>
+        <td><span class="celda-doble">{{ envio.conductor.usuario.get_full_name }}<small class="tenue">{{ envio.vehiculo.placa|default:"Sin vehículo" }}</small></span></td>
+        <td>{% include "envios/_estado.html" %}</td>
+        <td class="num">{% if envio.entregado_en %}<span class="celda-doble">{{ envio.entregado_en|date:"d/m H:i" }}
+            {% if envio.entregado_a_tiempo %}<small class="marca-texto ok">A tiempo</small>{% else %}<small class="marca-texto ambar">Fuera de tiempo</small>{% endif %}</span>
+          {% else %}<span class="tenue">—</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="vacio">
+        {% if hay_filtros %}No hay envíos con estos filtros. <a href="{% url 'envios:lista' %}">Quitar filtros</a>
+        {% elif vista == "hoy" %}No hay envíos programados para hoy. <a href="{% url 'envios:programar' %}">Programar envíos →</a>
+        {% else %}No hay envíos en esta vista.{% endif %}
+      </td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "_paginacion.html" with objetivo="resultados" %}

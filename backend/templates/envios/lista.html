@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Envíos{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Envíos</h1>
+    <div class="sub">Registro de despachos hacia las instituciones educativas</div>
+  </div>
+  <div class="acciones">
+    <a class="boton sec" href="{% url 'envios:programar' %}">Programar varios</a>
+    <a class="boton" href="{% url 'envios:nuevo' %}" hx-get="{% url 'envios:nuevo' %}" hx-target="#panel-contenido" hx-push-url="true">Nuevo envío <span class="atajo" aria-hidden="true">n</span></a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" action="{% url 'envios:lista' %}"
+        hx-get="{% url 'envios:lista' %}" hx-target="#resultados" hx-push-url="true"
+        hx-trigger="change, input from:#id_codigo delay:350ms, submit">
+    <input type="hidden" name="vista" id="vista-actual" value="{{ vista }}">
+    <div class="campo buscar"><label for="id_codigo">Buscar código</label>
+      <input type="search" name="codigo" id="id_codigo" value="{{ filtros.data.codigo|default:'' }}" placeholder="PAE-…" data-buscar autocomplete="off"></div>
+    <div class="campo"><label for="{{ filtros.fecha_desde.id_for_label }}">Desde</label>{{ filtros.fecha_desde }}</div>
+    <div class="campo"><label for="{{ filtros.fecha_hasta.id_for_label }}">Hasta</label>{{ filtros.fecha_hasta }}</div>
+    <div class="campo"><label for="{{ filtros.institucion.id_for_label }}">Institución</label>{{ filtros.institucion }}</div>
+    <div class="campo"><label for="{{ filtros.conductor.id_for_label }}">Conductor</label>{{ filtros.conductor }}</div>
+    <div class="campo"><label for="{{ filtros.estado.id_for_label }}">Estado</label>{{ filtros.estado }}</div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="envios-actualizados">
+    {% include "envios/_resultados.html" %}
+  </div>
+</div>
+{% endblock %}

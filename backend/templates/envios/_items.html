@@ -1,0 +1,26 @@
+{# Editor de alimentos (RF-14). Envía listas item_producto / item_cantidad / item_unidad.
+   data-raciones (opcional): mapa institución→beneficiarios para sugerir las raciones. #}
+<div data-items {% if raciones_json %}data-raciones='{{ raciones_json|safe }}'{% endif %}>
+  <table class="items-tabla">
+    <thead><tr><th>Producto</th><th style="width:120px">Cantidad</th><th style="width:150px">Unidad</th><th style="width:40px"><span class="oculto-visual">Quitar</span></th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td><input name="item_producto" value="{{ item.producto }}" required aria-label="Producto"></td>
+        <td><input name="item_cantidad" type="number" step="0.01" min="0.01" value="{{ item.cantidad|stringformat:'s' }}" required aria-label="Cantidad" class="num"></td>
+        <td><select name="item_unidad" aria-label="Unidad">{% for v, n in unidades %}<option value="{{ v }}" {% if item.unidad == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></td>
+        <td><button type="button" class="boton texto chico" data-quitar aria-label="Quitar alimento">×</button></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <template>
+    <tr>
+      <td><input name="item_producto" required placeholder="Ej.: leche entera UHT" aria-label="Producto"></td>
+      <td><input name="item_cantidad" type="number" step="0.01" min="0.01" required aria-label="Cantidad" class="num"></td>
+      <td><select name="item_unidad" aria-label="Unidad">{% for v, n in unidades %}<option value="{{ v }}">{{ n }}</option>{% endfor %}</select></td>
+      <td><button type="button" class="boton texto chico" data-quitar aria-label="Quitar alimento">×</button></td>
+    </tr>
+  </template>
+  <button type="button" class="boton texto chico" data-agregar style="margin-top:var(--s1)">+ Agregar alimento</button>
+</div>

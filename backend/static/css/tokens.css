@@ -1,0 +1,81 @@
+/* PAEGo — tokens de diseño.
+ *
+ * Basados en el sistema de diseño GOV.CO (Kit UI 9.2): tipografía Work Sans y
+ * azul institucional. Si MinTIC actualiza la paleta, solo se cambia este archivo.
+ */
+:root {
+  /* Marca GOV.CO */
+  --govco-azul: #3366cc;
+  --govco-azul-oscuro: #004884;
+  --govco-azul-claro: #e8effb;
+
+  /* Acción e interacción (botones, enlaces, foco) */
+  --accion: var(--govco-azul);
+  --accion-hover: var(--govco-azul-oscuro);
+  --accion-suave: var(--govco-azul-claro);
+  --foco: #ffab00;
+
+  /* Superficies y tinta */
+  --fondo: #f2f4f7;
+  --superficie: #ffffff;
+  --superficie-2: #f8f9fb;
+  --borde: #e1e5eb;
+  --borde-fuerte: #b8bec8;
+  --tinta: #1b1b1b;
+  --tinta-2: #4b4b4b;
+  --tinta-3: #5f6672;
+
+  /* Estados del envío (RF-18): siempre con texto, nunca solo color */
+  --e-asignado: #3366cc;
+  --e-transito: #b25e00;
+  --e-entregado: #05785a;
+  --e-novedad: #c2410c;
+  --e-cancelado: #6b7280;
+  /* Fondos suaves de las etiquetas de estado */
+  --e-asignado-fondo: #eaf0fb;
+  --e-transito-fondo: #fdf1e3;
+  --e-entregado-fondo: #e6f4ee;
+  --e-novedad-fondo: #fdeee7;
+  --e-cancelado-fondo: #f0f1f3;
+
+  /* Retroalimentación */
+  --error: #a80521;
+  --error-fondo: #fdecee;
+  --aviso: #8a5300;
+  --aviso-fondo: #fff4e0;
+  --ok: #05785a;
+  --ok-fondo: #e7f5ef;
+  --info-fondo: var(--govco-azul-claro);
+
+  /* Tipografía */
+  --fuente: "Work Sans", "Segoe UI", Arial, sans-serif;
+  --mono: "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  --t-xs: 12px;
+  --t-sm: 13px;
+  --t-base: 14px;
+  --t-md: 15px;
+  --t-lg: 18px;
+  --t-xl: 24px;
+  --t-cifra: 32px;
+
+  /* Espaciado (escala de 4) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  /* Forma */
+  --r-control: 4px;
+  --r-panel: 6px;
+  --sombra-bloque: 0 1px 2px rgba(16, 24, 40, .06);
+  --sombra-panel: -8px 0 24px rgba(17, 24, 39, .12);
+  --sombra-menu: 0 6px 20px rgba(17, 24, 39, .14);
+
+  /* Estructura */
+  --alto-govco: 32px;
+  --alto-cabecera: 56px;
+  --ancho-nav: 232px;
+  --ancho-panel: 560px;
+}

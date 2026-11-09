@@ -1,0 +1,166 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#3366cc">
+  <title>{% block titulo %}Panel{% endblock %} · PAEGo</title>
+  <link rel="manifest" href="{% url 'manifest' %}">
+  <link rel="icon" href="{% static 'img/icono.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/componentes.css' %}">
+  {% block cabeza %}{% endblock %}
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' data-url-base="{{ request.get_full_path }}"
+      x-data="{ navCompacta: localStorage.getItem('paego-nav') === '1', navAbierta: false }"
+      x-init="$watch('navCompacta', v => { try { localStorage.setItem('paego-nav', v ? '1' : '0') } catch (e) {} })">
+{% include "_iconos.html" %}
+<a class="oculto-visual" href="#principal">Saltar al contenido</a>
+
+<div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+
+<header class="cabecera">
+  <button type="button" class="boton texto boton-menu" @click="navAbierta = !navAbierta" aria-label="Menú">
+    <svg class="icono" width="20" height="20" stroke="currentColor" fill="none" stroke-width="1.7"><use href="#i-menu"/></svg>
+  </button>
+  <a class="entidad" href="{% url 'monitoreo:panel' %}">
+    <img class="marca" src="{% static 'img/icono.svg' %}" alt="" width="32" height="32">
+    <span class="nombres"><strong>PAEGo</strong><span>{{ paego.ENTIDAD }} · {{ paego.DEPENDENCIA }}</span></span>
+  </a>
+  {% now "l j \d\e F" as fecha_hoy %}<span class="fecha">{{ fecha_hoy|lower|capfirst }}</span>
+
+  {# RF-38: estado de conexión y cola sin conexión #}
+  <div class="menu" x-data="{ abierto: false }" @click.outside="abierto = false">
+    <button type="button" id="estado-conexion" class="conexion" @click="abierto = !abierto" aria-haspopup="true" :aria-expanded="abierto">En línea</button>
+    <div class="menu-lista" x-show="abierto" x-cloak style="min-width:300px">
+      <div class="cabeza"><strong>Sincronización</strong><small id="detalle-conexion" class="tenue">Todos los cambios están guardados en el servidor.</small></div>
+      <button type="button" id="boton-sincronizar">Sincronizar ahora</button>
+      <button type="button" id="ver-rechazadas">Ver operaciones rechazadas</button>
+    </div>
+  </div>
+
+  <div class="menu" x-data="{ abierto: false }" @click.outside="abierto = false">
+    <button type="button" class="boton-usuario" @click="abierto = !abierto" aria-haspopup="true" :aria-expanded="abierto">
+      <span class="iniciales" aria-hidden="true">{{ request.user.first_name|first }}{{ request.user.last_name|first }}</span>
+      <span>{{ request.user.first_name }}</span>
+    </button>
+    <div class="menu-lista" x-show="abierto" x-cloak>
+      <div class="cabeza"><strong>{{ request.user.get_full_name }}</strong><small class="tenue">{{ request.user.email }} · {{ request.user.get_rol_display }}</small></div>
+      <a href="{% url 'api:docs' %}" target="_blank" rel="noopener">Documentación de la API</a>
+      <button type="button" onclick="document.getElementById('dialogo-atajos').showModal()">Atajos de teclado</button>
+      <form method="post" action="{% url 'cuentas:logout' %}" class="en-linea">{% csrf_token %}<button type="submit">Cerrar sesión</button></form>
+    </div>
+  </div>
+</header>
+
+{% with ns=request.resolver_match.namespace nombre=request.resolver_match.url_name modulo=request.resolver_match.kwargs.modulo %}
+<div class="app" :class="{ 'nav-compacta': navCompacta }">
+  <nav class="nav" :class="{ abierta: navAbierta }" aria-label="Navegación principal">
+    <div class="grupo">Operación</div>
+    <a href="{% url 'monitoreo:panel' %}" {% if ns == 'monitoreo' and nombre == 'panel' %}aria-current="page"{% endif %} title="Hoy">
+      <svg class="icono"><use href="#i-hoy"/></svg><span class="texto">Hoy</span>
+      {% if alertas_pendientes %}<span class="cuenta aviso" title="Envíos retrasados">{{ alertas_pendientes }}</span>{% endif %}</a>
+    <a href="{% url 'envios:lista' %}" {% if ns == 'envios' and nombre != 'programar' %}aria-current="page"{% endif %} title="Envíos">
+      <svg class="icono"><use href="#i-envios"/></svg><span class="texto">Envíos</span></a>
+    <a href="{% url 'monitoreo:novedades' %}" {% if ns == 'monitoreo' and nombre == 'novedades' or nombre == 'novedad' %}aria-current="page"{% endif %} title="Novedades">
+      <svg class="icono"><use href="#i-novedades"/></svg><span class="texto">Novedades</span>
+      {% if novedades_pendientes %}<span class="cuenta" title="Sin atender">{{ novedades_pendientes }}</span>{% endif %}</a>
+
+    <div class="grupo">Planeación</div>
+    <a href="{% url 'envios:programar' %}" {% if nombre == 'programar' %}aria-current="page"{% endif %} title="Programar envíos">
+      <svg class="icono"><use href="#i-programar"/></svg><span class="texto">Programar envíos</span></a>
+
+    <div class="grupo">Catálogo</div>
+    <a href="{% url 'catalogo:lista' 'instituciones' %}" {% if modulo == 'instituciones' %}aria-current="page"{% endif %} title="Instituciones">
+      <svg class="icono"><use href="#i-instituciones"/></svg><span class="texto">Instituciones</span></a>
+    <a href="{% url 'catalogo:lista' 'responsables' %}" {% if modulo == 'responsables' %}aria-current="page"{% endif %} title="Responsables de recepción">
+      <svg class="icono"><use href="#i-responsables"/></svg><span class="texto">Responsables</span></a>
+    <a href="{% url 'catalogo:lista' 'conductores' %}" {% if modulo == 'conductores' %}aria-current="page"{% endif %} title="Conductores">
+      <svg class="icono"><use href="#i-conductores"/></svg><span class="texto">Conductores</span></a>
+    <a href="{% url 'catalogo:lista' 'vehiculos' %}" {% if modulo == 'vehiculos' %}aria-current="page"{% endif %} title="Vehículos">
+      <svg class="icono"><use href="#i-vehiculos"/></svg><span class="texto">Vehículos</span></a>
+
+    <div class="grupo">Control</div>
+    <a href="{% url 'monitoreo:indicadores' %}" {% if nombre == 'indicadores' %}aria-current="page"{% endif %} title="Indicadores">
+      <svg class="icono"><use href="#i-indicadores"/></svg><span class="texto">Indicadores</span></a>
+    <a href="{% url 'monitoreo:cobertura' %}" {% if nombre == 'cobertura' %}aria-current="page"{% endif %} title="Cobertura (matrícula)">
+      <svg class="icono"><use href="#i-instituciones"/></svg><span class="texto">Cobertura</span></a>
+    <a href="{% url 'auditoria:reportes' %}" {% if nombre == 'reportes' %}aria-current="page"{% endif %} title="Reportes">
+      <svg class="icono"><use href="#i-reportes"/></svg><span class="texto">Reportes</span></a>
+    <a href="{% url 'auditoria:lista' %}" {% if ns == 'auditoria' and nombre == 'lista' %}aria-current="page"{% endif %} title="Auditoría">
+      <svg class="icono"><use href="#i-auditoria"/></svg><span class="texto">Auditoría</span></a>
+
+    <div class="grupo">Administración</div>
+    <a href="{% url 'cuentas:usuarios' %}" {% if ns == 'cuentas' %}aria-current="page"{% endif %} title="Usuarios">
+      <svg class="icono"><use href="#i-usuarios"/></svg><span class="texto">Usuarios</span></a>
+
+    <button type="button" class="boton texto chico plegar" @click="navCompacta = !navCompacta" :title="navCompacta ? 'Expandir menú' : 'Contraer menú'">
+      <svg class="icono" :style="navCompacta && 'transform:scaleX(-1)'"><use href="#i-plegar"/></svg><span class="texto">Contraer</span>
+    </button>
+  </nav>
+
+  <main class="principal" id="principal">
+    {% block contenido %}{% endblock %}
+  </main>
+</div>
+{% endwith %}
+
+{# Panel lateral único: detalle y formularios se cargan aquí con HTMX #}
+<div class="velo" x-data x-show="$store.panel.abierto" x-cloak @click="$store.panel.cerrar()"></div>
+<aside id="panel" class="panel" x-data :class="{ abierto: $store.panel.abierto }" role="dialog" aria-modal="true" aria-label="Detalle"
+       :aria-hidden="!$store.panel.abierto">
+  <div id="panel-contenido" class="panel-contenido" style="display:contents"></div>
+</aside>
+
+{% include "_avisos.html" %}
+
+<dialog id="dialogo-atajos" class="dialogo">
+  <div class="cabeza"><h2>Atajos de teclado</h2></div>
+  <div class="cuerpo">
+    <dl class="atajos">
+      <dt><kbd>/</kbd></dt><dd>Buscar en la página actual</dd>
+      <dt><kbd>n</kbd></dt><dd>Nuevo envío</dd>
+      <dt><kbd>p</kbd></dt><dd>Programar envíos del día</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Cerrar el panel lateral</dd>
+      <dt><kbd>?</kbd></dt><dd>Mostrar esta ayuda</dd>
+    </dl>
+  </div>
+  <div class="pie"><button type="button" class="boton" onclick="this.closest('dialog').close()">Entendido</button></div>
+</dialog>
+
+<dialog id="dialogo-rechazadas" class="dialogo">
+  <div class="cabeza"><h2>Operaciones sin conexión rechazadas</h2></div>
+  <div class="cuerpo">
+    <p class="tenue">El servidor no aceptó estas operaciones (por ejemplo, el envío cambió de estado mientras usted no tenía conexión). Revíselas y vuelva a registrarlas si corresponde.</p>
+    <ul id="lista-rechazadas"></ul>
+  </div>
+  <div class="pie">
+    <button type="button" class="boton sec" id="limpiar-rechazadas">Descartar</button>
+    <button type="button" class="boton" onclick="this.closest('dialog').close()">Cerrar</button>
+  </div>
+</dialog>
+
+<script>
+  window.PAEGO = {
+    urlLote: "{% url 'api:sincronizacion_lote' %}",
+    urlLogin: "{% url 'cuentas:login' %}",
+    urlNuevoEnvio: "{% url 'envios:nuevo' %}",
+    urlProgramar: "{% url 'envios:programar' %}",
+    usuarioId: {{ request.user.pk|default:"null" }},
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.4/htmx.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+<script src="{% static 'js/mapas.js' %}"></script>
+<script src="{% static 'js/cola.js' %}"></script>
+<script src="{% static 'js/offline.js' %}"></script>
+{% block scripts %}{% endblock %}
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.8/cdn.min.js"></script>
+</body>
+</html>

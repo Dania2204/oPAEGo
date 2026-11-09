@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Hoy{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Operación de hoy</h1>
+    {% now "l j \d\e F \d\e Y" as fecha_hoy %}<div class="sub">{{ fecha_hoy|lower|capfirst }} · se actualiza cada {{ paego.INTERVALO_MAPA_SEG }} segundos</div>
+  </div>
+  <div class="acciones">
+    <button type="button" class="boton sec" hx-get="{% url 'envios:nuevo' %}" hx-target="#panel-contenido" hx-push-url="true">Nuevo envío <span class="atajo" aria-hidden="true">n</span></button>
+    <a class="boton" href="{% url 'envios:programar' %}">Programar envíos</a>
+  </div>
+</div>
+
+<div class="dividido" x-data="{ sinMapa: false }" :class="{ 'mapa-oculto': sinMapa }">
+  {# Columna izquierda: se refresca sola (RF-29) y cuando cambia un envío o una novedad #}
+  <div id="estado-hoy"
+       hx-get="{% url 'monitoreo:panel' %}"
+       hx-trigger="every {{ paego.INTERVALO_MAPA_SEG }}s [!document.hidden], envios-actualizados from:body, novedades-actualizadas from:body"
+       hx-swap="innerHTML">
+    {% include "monitoreo/_hoy_estado.html" %}
+  </div>
+
+  <div class="columna-mapa">
+    <div class="bloque">
+      <div class="bloque-cabeza">
+        <h2>Mapa</h2>
+        <div class="acciones"><button type="button" class="boton texto chico" @click="sinMapa = true">Ocultar</button></div>
+      </div>
+      <div class="bloque-cuerpo" style="padding:var(--s2)">
+        <div id="mapa-hoy" class="mapa alto" data-mapa="hoy" data-fuente="datos-hoy" data-zona="estado-hoy"
+             data-vivo="{% url 'api:monitoreo_conductores_en_vivo' %}" role="img"
+             aria-label="Mapa con los envíos del día, la posición de los vehículos en ruta y los conductores en vivo"></div>
+        <div class="leyenda-mapa">
+          <span class="auto" style="--c:var(--govco-azul-oscuro)">Conductor en vivo (se mueve en tiempo real)</span>
+          <span style="--c:var(--govco-azul-oscuro)">Vehículo en ruta (etiqueta con el código)</span>
+          <span style="--c:var(--error)">Vehículo retrasado</span>
+          <span style="--c:var(--e-asignado)">Destino por salir</span>
+          <span style="--c:var(--e-transito)">Destino en ruta</span>
+          <span style="--c:var(--e-entregado)">Destino entregado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="boton sec chico" x-show="sinMapa" x-cloak @click="sinMapa = false; $nextTick(() => document.getElementById('mapa-hoy')._mapa.resize())" style="position:fixed;right:24px;bottom:24px">Mostrar mapa</button>
+</div>
+{% endblock %}

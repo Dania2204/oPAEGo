@@ -1,0 +1,131 @@
+<div class="panel-cabeza">
+  <div>
+    <h2>{{ envio.codigo }}</h2>
+    <div class="sub">{{ envio.institucion }} · {% include "envios/_estado.html" %}</div>
+  </div>
+  {% if en_panel %}
+    <a class="boton texto chico" href="{% url 'envios:detalle' envio.pk %}" title="Abrir como página">Abrir</a>
+    <button type="button" class="boton texto chico cerrar" onclick="Alpine.store('panel').cerrar()" aria-label="Cerrar panel">
+      <svg class="icono" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.8"><use href="#i-cerrar"/></svg>
+    </button>
+  {% endif %}
+</div>
+
+<div class="panel-cuerpo" x-data="{ accion: null }">
+  {# ---- acciones (RF-16) ---- #}
+  <div class="acciones">
+    {% if puede_modificar %}
+      <a class="boton sec chico" href="{% url 'envios:editar' envio.pk %}"{% if en_panel %} hx-get="{% url 'envios:editar' envio.pk %}" hx-target="#panel-contenido"{% endif %}>Modificar</a>
+      <button type="button" class="boton sec chico" @click="accion = accion === 'reasignar' ? null : 'reasignar'" :aria-expanded="accion === 'reasignar'">Reasignar</button>
+      <button type="button" class="boton peligro chico" @click="accion = accion === 'cancelar' ? null : 'cancelar'" :aria-expanded="accion === 'cancelar'">Cancelar envío</button>
+    {% endif %}
+    {% if puede_cerrar %}
+      <button type="button" class="boton peligro chico" @click="accion = accion === 'cerrar' ? null : 'cerrar'" :aria-expanded="accion === 'cerrar'">Cerrar con novedad</button>
+    {% endif %}
+    <a class="boton texto chico" href="{% url 'envios:nuevo' %}?duplicar={{ envio.pk }}"{% if en_panel %} hx-get="{% url 'envios:nuevo' %}?duplicar={{ envio.pk }}" hx-target="#panel-contenido" hx-push-url="true"{% endif %}>Duplicar</a>
+  </div>
+
+  {% if puede_modificar %}
+  <form class="accion-desplegable formulario" x-show="accion === 'reasignar'" x-cloak method="post" action="{% url 'envios:reasignar' envio.pk %}"
+        {% if en_panel %}hx-post="{% url 'envios:reasignar' envio.pk %}" hx-target="#panel-contenido"{% endif %} data-offline-tipo="envio.reasignar">
+    {% csrf_token %}<input type="hidden" name="uuid_cliente" value="{{ uuid_reasignar }}"><input type="hidden" name="envio" value="{{ envio.pk }}">
+    <div class="campos">
+      {% include "_campo.html" with campo=form_reasignar.conductor %}
+      {% include "_campo.html" with campo=form_reasignar.vehiculo %}
+      {% include "_campo.html" with campo=form_reasignar.motivo ancho=True %}
+    </div>
+    <div class="acciones"><button class="boton chico" type="submit">Reasignar</button><button class="boton texto chico" type="button" @click="accion = null">Cancelar</button></div>
+  </form>
+  <form class="accion-desplegable formulario" x-show="accion === 'cancelar'" x-cloak method="post" action="{% url 'envios:cancelar' envio.pk %}"
+        {% if en_panel %}hx-post="{% url 'envios:cancelar' envio.pk %}" hx-target="#panel-contenido"{% endif %} data-offline-tipo="envio.cancelar">
+    {% csrf_token %}<input type="hidden" name="uuid_cliente" value="{{ uuid_cancelar }}"><input type="hidden" name="envio" value="{{ envio.pk }}">
+    <p class="tenue" style="margin:0">El envío no podrá reactivarse. El motivo queda en la auditoría.</p>
+    {% include "_campo.html" with campo=form_motivo.motivo %}
+    <div class="acciones"><button class="boton peligro lleno chico" type="submit">Cancelar envío</button><button class="boton texto chico" type="button" @click="accion = null">Volver</button></div>
+  </form>
+  {% endif %}
+  {% if puede_cerrar %}
+  <form class="accion-desplegable formulario" x-show="accion === 'cerrar'" x-cloak method="post" action="{% url 'envios:cerrar' envio.pk %}"
+        {% if en_panel %}hx-post="{% url 'envios:cerrar' envio.pk %}" hx-target="#panel-contenido"{% endif %} data-offline-tipo="envio.cerrar_con_novedad">
+    {% csrf_token %}<input type="hidden" name="uuid_cliente" value="{{ uuid_cerrar }}"><input type="hidden" name="envio" value="{{ envio.pk }}">
+    <p class="tenue" style="margin:0">Para envíos que no pudieron llegar (accidente, daño del vehículo…).</p>
+    {% include "_campo.html" with campo=form_motivo.motivo %}
+    <div class="acciones"><button class="boton peligro lleno chico" type="submit">Cerrar con novedad</button><button class="boton texto chico" type="button" @click="accion = null">Volver</button></div>
+  </form>
+  {% endif %}
+
+  <section class="separado">
+    <dl class="datos">
+      <dt>Programado</dt><dd class="num">{{ envio.programado_para|date:"l j \d\e F, H:i"|lower|capfirst }} <small class="tenue">(tolerancia hasta {{ envio.limite_entrega|date:"H:i" }})</small></dd>
+      <dt>Destino</dt><dd>{{ envio.institucion }}<br><small class="tenue">{{ envio.institucion.direccion }}</small></dd>
+      <dt>Conductor</dt><dd>{{ envio.conductor.usuario.get_full_name }} · <span class="num">{{ envio.conductor.telefono }}</span></dd>
+      <dt>Vehículo</dt><dd>{{ envio.vehiculo|default:"Sin vehículo" }}</dd>
+      <dt>Código de verificación</dt><dd><span class="codigo-verificacion">{{ envio.codigo_verificacion }}</span><br><small class="tenue">Lo muestra el conductor; la institución lo digita al recibir.</small></dd>
+      <dt>Salida</dt><dd class="num">{{ envio.salida_en|date:"d/m/Y H:i"|default:"—" }}</dd>
+      <dt>Llegada</dt><dd class="num">{{ envio.llegada_en|date:"d/m/Y H:i"|default:"—" }}</dd>
+      <dt>Entrega</dt><dd class="num">{{ envio.entregado_en|date:"d/m/Y H:i"|default:"—" }}
+        {% if envio.entregado_en %}{% if envio.entregado_a_tiempo %}<span class="marca-texto ok">A tiempo</span>{% else %}<span class="marca-texto ambar">Fuera de tiempo</span>{% endif %}{% endif %}</dd>
+      {% if envio.motivo_cancelacion %}<dt>Motivo de cancelación</dt><dd>{{ envio.motivo_cancelacion }}</dd>{% endif %}
+      {% if envio.observaciones %}<dt>Observaciones</dt><dd>{{ envio.observaciones }}</dd>{% endif %}
+    </dl>
+  </section>
+
+  <section>
+    <h3>Alimentos</h3>
+    <table>
+      <thead><tr><th>Producto</th><th class="der">Programado</th><th class="der">Recibido</th></tr></thead>
+      <tbody>
+      {% for item in envio.items.all %}
+        <tr><td>{{ item.producto }}</td>
+          <td class="der num">{{ item.cantidad|floatformat:"-2" }} {{ item.get_unidad_display|lower }}</td>
+          <td class="der num">{% if item.cantidad_recibida is not None %}{{ item.cantidad_recibida|floatformat:"-2" }}{% if item.diferencia %} <span class="marca-texto">({{ item.diferencia|floatformat:"-2" }})</span>{% endif %}{% else %}<span class="tenue">—</span>{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h3>Ruta recorrida <small class="tenue">· {{ puntos_ruta }} posiciones</small></h3>
+    <div class="mapa chico" data-mapa="ruta" data-datos="{{ mapa_json }}" role="img" aria-label="Ruta recorrida por el vehículo"></div>
+  </section>
+
+  <section>
+    <h3>Evidencia de entrega</h3>
+    {% if evidencia %}
+      <dl class="datos">
+        <dt>Recibió</dt><dd>{{ evidencia.recibido_por_nombre }}{% if evidencia.recibido_por_cargo %} · {{ evidencia.recibido_por_cargo }}{% endif %}</dd>
+        <dt>Registrada</dt><dd class="num">{{ evidencia.ocurrido_en|date:"d/m/Y H:i" }} · {{ evidencia.registrado_por.get_full_name }}</dd>
+        <dt>Ubicación</dt><dd class="num">{% if evidencia.latitud is not None %}{{ evidencia.latitud }}, {{ evidencia.longitud }}{% else %}No registrada{% endif %}</dd>
+        <dt>Integridad</dt><dd>{% if evidencia.es_integra %}<span class="marca-texto ok">Verificada: no ha sido alterada</span>{% else %}<span class="marca-texto">No coincide con su huella: revisar</span>{% endif %}</dd>
+        <dt>Huella SHA-256</dt><dd class="huella">{{ evidencia.huella_sha256 }}</dd>
+      </dl>
+      {% if evidencia.foto %}<p class="separado"><a href="{{ evidencia.foto.url }}" target="_blank" rel="noopener"><img class="foto-evidencia" src="{{ evidencia.foto.url }}" alt="Foto de la entrega"></a></p>{% endif %}
+    {% else %}
+      <p class="tenue">Aún no se ha confirmado la recepción.</p>
+    {% endif %}
+  </section>
+
+  {% if novedades %}
+  <section>
+    <h3>Novedades</h3>
+    <ul class="linea-tiempo">
+      {% for n in novedades %}
+        <li><time>{{ n.ocurrido_en|date:"d/m H:i" }}</time>
+          <div><strong>{{ n.get_tipo_display }}</strong> · {{ n.descripcion }}<div class="quien">{{ n.get_origen_display }} · {{ n.reportado_por.get_full_name }}{% if n.foto %} · <a href="{{ n.foto.url }}" target="_blank" rel="noopener">foto</a>{% endif %}</div></div></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section>
+    <h3>Historial</h3>
+    <ul class="linea-tiempo">
+      {% for r in historial %}
+        <li><time datetime="{{ r.ocurrido_en|date:'c' }}">{{ r.ocurrido_en|date:"d/m H:i" }}</time>
+          <div>{{ r.descripcion|default:r.get_accion_display }}
+            <div class="quien">{{ r.usuario.get_full_name|default:"Sistema" }}{% if r.diferido %} · <span class="marca-texto ambar" title="Recibido por el servidor el {{ r.registrado_en|date:'d/m/Y H:i' }}">registrado sin conexión</span>{% endif %}</div></div></li>
+      {% empty %}<li><span></span><span class="tenue">Sin registros.</span></li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% if oob_avisos %}{% include "_avisos.html" with oob=True %}{% endif %}

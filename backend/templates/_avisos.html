@@ -1,0 +1,9 @@
+{# Mensajes del sistema. En respuestas HTMX llega "fuera de banda" (oob) y reemplaza la zona de avisos. #}
+<div id="avisos" class="avisos" aria-live="polite"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% for m in messages %}
+    <div class="aviso {{ m.tags }}" role="status" data-auto-cerrar>
+      <span>{{ m }}</span>
+      <button type="button" aria-label="Cerrar aviso" onclick="this.parentElement.remove()">×</button>
+    </div>
+  {% endfor %}
+</div>

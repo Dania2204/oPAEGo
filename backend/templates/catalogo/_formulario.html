@@ -1,0 +1,36 @@
+<form method="post" class="formulario" novalidate style="display:contents"
+      action="{% if objeto %}{% url 'catalogo:editar' modulo objeto.pk %}{% else %}{% url 'catalogo:nuevo' modulo %}{% endif %}"
+      {% if en_panel %}hx-post="{% if objeto %}{% url 'catalogo:editar' modulo objeto.pk %}{% else %}{% url 'catalogo:nuevo' modulo %}{% endif %}" hx-target="#panel-contenido"{% endif %}
+      data-offline-tipo="{{ tipo_operacion }}" {% if cfg.con_usuario and not objeto %}data-offline="no"{% endif %}
+      data-offline-volver="{% url 'catalogo:lista' modulo %}">
+  <div class="panel-cabeza">
+    <div>
+      <h2>{% if objeto %}{{ objeto }}{% else %}Registrar {{ cfg.singular }}{% endif %}</h2>
+      <div class="sub">{% if objeto %}Editar {{ cfg.singular }}{% if not objeto.activo %} · desactivado{% endif %}{% else %}Los campos con * son obligatorios.{% endif %}</div>
+    </div>
+    {% if en_panel %}<button type="button" class="boton texto chico cerrar" onclick="Alpine.store('panel').cerrar()" aria-label="Cerrar panel">
+      <svg class="icono" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.8"><use href="#i-cerrar"/></svg></button>{% endif %}
+  </div>
+  <div class="panel-cuerpo">
+    {% csrf_token %}
+    <input type="hidden" name="uuid_cliente" value="{{ uuid_cliente }}">
+    {% if objeto %}<input type="hidden" name="id" value="{{ objeto.pk }}">{% endif %}
+    {% include "_errores.html" %}
+    <div class="campos">
+      {% for campo in form %}
+        {% if campo.name == "direccion" or campo.name == "nombre" %}{% include "_campo.html" with campo=campo ancho=True %}
+        {% else %}{% include "_campo.html" with campo=campo %}{% endif %}
+      {% endfor %}
+    </div>
+    {% if cfg.con_mapa %}
+      <div class="campo separado"><span class="etiqueta-campo">Ubicación</span>
+        <div class="mapa chico" data-mapa="selector" data-lat="id_latitud" data-lng="id_longitud" role="application" aria-label="Mapa para fijar la ubicación de la institución"></div>
+        <span class="ayuda">Haga clic en el mapa para fijar las coordenadas, o escríbalas arriba.</span></div>
+    {% endif %}
+  </div>
+  <div class="panel-pie">
+    {% if en_panel %}<button type="button" class="boton texto" onclick="Alpine.store('panel').cerrar()">Cancelar</button>
+    {% else %}<a class="boton texto" href="{% url 'catalogo:lista' modulo %}">Cancelar</a>{% endif %}
+    <button class="boton" type="submit">Guardar</button>
+  </div>
+</form>

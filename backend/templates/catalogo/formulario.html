@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}{{ cfg.singular|capfirst }}{% endblock %}
+{% block contenido %}
+<p style="margin-bottom:var(--s3)"><a href="{% url 'catalogo:lista' modulo %}">← {{ cfg.titulo }}</a></p>
+<div class="bloque" style="max-width:720px;display:flex;flex-direction:column">
+  {% include "catalogo/_formulario.html" %}
+</div>
+{% endblock %}

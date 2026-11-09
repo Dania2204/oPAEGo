@@ -1,0 +1,44 @@
+<form method="post" class="formulario" novalidate style="display:contents"
+      action="{% if objeto %}{% url 'envios:editar' objeto.pk %}{% else %}{% url 'envios:nuevo' %}{% endif %}"
+      {% if en_panel %}hx-post="{% if objeto %}{% url 'envios:editar' objeto.pk %}{% else %}{% url 'envios:nuevo' %}{% endif %}" hx-target="#panel-contenido"{% endif %}
+      data-offline-tipo="{{ tipo_operacion }}" data-offline-volver="{% url 'envios:lista' %}">
+  <div class="panel-cabeza">
+    <div>
+      <h2>{% if objeto %}Modificar {{ objeto.codigo }}{% elif duplicado %}Duplicar {{ duplicado.codigo }}{% else %}Nuevo envío{% endif %}</h2>
+      <div class="sub">{% if objeto %}Solo antes de la salida. El motivo queda en la auditoría (RF-16).{% else %}El envío se crea asignado a su conductor (RF-13 a RF-15).{% endif %}</div>
+    </div>
+    {% if en_panel %}<button type="button" class="boton texto chico cerrar" onclick="Alpine.store('panel').cerrar()" aria-label="Cerrar panel">
+      <svg class="icono" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.8"><use href="#i-cerrar"/></svg></button>{% endif %}
+  </div>
+
+  <div class="panel-cuerpo">
+    {% csrf_token %}
+    <input type="hidden" name="uuid_cliente" value="{{ uuid_cliente }}">
+    {% if objeto %}<input type="hidden" name="envio" value="{{ objeto.pk }}">{% endif %}
+    {% include "_errores.html" %}
+    <div class="campos">
+      {% include "_campo.html" with campo=form.institucion ancho=True %}
+      {% include "_campo.html" with campo=form.programado_para %}
+      {% if form.conductor %}{% include "_campo.html" with campo=form.conductor %}{% else %}
+        <div class="campo"><span class="etiqueta-campo">Conductor</span><span style="padding:8px 0">{{ objeto.conductor.usuario.get_full_name }}</span>
+          <span class="ayuda">Para cambiarlo use «Reasignar».</span></div>{% endif %}
+      {% include "_campo.html" with campo=form.vehiculo %}
+    </div>
+
+    <section class="separado">
+      <h3>Alimentos programados</h3>
+      {% include "envios/_items.html" %}
+    </section>
+
+    <div class="campos separado">
+      {% include "_campo.html" with campo=form.observaciones ancho=True %}
+      {% if form.motivo %}{% include "_campo.html" with campo=form.motivo ancho=True %}{% endif %}
+    </div>
+  </div>
+
+  <div class="panel-pie">
+    {% if en_panel %}<button type="button" class="boton texto" onclick="Alpine.store('panel').cerrar()">Cancelar</button>
+    {% else %}<a class="boton texto" href="{% if objeto %}{% url 'envios:detalle' objeto.pk %}{% else %}{% url 'envios:lista' %}{% endif %}">Cancelar</a>{% endif %}
+    <button class="boton" type="submit">{% if objeto %}Guardar cambios{% else %}Crear envío{% endif %}</button>
+  </div>
+</form>

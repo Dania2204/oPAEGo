@@ -1,0 +1,35 @@
+{% if seleccionada %}{% with n=seleccionada %}
+<div style="display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4)">
+  <div>
+    <h2>{{ n.get_tipo_display }} · {{ n.envio.codigo }}</h2>
+    <div class="tenue" style="font-size:var(--t-sm)">{{ n.get_origen_display }} · {{ n.ocurrido_en|date:"l j \d\e F, H:i"|lower }}</div>
+  </div>
+  <div class="acciones" style="margin-left:auto">
+    {% if n.leida_en %}
+      <span class="marca-texto ok">Atendida por {{ n.leida_por.get_full_name }} · {{ n.leida_en|date:"d/m H:i" }}</span>
+    {% else %}
+      <form method="post" action="{% url 'monitoreo:novedad' n.pk %}" hx-post="{% url 'monitoreo:novedad' n.pk %}" hx-target="#novedad-detalle">
+        {% csrf_token %}<input type="hidden" name="volver" value="{{ request.get_full_path }}">
+        <button class="boton" type="submit">Marcar como atendida</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<p style="font-size:var(--t-md)">{{ n.descripcion }}</p>
+
+<dl class="datos" style="margin-top:var(--s4)">
+  <dt>Envío</dt><dd><a href="{% url 'envios:detalle' n.envio_id %}" hx-get="{% url 'envios:detalle' n.envio_id %}" hx-target="#panel-contenido">{{ n.envio.codigo }}</a> · {% include "envios/_estado.html" with envio=n.envio %}</dd>
+  <dt>Institución</dt><dd>{{ n.envio.institucion }}</dd>
+  <dt>Reportó</dt><dd>{{ n.reportado_por.get_full_name }} · {{ n.reportado_por.get_rol_display }}</dd>
+  <dt>Ubicación</dt><dd class="num">{% if n.latitud is not None %}{{ n.latitud }}, {{ n.longitud }}{% else %}No registrada{% endif %}</dd>
+  <dt>Recibida</dt><dd>{{ n.recibido_en|date:"d/m/Y H:i" }}{% if n.diferida %} <span class="marca-texto tenue">registrada sin conexión</span>{% endif %}</dd>
+</dl>
+
+{% if n.foto %}
+  <p style="margin-top:var(--s4)"><a href="{{ n.foto.url }}" target="_blank" rel="noopener"><img class="foto-evidencia" src="{{ n.foto.url }}" alt="Foto de la novedad"></a></p>
+{% endif %}
+{% endwith %}{% else %}
+  <p class="vacio">Seleccione una novedad para ver el detalle.</p>
+{% endif %}
+{% if oob_avisos %}{% include "_avisos.html" with oob=True %}{% endif %}

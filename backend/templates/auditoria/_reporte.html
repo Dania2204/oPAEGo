@@ -1,0 +1,33 @@
+{% for e in filtros.non_field_errors %}<p class="nota error" style="margin:var(--s3) var(--s4)">{{ e }}</p>{% endfor %}
+{% if reporte %}
+  <div class="bloque-cabeza">
+    <p class="resumen-dia" style="margin:0;font-size:var(--t-base)">
+      <span><b>{{ reporte.filas|length }}</b> envíos</span>
+      <span>Registro completo <b>{% if reporte.indicadores.porcentaje_registro_completo is not None %}{{ reporte.indicadores.porcentaje_registro_completo }} %{% else %}—{% endif %}</b></span>
+      <span>A tiempo <b>{% if reporte.indicadores.porcentaje_a_tiempo is not None %}{{ reporte.indicadores.porcentaje_a_tiempo }} %{% else %}—{% endif %}</b></span>
+      <span>Con evidencia <b>{% if reporte.indicadores.porcentaje_con_evidencia is not None %}{{ reporte.indicadores.porcentaje_con_evidencia }} %{% else %}—{% endif %}</b></span>
+      <span>Novedades <b>{{ reporte.indicadores.novedades }}</b></span>
+    </p>
+    <div class="acciones">
+      <a class="boton sec chico" href="{% url 'auditoria:reportes' %}?{{ parametros }}&formato=xlsx" hx-boost="false">Excel</a>
+      <a class="boton sec chico" href="{% url 'auditoria:reportes' %}?{{ parametros }}&formato=pdf" hx-boost="false">PDF</a>
+    </div>
+  </div>
+  <div class="tabla-scroll">
+    <table>
+      <thead><tr>{% for _, titulo in reporte.columnas %}<th>{{ titulo }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for fila in reporte.filas %}
+        <tr>
+          <td><strong style="font-weight:500">{{ fila.codigo }}</strong></td><td class="num">{{ fila.programado }}</td><td>{{ fila.institucion }}</td><td>{{ fila.conductor }}</td>
+          <td>{{ fila.vehiculo|default:"—" }}</td><td>{{ fila.estado }}</td><td class="num">{{ fila.salida|default:"—" }}</td>
+          <td class="num">{{ fila.llegada|default:"—" }}</td><td class="num">{{ fila.entrega|default:"—" }}</td><td>{{ fila.a_tiempo }}</td>
+          <td>{{ fila.registro_completo }}</td><td>{{ fila.evidencia }}</td><td class="der num">{{ fila.novedades }}</td>
+        </tr>
+      {% empty %}<tr><td colspan="13" class="vacio">Sin envíos en el periodo.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="vacio">Elija un periodo y pulse «Generar». Sin fechas, el reporte incluye todos los envíos.</p>
+{% endif %}

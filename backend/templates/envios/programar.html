@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block titulo %}Programar envíos{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Programar envíos</h1>
+    <div class="sub">Cree en un solo paso los envíos de un día para varias instituciones con el mismo menú. Se usa el último conductor y vehículo de cada institución; puede cambiarlos.</div>
+  </div>
+</div>
+
+<form method="post" action="{% url 'envios:programar' %}" novalidate data-offline-tipo="envio.lote" data-offline-volver="{% url 'envios:lista' %}"
+      x-data="{ filtro: '', marcadas: 0 }"
+      x-init="marcadas = $el.querySelectorAll('input[name=instituciones]:checked').length"
+      @change="marcadas = $el.querySelectorAll('input[name=instituciones]:checked').length">
+  {% csrf_token %}
+  <input type="hidden" name="uuid_lote" value="{{ uuid_lote }}">
+
+  {% if errores %}<div class="nota error" role="alert" style="margin-bottom:var(--s4)">{% for e in errores %}<div>{{ e }}</div>{% endfor %}</div>{% endif %}
+
+  <div class="bloque">
+    <div class="bloque-cabeza"><h2>1. Fecha y hora</h2></div>
+    <div class="bloque-cuerpo">
+      <div class="campos" style="max-width:520px">
+        <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha" name="fecha" value="{{ fecha }}" required></div>
+        <div class="campo"><label for="hora">Hora programada</label><input type="time" id="hora" name="hora" value="{{ hora }}" required></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-cabeza">
+      <h2>2. Instituciones</h2>
+      <div class="acciones">
+        <label class="oculto-visual" for="buscar-institucion">Buscar institución</label>
+        <input type="search" id="buscar-institucion" placeholder="Buscar institución" x-model="filtro" data-buscar style="min-height:30px;width:220px">
+        <button type="button" class="boton texto chico" @click="$root.querySelectorAll('tr[data-nombre]:not([hidden]) input[name=instituciones]').forEach(c => c.checked = true); marcadas = $root.querySelectorAll('input[name=instituciones]:checked').length">Marcar visibles</button>
+        <button type="button" class="boton texto chico" @click="$root.querySelectorAll('input[name=instituciones]').forEach(c => c.checked = false); marcadas = 0">Ninguna</button>
+      </div>
+    </div>
+    <div class="tabla-scroll">
+      <table class="programar-instituciones">
+        <thead><tr><th style="width:36px"><span class="oculto-visual">Incluir</span></th><th>Institución</th><th>Conductor</th><th>Vehículo</th></tr></thead>
+        <tbody>
+          {% for fila in filas %}
+            <tr data-nombre="{{ fila.institucion|lower }}" :hidden="!!filtro && !$el.dataset.nombre.includes(filtro.toLowerCase())">
+              <td><input type="checkbox" name="instituciones" value="{{ fila.institucion.pk }}" id="inst-{{ fila.institucion.pk }}" {% if fila.seleccionada %}checked{% endif %}></td>
+              <td><label for="inst-{{ fila.institucion.pk }}" style="font-weight:500;color:var(--tinta)">{{ fila.institucion }}</label>
+                <small class="tenue" style="display:block">{{ fila.institucion.direccion }}</small>
+                {% if fila.error %}<small class="marca-texto" style="display:block">{{ fila.error }}</small>{% endif %}</td>
+              <td><select name="conductor_{{ fila.institucion.pk }}" aria-label="Conductor para {{ fila.institucion }}">
+                <option value="">Elegir…</option>
+                {% for c in conductores %}<option value="{{ c.pk }}" {% if fila.conductor == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.usuario.get_full_name }}</option>{% endfor %}
+              </select></td>
+              <td><select name="vehiculo_{{ fila.institucion.pk }}" aria-label="Vehículo para {{ fila.institucion }}">
+                <option value="">Sin vehículo</option>
+                {% for v in vehiculos %}<option value="{{ v.pk }}" {% if fila.vehiculo == v.pk|stringformat:"s" %}selected{% endif %}>{{ v.placa }} · {{ v.tipo }}</option>{% endfor %}
+              </select></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="vacio">No hay instituciones activas. <a href="{% url 'catalogo:lista' 'instituciones' %}">Registrar instituciones →</a></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-cabeza"><h2>3. Menú del día</h2><span class="tenue" style="font-size:var(--t-sm)">Se aplica a todas las instituciones marcadas</span></div>
+    <div class="bloque-cuerpo">
+      {% include "envios/_items.html" %}
+      <div class="campo separado" style="max-width:640px">
+        <label for="observaciones">Observaciones para todos los envíos</label>
+        <textarea id="observaciones" name="observaciones" rows="2">{{ observaciones }}</textarea>
+      </div>
+    </div>
+
+    <div class="pie-fijo">
+      <span class="resumen" x-text="marcadas === 1 ? '1 institución seleccionada' : marcadas + ' instituciones seleccionadas'">{{ filas|length }} instituciones</span>
+      <div class="acciones" style="margin-left:auto">
+        <a class="boton texto" href="{% url 'envios:lista' %}">Cancelar</a>
+        <button class="boton" type="submit" :disabled="marcadas === 0" x-text="marcadas === 1 ? 'Crear 1 envío' : 'Crear ' + marcadas + ' envíos'">Crear envíos</button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

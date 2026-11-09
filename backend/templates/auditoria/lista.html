@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Registro de auditoría</h1>
+    <div class="sub">Cada acción con usuario, fecha, hora y ubicación (RF-33). No se puede modificar ni eliminar (RNF-12).</div>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="{% url 'auditoria:lista' %}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    <div class="campo"><label for="accion">Acción</label>
+      <select id="accion" name="accion"><option value="">Todas</option>
+        {% for v, n in acciones %}<option value="{{ v }}" {% if request.GET.accion == v %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+    <div class="campo"><label for="usuario">Usuario</label>
+      <select id="usuario" name="usuario"><option value="">Todos</option>
+        {% for u in usuarios %}<option value="{{ u.pk }}" {% if request.GET.usuario == u.pk|stringformat:"s" %}selected{% endif %}>{{ u }}</option>{% endfor %}</select></div>
+    <div class="campo"><label for="desde">Desde</label><input type="date" id="desde" name="desde" value="{{ request.GET.desde }}"></div>
+    <div class="campo"><label for="hasta">Hasta</label><input type="date" id="hasta" name="hasta" value="{{ request.GET.hasta }}"></div>
+    <label class="casilla" style="align-self:center"><input type="checkbox" name="diferido" value="1" {% if request.GET.diferido %}checked{% endif %}> Solo registrados sin conexión</label>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados">{% include "auditoria/_tabla.html" %}</div>
+</div>
+{% endblock %}

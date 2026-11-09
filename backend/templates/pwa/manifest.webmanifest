@@ -1,0 +1,14 @@
+{% load static %}{
+  "name": "PAEGo — Gestión y monitoreo del PAE",
+  "short_name": "PAEGo",
+  "description": "Plataforma web del administrador del Programa de Alimentación Escolar",
+  "lang": "es-CO",
+  "start_url": "/panel/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4faf4",
+  "theme_color": "#123014",
+  "icons": [
+    {"src": "{% static 'img/icono.svg' %}", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}

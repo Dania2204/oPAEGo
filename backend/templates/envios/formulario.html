@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}{% if objeto %}Modificar envío{% else %}Nuevo envío{% endif %}{% endblock %}
+{% block contenido %}
+<p style="margin-bottom:var(--s3)"><a href="{% url 'envios:lista' %}">← Envíos</a></p>
+<div class="bloque" style="max-width:760px;display:flex;flex-direction:column">
+  {% include "envios/_formulario.html" %}
+</div>
+{% endblock %}

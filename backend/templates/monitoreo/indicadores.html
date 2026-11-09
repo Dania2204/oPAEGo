@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Indicadores{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Indicadores</h1>
+    <div class="sub">Trazabilidad, control operativo y transparencia según la Tabla 3 del proyecto (RF-32)</div>
+  </div>
+  <div class="acciones"><a class="boton sec" href="{% url 'auditoria:reportes' %}">Ir a reportes</a></div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="{% url 'monitoreo:indicadores' %}" hx-target="#resultado-indicadores" hx-push-url="true" hx-trigger="change">
+    {% for campo in filtros %}<div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label|capfirst }}</label>{{ campo }}</div>{% endfor %}
+    <noscript><button class="boton sec chico" type="submit">Aplicar</button></noscript>
+    <span class="indicador">Calculando…</span>
+  </form>
+  {% for e in filtros.non_field_errors %}<p class="nota error" style="margin:var(--s3)">{{ e }}</p>{% endfor %}
+</div>
+
+<div id="resultado-indicadores" class="separado">
+  {% include "monitoreo/_indicadores.html" %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script src="{% static 'js/indicadores.js' %}"></script>
+{% endblock %}

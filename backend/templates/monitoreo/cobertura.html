@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block titulo %}Cobertura{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Cobertura</h1>
+    <div class="sub">Beneficiarios (matrícula) por institución, grado y jornada, según el Anexo 6A de SIMAT. Solo conteos agregados.</div>
+  </div>
+  {% if anios %}
+  <div class="acciones">
+    <form method="get" style="margin:0">
+      <label class="campo" style="margin:0">
+        <span class="texto-chico tenue">Año</span>
+        <select name="anio" onchange="this.form.submit()">
+          {% for a in anios %}<option value="{{ a }}" {% if a == anio %}selected{% endif %}>{{ a }}</option>{% endfor %}
+        </select>
+      </label>
+      <noscript><button class="boton sec chico" type="submit">Ver</button></noscript>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+{% if not instituciones %}
+  <div class="bloque">
+    <p class="nota">Aún no hay matrícula importada. Cargue el Anexo 6A de SIMAT con
+      <code>python manage.py importar_simat &lt;archivo.xlsx&gt; --dane &lt;CODIGO_DANE&gt; --sedes &lt;sedes.csv&gt;</code>.</p>
+  </div>
+{% else %}
+<div class="cifras">
+  <div class="cifra">
+    <span class="nombre">Total de beneficiarios</span>
+    <span class="valor">{{ total }}</span>
+    <span class="formula">matrícula{% if anio %} del año {{ anio }}{% endif %}</span>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Sedes con matrícula</span>
+    <span class="valor">{{ instituciones|length }}</span>
+    <span class="formula">cada sede es un punto de entrega del PAE</span>
+  </div>
+</div>
+
+<section class="bloque separado" style="margin:0">
+  <div class="bloque-cabeza"><h2>Por institución / sede</h2></div>
+  <div class="tabla-scroll">
+    <table>
+      <thead><tr><th>Institución / sede</th><th class="der">Beneficiarios</th><th>Grados</th><th>Jornadas</th></tr></thead>
+      <tbody>
+        {% for fila in instituciones %}
+          <tr>
+            <td>{{ fila.institucion }}</td>
+            <td class="der num">{{ fila.total }}</td>
+            <td class="tenue">{% for etiqueta, n in fila.grados %}{{ etiqueta }} {{ n }}{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+            <td class="tenue">{% for etiqueta, n in fila.jornadas %}{{ etiqueta }} {{ n }}{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr><th>Total</th><th class="der num">{{ total }}</th><th colspan="2"></th></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<div class="separado" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--s4)">
+  <section class="bloque" style="margin:0">
+    <div class="bloque-cabeza"><h2>Por grado</h2></div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Grado</th><th class="der">Beneficiarios</th></tr></thead>
+        <tbody>
+          {% for etiqueta, n in por_grado %}<tr><td>{{ etiqueta }}</td><td class="der num">{{ n }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="bloque" style="margin:0">
+    <div class="bloque-cabeza"><h2>Por jornada</h2></div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Jornada</th><th class="der">Beneficiarios</th></tr></thead>
+        <tbody>
+          {% for etiqueta, n in por_jornada %}<tr><td>{{ etiqueta }}</td><td class="der num">{{ n }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<p class="tenue" style="font-size:var(--t-xs);margin-top:var(--s2)">
+  El sistema no almacena datos personales de los estudiantes: solo estos conteos agregados (minimización de datos, Ley 1581 de 2012).
+</p>
+{% endif %}
+{% endblock %}

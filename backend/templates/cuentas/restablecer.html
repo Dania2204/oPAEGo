@@ -1,0 +1,13 @@
+{% extends "base_acceso.html" %}
+{% block titulo %}Restablecer contraseña{% endblock %}
+{% block contenido %}
+<h2>Restablecer contraseña</h2>
+<p class="sub">Le enviaremos al correo un enlace de un solo uso para definir una nueva contraseña.</p>
+<form method="post" class="formulario" novalidate>
+  {% csrf_token %}
+  {% include "_errores.html" %}
+  {% include "_campo.html" with campo=form.email %}
+  <button class="boton" type="submit" style="width:100%">Enviar enlace</button>
+  <a href="{% url 'cuentas:login' %}" style="font-size:var(--t-sm)">Volver a ingresar</a>
+</form>
+{% endblock %}

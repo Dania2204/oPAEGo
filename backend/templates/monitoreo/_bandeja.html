@@ -1,0 +1,16 @@
+{% for n in pagina %}
+  <a class="item{% if not n.leida_en %} sin-leer{% endif %}" href="{% url 'monitoreo:novedad' n.pk %}?{{ parametros }}"
+     hx-get="{% url 'monitoreo:novedad' n.pk %}" hx-target="#novedad-detalle" hx-push-url="{% url 'monitoreo:novedad' n.pk %}?{{ parametros }}"
+     {% if seleccionada and seleccionada.pk == n.pk %}aria-current="true"{% endif %}
+     onclick="this.parentElement.querySelectorAll('[aria-current]').forEach(e => e.removeAttribute('aria-current')); this.setAttribute('aria-current','true')">
+    <div class="linea1">
+      <strong>{{ n.get_tipo_display }}</strong>
+      <span class="tenue" style="font-size:var(--t-sm)">{{ n.envio.codigo }}</span>
+      <time datetime="{{ n.ocurrido_en|date:'c' }}">{{ n.ocurrido_en|date:"d/m H:i" }}</time>
+    </div>
+    <p>{{ n.descripcion }}</p>
+  </a>
+{% empty %}
+  <p class="vacio">{% if estado == "pendientes" %}No hay novedades sin atender.{% else %}No hay novedades.{% endif %}</p>
+{% endfor %}
+{% include "_paginacion.html" %}

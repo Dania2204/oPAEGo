@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}{{ cfg.titulo }}{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>{{ cfg.titulo }}</h1>
+    <div class="sub">{% if modulo == "conductores" %}Cada conductor tiene un usuario para la aplicación móvil.{% elif modulo == "responsables" %}Personal de cada institución que confirma la recepción desde la aplicación móvil.{% elif modulo == "vehiculos" %}Vehículos asociados a los conductores.{% else %}Instituciones que reciben los alimentos del PAE.{% endif %}</div>
+  </div>
+  <div class="acciones">
+    <a class="boton" href="{% url 'catalogo:nuevo' modulo %}" hx-get="{% url 'catalogo:nuevo' modulo %}" hx-target="#panel-contenido" hx-push-url="true">Registrar {{ cfg.singular }}</a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="{% url 'catalogo:lista' modulo %}" hx-target="#resultados" hx-push-url="true"
+        hx-trigger="change, input from:#buscar delay:300ms, submit">
+    <div class="campo buscar"><label for="buscar">Buscar</label><input type="search" id="buscar" name="q" value="{{ q }}" data-buscar autocomplete="off"></div>
+    <div class="campo"><label for="estado">Estado</label>
+      <select id="estado" name="estado">
+        <option value="activos" {% if estado == "activos" %}selected{% endif %}>Activos</option>
+        <option value="inactivos" {% if estado == "inactivos" %}selected{% endif %}>Desactivados</option>
+        <option value="todos" {% if estado == "todos" %}selected{% endif %}>Todos</option>
+      </select></div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="catalogo-actualizado">
+    {% include "catalogo/_tabla.html" %}
+  </div>
+</div>
+{% endblock %}

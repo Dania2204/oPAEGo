@@ -1,0 +1,70 @@
+<p class="resumen-dia" aria-live="polite">
+  <span><b>{{ total_hoy }}</b> programado{{ total_hoy|pluralize }} para hoy</span>
+  <span><b>{{ en_ruta }}</b> en ruta</span>
+  <span><b>{{ entregados }}</b> entregado{{ entregados|pluralize }}</span>
+  {% if retrasados %}<span class="alerta"><b>{{ retrasados|length }}</b> retrasado{{ retrasados|length|pluralize }}</span>{% endif %}
+  {% if novedades_total %}<span><b>{{ novedades_total }}</b> novedad{{ novedades_total|pluralize:"es" }} sin atender</span>{% endif %}
+</p>
+
+{% if hay_atencion %}
+<section class="bloque" aria-labelledby="titulo-atencion">
+  <div class="bloque-cabeza"><h2 id="titulo-atencion">Requiere atención</h2></div>
+  <ul class="atencion">
+    {% for envio in retrasados %}
+      <li>
+        <span class="tipo retraso">Retrasado</span>
+        <span class="texto"><strong>{{ envio.codigo }}</strong> · {{ envio.institucion }}
+          <small class="tenue">Programado {{ envio.programado_para|date:"d/m H:i" }} · {{ envio.conductor.usuario.get_full_name }} · {{ envio.get_estado_display|lower }}</small></span>
+        <button type="button" class="boton sec chico" hx-get="{% url 'envios:detalle' envio.pk %}" hx-target="#panel-contenido" hx-push-url="true">Revisar</button>
+      </li>
+    {% endfor %}
+    {% for n in novedades %}
+      <li>
+        <span class="tipo novedad">Novedad</span>
+        <span class="texto"><strong>{{ n.envio.codigo }}</strong> · {{ n.get_tipo_display }}: {{ n.descripcion|truncatechars:80 }}
+          <small class="tenue">{{ n.get_origen_display }} · {{ n.ocurrido_en|date:"H:i" }} · {{ n.reportado_por.get_full_name }}</small></span>
+        <span class="acciones">
+          <a class="boton texto chico" href="{% url 'monitoreo:novedad' n.pk %}">Ver</a>
+          <form class="en-linea" method="post" action="{% url 'monitoreo:novedad' n.pk %}" hx-post="{% url 'monitoreo:novedad' n.pk %}" hx-target="#estado-hoy" hx-swap="none">
+            {% csrf_token %}<button class="boton sec chico" type="submit">Atendida</button>
+          </form>
+        </span>
+      </li>
+    {% endfor %}
+    {% for envio in proximos %}
+      <li>
+        <span class="tipo proximo">Sale pronto</span>
+        <span class="texto"><strong>{{ envio.codigo }}</strong> · {{ envio.institucion }}
+          <small class="tenue">Programado {{ envio.programado_para|date:"H:i" }} y aún sin salida · {{ envio.conductor.usuario.get_full_name }} · {{ envio.conductor.telefono }}</small></span>
+        <button type="button" class="boton sec chico" hx-get="{% url 'envios:detalle' envio.pk %}" hx-target="#panel-contenido" hx-push-url="true">Revisar</button>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="bloque separado" aria-labelledby="titulo-dia">
+  <div class="bloque-cabeza">
+    <h2 id="titulo-dia">Envíos del día</h2>
+    <span class="tenue num" style="font-size:var(--t-xs)">Actualizado {{ actualizado|time:"H:i:s" }}</span>
+  </div>
+  {% if grupos %}
+  <div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Hora</th><th>Envío</th><th>Conductor</th><th>Estado</th></tr></thead>
+    {% for titulo, lista in grupos %}
+      <tbody>
+        <tr><td colspan="4" class="grupo-estado">{{ titulo }} · {{ lista|length }}</td></tr>
+        {% for envio in lista %}
+          {% include "envios/_fila_hoy.html" %}
+        {% endfor %}
+      </tbody>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+    <p class="vacio">Aún no hay envíos para hoy. <a href="{% url 'envios:programar' %}">Programar envíos →</a></p>
+  {% endif %}
+</section>
+
+<script type="application/json" id="datos-hoy">{{ mapa_json|safe }}</script>

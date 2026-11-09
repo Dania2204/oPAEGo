@@ -1,0 +1,6 @@
+<tr class="clic" data-envio-id="{{ envio.pk }}" hx-get="{% url 'envios:detalle' envio.pk %}" hx-target="#panel-contenido" hx-push-url="true">
+  <td class="num">{{ envio.programado_para|date:"H:i" }}{% if envio.programado_para|date:"Ymd" != hoy_ymd %}<small class="tenue" style="display:block">{{ envio.programado_para|date:"d/m" }}</small>{% endif %}</td>
+  <td><span class="celda-doble"><a href="{% url 'envios:detalle' envio.pk %}" onclick="event.preventDefault()"><strong>{{ envio.codigo }}</strong></a><small class="tenue">{{ envio.institucion }}</small></span></td>
+  <td><span class="celda-doble">{{ envio.conductor.usuario.get_full_name }}<small class="tenue">{{ envio.vehiculo.placa|default:"Sin vehículo" }}</small></span></td>
+  <td>{% include "envios/_estado.html" %}</td>
+</tr>
