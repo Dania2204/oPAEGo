@@ -15,6 +15,7 @@ from apps.catalogo.api import (
 from apps.cuentas import api as cuentas
 from apps.envios.api import EnvioViewSet
 from apps.monitoreo import api as monitoreo
+from apps.nutricion import api as nutricion
 from apps.sincronizacion import api as sincronizacion
 
 router = DefaultRouter()
@@ -57,6 +58,7 @@ urlpatterns = [
         monitoreo.conductores_en_vivo,
         name="monitoreo_conductores_en_vivo",
     ),
+    path("nutricion/asistente/", nutricion.asistente, name="nutricion_asistente"),
     path("reportes/", ReporteView.as_view(), name="reportes"),
     path("sincronizacion/lote/", sincronizacion.lote, name="sincronizacion_lote"),
     path(

@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "apps.auditoria",
     "apps.monitoreo",
     "apps.sincronizacion",
+    "apps.nutricion",
 ]
 
 # No se usan sesiones de Django: la autenticación de la web y de la API es
@@ -125,6 +126,8 @@ REST_FRAMEWORK = {
         "login": env("LIMITE_LOGIN", default="10/min"),
         "renovar": env("LIMITE_RENOVAR", default="30/min"),
         "restablecer": env("LIMITE_RESTABLECER", default="5/hour"),
+        # Consultas al asistente de nutrición, por usuario (gastan cuota de Gemini).
+        "nutricion": env("LIMITE_NUTRICION", default="20/hour"),
     },
 }
 
@@ -132,6 +135,11 @@ REST_FRAMEWORK = {
 # con varios workers de gunicorn conviene una compartida, p. ej.
 # CACHE_URL=dbcache://cache_paego (y `manage.py createcachetable`) o rediscache://.
 CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
+
+# Asistente de nutrición de la app móvil (apps/nutricion). Sin clave responde 503.
+GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
+GEMINI_MODEL = env("GEMINI_MODEL", default="gemini-2.5-flash")
+GEMINI_TIMEOUT_SEG = env.int("GEMINI_TIMEOUT_SEG", default=30)
 
 # RF-02 / RNF-08: el access token dura poco y el refresh rota en cada uso.
 # Si el usuario pasa JWT_INACTIVIDAD_MIN minutos sin actividad, el refresh

@@ -34,3 +34,10 @@ class _LimitePorIp(_TasasVigentes, SimpleRateThrottle):
 def permitido(request, alcance):
     """Registra un intento y dice si todavía está dentro del límite."""
     return _LimitePorIp(alcance).allow_request(request, None)
+
+
+class LimitePorUsuario(_TasasVigentes, SimpleRateThrottle):
+    """Cupo por usuario autenticado; la subclase define `scope`."""
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {"scope": self.scope, "ident": request.user.pk}

@@ -58,6 +58,9 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
   permisos), `catalogo` (instituciones, conductores, vehículos, responsables, import SIMAT),
   `envios`, `monitoreo` (mapa, alertas, KPIs, posición en vivo, ruteo OSRM), `auditoria`
   (registro inmutable + reportes PDF/Excel), `sincronizacion` (lotes offline).
+  `nutricion` (solo API: `POST /api/nutricion/asistente/` reenvía el chat de la app a Gemini con
+  `GEMINI_API_KEY` del servidor, para que la clave no viaje en el APK; 503 sin clave, 502 si Gemini
+  falla; cupo por usuario `LIMITE_NUTRICION`, clase `LimitePorUsuario` de `cuentas/limite.py`).
 - **Una sola fuente de reglas:** API, panel y sincronización llaman a `apps/envios/servicios.py`
   (permisos por rol, transiciones, auditoría). No poner lógica de negocio en vistas/serializers.
   Las transiciones de estado (`ASIGNADO → EN_TRANSITO → ENTREGADO | CON_NOVEDAD`, `ASIGNADO →
