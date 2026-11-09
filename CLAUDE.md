@@ -64,6 +64,9 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
   CANCELADO`) por rol están en `apps/envios/estados.py`.
 - **Auth:** la app móvil usa `Authorization: Bearer`; el panel guarda el mismo JWT en cookies
   httpOnly (`paego_access`/`paego_refresh`) con CSRF. Access 10 min, refresh por inactividad 30 min.
+  Límite de intentos por IP (`apps/cuentas/limite.py`, alcances `login`/`renovar`/`restablecer`,
+  variables `LIMITE_*`) en la API (429) y en el login/restablecer del panel; contadores en la caché
+  (`CACHE_URL`, por defecto memoria local por proceso). `tests/conftest.py` limpia la caché en cada prueba.
 - **Offline (RF-38):** `POST /api/sincronizacion/lote/` aplica operaciones en orden cronológico,
   idempotentes por `uuid_cliente`, usando la hora real `ocurrido_en`. Despacho en
   `apps/sincronizacion/operaciones.py` (`OPERACIONES`); una operación puede referenciar un objeto

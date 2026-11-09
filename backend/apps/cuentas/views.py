@@ -16,7 +16,7 @@ from apps.catalogo import servicios as catalogo
 from apps.comun import PANEL, aplicar_errores, datos_formulario, disparar, es_htmx, responder
 from apps.monitoreo.en_vivo import desconectar
 
-from . import restablecimiento
+from . import limite, restablecimiento
 from .forms import (
     InicioSesionForm,
     NuevaContrasenaForm,
@@ -29,6 +29,8 @@ from .serializers import UsuarioAdministradorSerializer
 from .tokens import borrar_cookies, emitir_tokens, poner_cookies, revocar_refresh
 
 Usuario = get_user_model()
+
+MENSAJE_LIMITE = "Demasiados intentos desde esta conexión. Espere unos minutos e intente de nuevo."
 
 
 def _pagina_inicial(usuario):
@@ -62,6 +64,9 @@ class InicioSesionView(View):
 
     def post(self, request):
         form = InicioSesionForm(request.POST)
+        if not limite.permitido(request, "login"):
+            form.add_error(None, MENSAJE_LIMITE)
+            return render(request, self.template_name, {"form": form}, status=429)
         if not form.is_valid():
             return render(request, self.template_name, {"form": form})
         usuario = authenticate(
@@ -136,6 +141,9 @@ class SolicitarRestablecimientoView(View):
 
     def post(self, request):
         form = SolicitudRestablecimientoForm(request.POST)
+        if not limite.permitido(request, "restablecer"):
+            form.add_error(None, MENSAJE_LIMITE)
+            return render(request, self.template_name, {"form": form}, status=429)
         if form.is_valid():
             restablecimiento.solicitar(form.cleaned_data["email"])
             messages.success(

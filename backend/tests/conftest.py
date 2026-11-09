@@ -2,6 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 import pytest
+from django.core.cache import cache
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -11,6 +12,14 @@ from apps.cuentas.tokens import emitir_tokens
 from apps.envios import servicios
 
 CLAVE = "Clave-Segura-2026"
+
+
+@pytest.fixture(autouse=True)
+def _contadores_limpios():
+    """Los límites de intentos (apps/cuentas/limite.py) no pasan de una prueba a otra."""
+    cache.clear()
+    yield
+    cache.clear()
 
 
 def crear_usuario(email, rol, **extra):

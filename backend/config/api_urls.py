@@ -4,7 +4,6 @@ aplicación móvil Flutter (repositorio aparte)."""
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.auditoria.api import RegistroAuditoriaViewSet, ReporteView
 from apps.catalogo.api import (
@@ -29,7 +28,7 @@ router.register("auditoria", RegistroAuditoriaViewSet, basename="auditoria")
 
 urlpatterns = [
     path("auth/token/", cuentas.InicioSesionView.as_view(), name="token"),
-    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("auth/token/refresh/", cuentas.RenovarTokenView.as_view(), name="token_refresh"),
     path("auth/logout/", cuentas.CierreSesionView.as_view(), name="logout"),
     path("auth/yo/", cuentas.PerfilView.as_view(), name="perfil"),
     path(

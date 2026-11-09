@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.auditoria.models import Accion
 from apps.auditoria.servicios import registrar
@@ -15,6 +15,7 @@ from apps.catalogo import servicios as catalogo
 from apps.monitoreo.en_vivo import desconectar
 
 from . import restablecimiento
+from .limite import LimitePorAlcance
 from .models import Rol
 from .permisos import EsAdministrador
 from .serializers import (
@@ -35,6 +36,8 @@ class InicioSesionView(TokenObtainPairView):
     """RF-01: inicia sesión y devuelve el par de tokens JWT (access y refresh)."""
 
     serializer_class = InicioSesionSerializer
+    throttle_classes = [LimitePorAlcance]
+    throttle_scope = "login"
 
     def post(self, request, *args, **kwargs):
         respuesta = super().post(request, *args, **kwargs)
@@ -42,6 +45,13 @@ class InicioSesionView(TokenObtainPairView):
             usuario = Usuario.objects.get(pk=respuesta.data["usuario"]["id"])
             registrar(usuario, Accion.INICIO_SESION, "Inicio de sesión (API)", request=request)
         return respuesta
+
+
+class RenovarTokenView(TokenRefreshView):
+    """RF-02: renueva el access token con el refresh (que rota)."""
+
+    throttle_classes = [LimitePorAlcance]
+    throttle_scope = "renovar"
 
 
 class CierreSesionView(APIView):
@@ -87,6 +97,8 @@ class SolicitarRestablecimientoView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [LimitePorAlcance]
+    throttle_scope = "restablecer"
 
     @extend_schema(request=SolicitudRestablecimientoSerializer, responses={202: None})
     def post(self, request):
@@ -102,6 +114,8 @@ class SolicitarRestablecimientoView(APIView):
 class ConfirmarRestablecimientoView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [LimitePorAlcance]
+    throttle_scope = "restablecer"
 
     @extend_schema(request=ConfirmacionRestablecimientoSerializer, responses={204: None})
     def post(self, request):

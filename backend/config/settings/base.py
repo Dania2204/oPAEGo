@@ -120,7 +120,18 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Intentos por IP (apps/cuentas/limite.py). Al superarlos la API responde 429.
+    "DEFAULT_THROTTLE_RATES": {
+        "login": env("LIMITE_LOGIN", default="10/min"),
+        "renovar": env("LIMITE_RENOVAR", default="30/min"),
+        "restablecer": env("LIMITE_RESTABLECER", default="5/hour"),
+    },
 }
+
+# Caché de los contadores de intentos. Por defecto en memoria de cada proceso;
+# con varios workers de gunicorn conviene una compartida, p. ej.
+# CACHE_URL=dbcache://cache_paego (y `manage.py createcachetable`) o rediscache://.
+CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
 
 # RF-02 / RNF-08: el access token dura poco y el refresh rota en cada uso.
 # Si el usuario pasa JWT_INACTIVIDAD_MIN minutos sin actividad, el refresh
