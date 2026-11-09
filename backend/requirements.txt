@@ -1,0 +1,18 @@
+Django==5.2.17
+django-cors-headers==4.9.0
+django-environ==0.14.0
+django-filter==26.2
+djangorestframework==3.18.1
+djangorestframework_simplejwt==5.5.1
+drf-spectacular==0.30.0
+gunicorn==26.2.0
+openpyxl==3.1.5
+pillow==12.3.0
+psycopg[binary]==3.3.6
+reportlab==5.0.1
+whitenoise==6.12.0
+
+# Desarrollo y pruebas
+pytest==9.1.1
+pytest-django==4.14.0
+ruff==0.16.10

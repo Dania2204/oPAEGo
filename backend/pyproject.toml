@@ -1,0 +1,15 @@
+[project]
+name = "paego-web"
+version = "1.0.0"
+description = "PAEGo — plataforma web (Django + DRF) del sistema de gestión y monitoreo del PAE"
+requires-python = ">=3.12"
+
+# RNF-18: estilo PEP 8 verificado con ruff.
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["**/migrations/*", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "DJ"]
+ignore = ["DJ001"]

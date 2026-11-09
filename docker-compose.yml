@@ -8,7 +8,8 @@ services:
       POSTGRES_USER: pae_user
       POSTGRES_PASSWORD: pae_password
     ports:
-      - "5432:5432"
+      # 5434 en el host para no chocar con PostgreSQL instalados localmente (5432, 5433).
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

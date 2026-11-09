@@ -1,7 +1,36 @@
+# Python / Django (backend)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.sqlite3
+backend/media/
+backend/staticfiles/
+backend/.media-test/
+.pytest_cache/
+.ruff_cache/
+respaldos/
+
+# Prototipo Next.js
 node_modules/
 .next/
-.env
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Documentos temporales de Word
+docs/~$*
+
+# Datos personales (Ley 1581): el Anexo 6A de SIMAT trae una fila por estudiante.
+bd/
+
+# Reportes de pruebas y cobertura
+.coverage
+coverage.xml
+resultados-pruebas.xml
+htmlcov/
+
+# Copia comprimida de docs/wireframes (los PNG ya están versionados)
+docs/wireframes.zip
