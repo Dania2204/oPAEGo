@@ -195,3 +195,8 @@ PAEGO = {
     # RF-38: tolerancia al reloj adelantado del dispositivo.
     "TOLERANCIA_RELOJ_MIN": env.int("PAEGO_TOLERANCIA_RELOJ_MIN", default=5),
 }
+
+# Registros por consola (config/registro.py). LOG_FORMATO=json en producción.
+from config.registro import configuracion as _registro  # noqa: E402
+
+LOGGING = _registro(env("LOG_FORMATO", default="texto"), env("LOG_NIVEL", default="INFO"))

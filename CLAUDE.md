@@ -49,7 +49,9 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
 
 ## Arquitectura
 
-- `config/settings/{base,dev,test,prod}.py`; variables con `django-environ`. Reglas de negocio
+- `config/settings/{base,dev,test,prod}.py`; variables con `django-environ`. Registros por consola
+  (`config/registro.py`): `LOG_FORMATO=texto|json` (json por defecto en prod, una línea por evento)
+  y `LOG_NIVEL`; Sentry opcional en prod con `SENTRY_DSN` (`send_default_pii=False`, Ley 1581). Reglas de negocio
   configurables en `settings.PAEGO` (tolerancias, intervalos, umbral de "diferido").
 - `config/api_urls.py` monta toda la API bajo `/api/` (namespace `api`); `config/urls.py` monta el
   panel web (cada app trae su `urls.py` con vistas de plantilla) y el service worker en `/sw.js`.

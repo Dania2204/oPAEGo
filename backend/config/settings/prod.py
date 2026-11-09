@@ -3,6 +3,8 @@
 RNF-10: toda la comunicación debe ir por HTTPS.
 """
 
+from config.registro import activar_sentry, configuracion
+
 from .base import *  # noqa: F403
 
 DEBUG = False
@@ -38,3 +40,16 @@ MIDDLEWARE = [
 
 # Dominios desde los que se aceptan formularios (p. ej. https://paego.up.railway.app).
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])  # noqa: F405
+
+# Registros en JSON (una línea por evento) para filtrarlos en Railway.
+LOGGING = configuracion(
+    env("LOG_FORMATO", default="json"),  # noqa: F405
+    env("LOG_NIVEL", default="INFO"),  # noqa: F405
+)
+
+# Monitoreo de errores (opcional): solo si se define SENTRY_DSN.
+activar_sentry(
+    env("SENTRY_DSN", default=""),  # noqa: F405
+    entorno=env("SENTRY_ENTORNO", default="produccion"),  # noqa: F405
+    muestreo_trazas=env.float("SENTRY_MUESTREO_TRAZAS", default=0.0),  # noqa: F405
+)
