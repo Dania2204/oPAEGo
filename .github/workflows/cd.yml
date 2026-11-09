@@ -1,0 +1,65 @@
+# Despliegue continuo a Railway (servicio `web`).
+#
+# Se ejecuta solo cuando el CI de `main` terminó en verde. Requiere el secreto
+# del repositorio RAILWAY_TOKEN (token de proyecto de Railway, entorno
+# production). Sin el secreto, el job se salta con un aviso en vez de fallar.
+# Los comandos de arranque (migrate, demo_mes, collectstatic, gunicorn) están
+# configurados en el servicio de Railway, no aquí.
+name: CD Railway
+
+on:
+  workflow_run:
+    workflows: ["CI plataforma web"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: despliegue-produccion
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    name: Desplegar en Railway
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - name: Verificar el secreto
+        id: secreto
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::warning::Falta el secreto RAILWAY_TOKEN; no se despliega."
+            echo "listo=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listo=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secreto.outputs.listo == 'true'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v4
+        if: steps.secreto.outputs.listo == 'true'
+        with:
+          node-version: 22
+      - name: Subir el backend
+        if: steps.secreto.outputs.listo == 'true'
+        working-directory: backend
+        run: npx --yes @railway/cli@4 up --service web --ci
+      - name: Verificar que la API responde
+        if: steps.secreto.outputs.listo == 'true' && vars.URL_PUBLICA != ''
+        run: |
+          for i in $(seq 1 30); do
+            codigo=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.URL_PUBLICA }}/api/schema/")
+            [ "$codigo" = "200" ] && echo "API en línea" && exit 0
+            sleep 10
+          done
+          echo "::error::La API no respondió 200 en /api/schema/ tras el despliegue"
+          exit 1

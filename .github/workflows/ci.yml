@@ -1,0 +1,108 @@
+# RNF-18: integración continua de la plataforma web.
+# Cada push y pull request pasa por estilo (PEP 8), pruebas con cobertura
+# mínima sobre PostgreSQL y revisión de seguridad de dependencias y settings.
+name: CI plataforma web
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  estilo:
+    name: Estilo PEP 8 (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install ruff==0.16.10
+      - run: ruff check --output-format=github .
+      - run: ruff format --check .
+
+  pruebas:
+    name: Pruebas (PostgreSQL) y cobertura
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: pae_go_test
+          POSTGRES_USER: pae_user
+          POSTGRES_PASSWORD: pae_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pae_user" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: clave-de-ci-solo-para-pruebas-automatizadas-paego
+      TEST_DATABASE_URL: postgres://pae_user:pae_password@localhost:5432/pae_go_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Migraciones completas
+        run: python manage.py makemigrations --check --dry-run
+      - name: Pruebas con cobertura (mínimo 85 %)
+        run: >-
+          pytest --cov=apps --cov=config --cov-report=term-missing:skip-covered
+          --cov-report=xml --cov-fail-under=85 --junitxml=resultados-pruebas.xml
+      - name: Resumen de cobertura
+        if: always()
+        run: >-
+          test -f coverage.xml &&
+          python -c "import xml.etree.ElementTree as ET;
+          r = ET.parse('coverage.xml').getroot();
+          print(f'### Cobertura de pruebas: {float(r.get(\"line-rate\")) * 100:.1f} %')"
+          >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Publicar reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas-web
+          path: |
+            backend/coverage.xml
+            backend/resultados-pruebas.xml
+          retention-days: 14
+
+  seguridad:
+    name: Seguridad (dependencias y settings de producción)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt pip-audit
+      - name: Vulnerabilidades conocidas en dependencias (pip-audit)
+        run: pip-audit -r requirements.txt --strict
+      - name: Configuración de despliegue (RNF-10)
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          DJANGO_SECRET_KEY: ${{ github.run_id }}-clave-larga-y-aleatoria-solo-para-el-chequeo-de-despliegue-paego
+          DATABASE_URL: sqlite:///chequeo.sqlite3
+          DJANGO_ALLOWED_HOSTS: paego.example.com
+        run: python manage.py check --deploy --fail-level ERROR
