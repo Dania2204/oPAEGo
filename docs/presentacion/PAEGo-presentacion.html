@@ -1,0 +1,2402 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#3366cc">
+<title>PAEGo · Presentación</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%23004884'/><path d='M256 104c-62 0-112 50-112 112 0 84 112 192 112 192s112-108 112-192c0-62-50-112-112-112z' fill='%23fff'/><circle cx='256' cy='216' r='44' fill='%233366cc'/></svg>" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* PAEGo — tokens de diseño.
+ *
+ * Basados en el sistema de diseño GOV.CO (Kit UI 9.2): tipografía Work Sans y
+ * azul institucional. Si MinTIC actualiza la paleta, solo se cambia este archivo.
+ */
+:root {
+  /* Marca GOV.CO */
+  --govco-azul: #3366cc;
+  --govco-azul-oscuro: #004884;
+  --govco-azul-claro: #e8effb;
+
+  /* Acción e interacción (botones, enlaces, foco) */
+  --accion: var(--govco-azul);
+  --accion-hover: var(--govco-azul-oscuro);
+  --accion-suave: var(--govco-azul-claro);
+  --foco: #ffab00;
+
+  /* Superficies y tinta */
+  --fondo: #f2f4f7;
+  --superficie: #ffffff;
+  --superficie-2: #f8f9fb;
+  --borde: #e1e5eb;
+  --borde-fuerte: #b8bec8;
+  --tinta: #1b1b1b;
+  --tinta-2: #4b4b4b;
+  --tinta-3: #5f6672;
+
+  /* Estados del envío (RF-18): siempre con texto, nunca solo color */
+  --e-asignado: #3366cc;
+  --e-transito: #b25e00;
+  --e-entregado: #05785a;
+  --e-novedad: #c2410c;
+  --e-cancelado: #6b7280;
+  /* Fondos suaves de las etiquetas de estado */
+  --e-asignado-fondo: #eaf0fb;
+  --e-transito-fondo: #fdf1e3;
+  --e-entregado-fondo: #e6f4ee;
+  --e-novedad-fondo: #fdeee7;
+  --e-cancelado-fondo: #f0f1f3;
+
+  /* Retroalimentación */
+  --error: #a80521;
+  --error-fondo: #fdecee;
+  --aviso: #8a5300;
+  --aviso-fondo: #fff4e0;
+  --ok: #05785a;
+  --ok-fondo: #e7f5ef;
+  --info-fondo: var(--govco-azul-claro);
+
+  /* Tipografía */
+  --fuente: "Work Sans", "Segoe UI", Arial, sans-serif;
+  --mono: "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  --t-xs: 12px;
+  --t-sm: 13px;
+  --t-base: 14px;
+  --t-md: 15px;
+  --t-lg: 18px;
+  --t-xl: 24px;
+  --t-cifra: 32px;
+
+  /* Espaciado (escala de 4) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  /* Forma */
+  --r-control: 4px;
+  --r-panel: 6px;
+  --sombra-bloque: 0 1px 2px rgba(16, 24, 40, .06);
+  --sombra-panel: -8px 0 24px rgba(17, 24, 39, .12);
+  --sombra-menu: 0 6px 20px rgba(17, 24, 39, .14);
+
+  /* Estructura */
+  --alto-govco: 32px;
+  --alto-cabecera: 56px;
+  --ancho-nav: 232px;
+  --ancho-panel: 560px;
+}
+
+/* PAEGo — base: tipografía, estructura, formularios y tablas. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: var(--t-md);
+  line-height: 1.45;
+  color: var(--tinta);
+  background: var(--fondo);
+}
+h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.25; color: var(--tinta); }
+h1 { font-size: var(--t-xl); }
+h2 { font-size: var(--t-lg); }
+h3 { font-size: var(--t-md); }
+p { margin: 0 0 var(--s3); }
+a { color: var(--accion); text-underline-offset: 2px; }
+a:hover { color: var(--accion-hover); }
+small, .tenue { color: var(--tinta-3); }
+.num, time, td.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: var(--t-sm); }
+.oculto-visual { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[x-cloak] { display: none !important; }
+
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- barra GOV.CO y cabecera de entidad ---------- */
+.govco {
+  height: var(--alto-govco);
+  background: var(--govco-azul);
+  display: flex; align-items: center;
+  padding: 0 var(--s4);
+}
+.govco a { color: #fff; font-weight: 600; font-size: var(--t-sm); text-decoration: none; letter-spacing: .02em; display: inline-flex; align-items: center; gap: 8px; }
+.govco a::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-sizing: border-box; }
+.govco a:hover { text-decoration: underline; color: #fff; }
+
+.cabecera {
+  height: var(--alto-cabecera);
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  display: flex; align-items: center; gap: var(--s4);
+  padding: 0 var(--s4);
+  position: sticky; top: 0; z-index: 30;
+}
+.cabecera .entidad { display: flex; align-items: center; gap: 10px; line-height: 1.2; min-width: 0; text-decoration: none; }
+.cabecera .entidad .marca { width: 32px; height: 32px; flex: none; border-radius: var(--r-panel); }
+.cabecera .entidad .nombres { display: flex; flex-direction: column; min-width: 0; }
+.cabecera .entidad strong { font-size: var(--t-lg); color: var(--govco-azul-oscuro); letter-spacing: -.01em; }
+.cabecera .entidad .nombres > span { font-size: var(--t-xs); color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cabecera .fecha { color: var(--tinta-2); font-size: var(--t-sm); margin-left: auto; }
+.boton-menu { display: none; }
+
+/* ---------- estructura ---------- */
+.app {
+  --col-nav: var(--ancho-nav);
+  display: grid; grid-template-columns: var(--col-nav) minmax(0, 1fr);
+  min-height: calc(100vh - var(--alto-govco) - var(--alto-cabecera));
+  /* La columna del menú llega siempre hasta el final de la página. */
+  background: linear-gradient(to right, var(--superficie) calc(var(--col-nav) - 1px), var(--borde) 0, var(--borde) var(--col-nav), transparent 0);
+}
+.app.nav-compacta { --col-nav: 56px; }
+
+.nav {
+  background: var(--superficie);
+  border-right: 1px solid var(--borde);
+  padding: var(--s2) 0 var(--s5);
+  position: sticky; top: var(--alto-cabecera);
+  height: calc(100vh - var(--alto-cabecera));
+  overflow-y: auto;
+}
+.nav .grupo { padding: var(--s4) var(--s4) 6px calc(var(--s4) + 2px); font-size: var(--t-xs); color: var(--tinta-3); font-weight: 500; }
+.nav a {
+  display: flex; align-items: center; gap: var(--s2);
+  position: relative;
+  padding: 8px var(--s3); margin: 1px var(--s2);
+  border-radius: var(--r-control);
+  color: var(--tinta-2); text-decoration: none; font-size: var(--t-base);
+}
+.nav a:hover { background: var(--fondo); color: var(--tinta); }
+.nav a[aria-current="page"] { background: var(--accion-suave); color: var(--govco-azul-oscuro); font-weight: 600; }
+.nav a[aria-current="page"]::before { content: ""; position: absolute; left: calc(-1 * var(--s2)); top: 6px; bottom: 6px; width: 3px; border-radius: 0 2px 2px 0; background: var(--accion); }
+.nav a .cuenta { margin-left: auto; font-size: var(--t-xs); font-weight: 600; color: #fff; background: var(--e-novedad); border-radius: 10px; padding: 0 7px; line-height: 18px; }
+.nav a .cuenta.aviso { background: var(--e-transito); }
+.nav .icono { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; }
+.app.nav-compacta .nav .grupo, .app.nav-compacta .nav .texto, .app.nav-compacta .nav .cuenta { display: none; }
+.app.nav-compacta .nav a { justify-content: center; padding: 8px 0; }
+.nav .plegar { margin: var(--s4) var(--s2) 0; width: calc(100% - var(--s4)); justify-content: center; }
+
+.principal { padding: var(--s5) var(--s6) var(--s6); min-width: 0; max-width: 1600px; }
+.titulo-pagina { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3) var(--s4); margin-bottom: var(--s5); }
+.titulo-pagina h1 { letter-spacing: -.015em; }
+.titulo-pagina .sub { color: var(--tinta-3); font-size: var(--t-base); margin-top: 4px; }
+.titulo-pagina .acciones { margin-left: auto; }
+
+/* ---------- bloques ---------- */
+.bloque { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-panel); box-shadow: var(--sombra-bloque); }
+.bloque + .bloque { margin-top: var(--s4); }
+.bloque-cabeza { display: flex; align-items: center; gap: var(--s3); padding: 14px var(--s4); border-bottom: 1px solid var(--borde); }
+.bloque-cabeza h2 { font-size: var(--t-md); }
+.bloque-cabeza .acciones { margin-left: auto; }
+.bloque-cuerpo { padding: var(--s4); }
+.separado { margin-top: var(--s4); }
+
+/* ---------- formularios ---------- */
+form.formulario { display: grid; gap: var(--s4); }
+.campos { display: grid; gap: var(--s3) var(--s4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.campo.ancho { grid-column: 1 / -1; }
+label, .etiqueta-campo { font-size: var(--t-sm); font-weight: 500; color: var(--tinta-2); }
+.campo .obligatorio { color: var(--error); }
+input, select, textarea {
+  font: inherit; font-size: var(--t-base); color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--r-control);
+  padding: 7px 10px; width: 100%; min-height: 36px;
+}
+textarea { min-height: 64px; resize: vertical; }
+input:hover, select:hover, textarea:hover { border-color: var(--tinta-3); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accion); box-shadow: 0 0 0 3px var(--accion-suave); }
+input[type="checkbox"], input[type="radio"] { width: 16px; height: 16px; min-height: 0; padding: 0; accent-color: var(--accion); }
+.campo .ayuda { font-size: var(--t-xs); color: var(--tinta-3); }
+.errorlist { list-style: none; margin: 0; padding: 0; color: var(--error); font-size: var(--t-sm); }
+.campo.con-error input, .campo.con-error select, .campo.con-error textarea { border-color: var(--error); }
+.casilla { display: flex; align-items: flex-start; gap: var(--s2); font-weight: 400; color: var(--tinta-2); }
+.casilla input { margin-top: 2px; }
+
+/* ---------- botones ---------- */
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font: inherit; font-size: var(--t-base); font-weight: 500; line-height: 1;
+  min-height: 38px; padding: 0 16px;
+  border: 1px solid var(--accion); border-radius: var(--r-control);
+  transition: background-color .12s, border-color .12s, color .12s;
+  background: var(--accion); color: #fff; text-decoration: none; cursor: pointer; white-space: nowrap;
+}
+.boton:hover { background: var(--accion-hover); border-color: var(--accion-hover); color: #fff; }
+.boton.sec { background: var(--superficie); color: var(--accion); border-color: var(--borde-fuerte); }
+.boton.sec:hover { background: var(--accion-suave); border-color: var(--accion); color: var(--govco-azul-oscuro); }
+.boton.texto { background: none; border-color: transparent; color: var(--accion); padding: 0 8px; }
+.boton.texto:hover { background: var(--accion-suave); }
+.boton.peligro { background: var(--superficie); color: var(--error); border-color: #e3a5af; }
+.boton.peligro:hover { background: var(--error-fondo); border-color: var(--error); color: var(--error); }
+.boton.peligro.lleno { background: var(--error); color: #fff; border-color: var(--error); }
+.boton.chico { min-height: 30px; padding: 0 10px; font-size: var(--t-sm); }
+.boton:disabled, .boton[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.boton .atajo { font-size: var(--t-xs); opacity: .75; border: 1px solid currentColor; border-radius: 3px; padding: 1px 4px; }
+.acciones { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+form.en-linea { display: inline; margin: 0; }
+
+/* ---------- tablas ---------- */
+.tabla-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--t-base); }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+th { font-size: var(--t-xs); font-weight: 600; color: var(--tinta-3); background: var(--superficie-2); white-space: nowrap; position: sticky; top: 0; padding-top: 10px; padding-bottom: 10px; }
+td { height: 48px; }
+tbody tr:last-child td { border-bottom: 0; }
+tr.clic { cursor: pointer; }
+tr.clic:hover td { background: var(--superficie-2); }
+tr.seleccionada td { background: var(--accion-suave); }
+tr.seleccionada td:first-child { box-shadow: inset 3px 0 0 var(--accion); }
+tr.inactivo td { color: var(--tinta-3); }
+td.der, th.der { text-align: right; white-space: nowrap; }
+.celda-doble { display: flex; flex-direction: column; line-height: 1.25; }
+.celda-doble small { font-size: var(--t-xs); }
+.celda-doble a strong { white-space: nowrap; }
+
+/* ---------- avisos (mensajes) ---------- */
+.avisos { position: fixed; left: 50%; bottom: var(--s5); transform: translateX(-50%); z-index: 80; display: grid; gap: var(--s2); width: min(520px, calc(100vw - 32px)); }
+.aviso {
+  display: flex; gap: var(--s3); align-items: flex-start;
+  padding: 10px 14px; border-radius: var(--r-panel);
+  background: var(--tinta); color: #fff; font-size: var(--t-base); box-shadow: var(--sombra-menu);
+}
+.aviso.error { background: var(--error); }
+.aviso button { margin-left: auto; background: none; border: 0; color: inherit; cursor: pointer; font-size: var(--t-lg); line-height: 1; }
+.nota { padding: 10px 14px; border-radius: var(--r-control); font-size: var(--t-base); }
+.nota.error { background: var(--error-fondo); color: var(--error); }
+.nota.aviso-amarillo { background: var(--aviso-fondo); color: var(--aviso); }
+.nota.info { background: var(--info-fondo); color: var(--govco-azul-oscuro); }
+.nota.ok { background: var(--ok-fondo); color: var(--ok); }
+
+.vacio { padding: var(--s6) var(--s4); text-align: center; color: var(--tinta-3); }
+.vacio a { font-weight: 500; }
+
+.paginacion { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); padding: var(--s3) var(--s4); border-top: 1px solid var(--borde); font-size: var(--t-sm); color: var(--tinta-3); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 980px) {
+  .app, .app.nav-compacta { grid-template-columns: 1fr; background: none; }
+  .nav { position: fixed; z-index: 40; top: calc(var(--alto-govco) + var(--alto-cabecera)); left: 0; width: 260px; height: auto; bottom: 0; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--sombra-menu); }
+  .nav.abierta { transform: none; }
+  .boton-menu { display: inline-flex; }
+  .cabecera .fecha, .boton .atajo { display: none; }
+  .cabecera .entidad .nombres > span { max-width: 38vw; }
+  .principal { padding: var(--s4); }
+  .cabecera .entidad .marca { width: 28px; height: 28px; }
+  .campos { grid-template-columns: 1fr; }
+}
+
+/* PAEGo — componentes del panel. */
+
+/* ---------- estado del envío: punto + texto ---------- */
+.estado {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: var(--t-sm); font-weight: 500; line-height: 1;
+  padding: 5px 9px 5px 8px; border-radius: var(--r-control);
+  color: var(--tinta-2); background: var(--e-cancelado-fondo);
+}
+.estado::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.estado--ASIGNADO { color: var(--e-asignado); background: var(--e-asignado-fondo); }
+.estado--EN_TRANSITO { color: var(--e-transito); background: var(--e-transito-fondo); }
+.estado--ENTREGADO { color: var(--e-entregado); background: var(--e-entregado-fondo); }
+.estado--CON_NOVEDAD { color: var(--e-novedad); background: var(--e-novedad-fondo); }
+.estado--CANCELADO { color: var(--e-cancelado); background: var(--e-cancelado-fondo); }
+.marca-texto { font-size: var(--t-xs); font-weight: 600; color: var(--error); margin-left: 4px; }
+.marca-texto.ambar { color: var(--aviso); }
+.marca-texto.ok { color: var(--ok); }
+.marca-texto.tenue { color: var(--tinta-3); font-weight: 500; }
+
+/* ---------- pestañas de vista ---------- */
+.pestanas { display: flex; gap: var(--s1); border-bottom: 1px solid var(--borde); padding: 0 var(--s3); overflow-x: auto; }
+.pestanas a {
+  padding: 10px var(--s3); font-size: var(--t-base); color: var(--tinta-2); text-decoration: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+}
+.pestanas a:hover { color: var(--tinta); }
+.pestanas a[aria-current="true"] { color: var(--govco-azul-oscuro); border-bottom-color: var(--accion); border-bottom-width: 3px; font-weight: 600; }
+.pestanas .n { color: var(--tinta-3); font-weight: 400; margin-left: 4px; font-variant-numeric: tabular-nums; }
+
+/* ---------- barra de filtros ---------- */
+.filtros { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: flex-end; padding: var(--s3) var(--s4); border-bottom: 1px solid var(--borde); background: var(--superficie-2); }
+.filtros .campo { min-width: 140px; flex: 0 1 180px; }
+.filtros .campo.buscar { flex: 0 1 240px; }
+.filtros input, .filtros select { min-height: 34px; height: 34px; padding: 5px 8px; }
+.filtros .limpiar { align-self: center; font-size: var(--t-sm); }
+
+/* ---------- panel lateral (drawer) ---------- */
+.panel {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 60;
+  width: min(var(--ancho-panel), 100vw);
+  background: var(--superficie); box-shadow: var(--sombra-panel);
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .18s ease-out; visibility: hidden;
+}
+.panel.abierto { transform: none; visibility: visible; }
+.velo { position: fixed; inset: 0; background: rgba(17, 24, 39, .18); z-index: 55; }
+.panel-cabeza { display: flex; align-items: flex-start; gap: var(--s3); padding: var(--s4) var(--s4) var(--s3); border-bottom: 1px solid var(--borde); }
+.panel-cabeza h2 { font-size: var(--t-lg); }
+.panel-cabeza .sub { font-size: var(--t-sm); color: var(--tinta-3); margin-top: 2px; }
+.panel-cabeza .cerrar { margin-left: auto; }
+.panel-cuerpo { flex: 1; overflow-y: auto; padding: var(--s4); }
+.panel-cuerpo section + section { margin-top: var(--s5); }
+.panel-cuerpo h3 { font-size: var(--t-base); margin-bottom: var(--s2); color: var(--tinta-2); }
+.panel-pie { border-top: 1px solid var(--borde); padding: var(--s3) var(--s4); display: flex; gap: var(--s2); justify-content: flex-end; background: var(--superficie-2); }
+.panel .cargando { padding: var(--s6); color: var(--tinta-3); text-align: center; }
+.htmx-request .indicador, .htmx-request.indicador { opacity: 1; }
+.indicador { opacity: 0; transition: opacity .2s; font-size: var(--t-sm); color: var(--tinta-3); }
+
+/* ---------- datos clave ---------- */
+dl.datos { display: grid; grid-template-columns: 140px 1fr; gap: 6px var(--s3); margin: 0; font-size: var(--t-base); }
+dl.datos dt { color: var(--tinta-3); }
+dl.datos dd { margin: 0; color: var(--tinta); min-width: 0; }
+.codigo-verificacion { font-family: var(--mono); font-size: var(--t-lg); letter-spacing: .25em; color: var(--tinta); }
+.huella { font-family: var(--mono); font-size: var(--t-xs); word-break: break-all; color: var(--tinta-2); }
+
+/* Acciones del envío desplegables dentro del panel */
+.accion-desplegable { border: 1px solid var(--borde); border-radius: var(--r-panel); padding: var(--s3); margin-top: var(--s3); background: var(--superficie-2); }
+
+/* ---------- línea de tiempo (RF-34) ---------- */
+.linea-tiempo { list-style: none; margin: 0; padding: 0; }
+.linea-tiempo li { display: grid; grid-template-columns: 96px 1fr; gap: var(--s3); padding: 6px 0; border-top: 1px solid var(--borde); font-size: var(--t-base); }
+.linea-tiempo li:first-child { border-top: 0; }
+.linea-tiempo time { color: var(--tinta-3); font-size: var(--t-sm); }
+.linea-tiempo .quien { color: var(--tinta-3); font-size: var(--t-sm); }
+
+/* ---------- vista Hoy ---------- */
+.resumen-dia { overflow: hidden;
+  display: flex; flex-wrap: wrap; margin: 0 0 var(--s4);
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-panel); box-shadow: var(--sombra-bloque);
+  font-size: var(--t-sm); color: var(--tinta-3);
+}
+.resumen-dia span { flex: 1 1 auto; display: flex; align-items: baseline; gap: 6px; padding: 12px var(--s4); border-right: 1px solid var(--borde); box-shadow: 0 1px 0 var(--borde); }
+.resumen-dia span:last-child { border-right: 0; }
+.resumen-dia b { color: var(--tinta); font-size: var(--t-lg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.resumen-dia .alerta b, .resumen-dia .alerta { color: var(--error); }
+
+.atencion { list-style: none; margin: 0; padding: 0; }
+.atencion li { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: 12px var(--s4); border-top: 1px solid var(--borde); }
+.atencion li:first-child { border-top: 0; }
+.atencion .tipo { justify-self: start; font-size: var(--t-xs); font-weight: 600; padding: 4px 8px; border-radius: var(--r-control); line-height: 1.2; }
+.atencion .tipo.retraso { color: var(--error); background: var(--error-fondo); }
+.atencion .tipo.novedad { color: var(--e-novedad); background: var(--e-novedad-fondo); }
+.atencion .tipo.proximo { color: var(--aviso); background: var(--aviso-fondo); }
+.atencion .texto { min-width: 0; }
+.atencion .texto small { display: block; }
+
+.dividido { display: grid; grid-template-columns: minmax(380px, 1fr) minmax(0, 1.1fr); gap: var(--s4); align-items: start; }
+.dividido.mapa-oculto { grid-template-columns: minmax(0, 1fr); }
+.dividido.mapa-oculto .columna-mapa { display: none; }
+.columna-mapa { position: sticky; top: calc(var(--alto-cabecera) + var(--s4)); }
+.mapa { height: 460px; border-radius: var(--r-control); border: 1px solid var(--borde); background: #eef0f3; z-index: 0; overflow: hidden; }
+.mapa .leaflet-control-attribution { font-size: 10px; }
+.mapa-sin-datos { height: 100%; display: grid; place-items: center; margin: 0; padding: var(--s5); text-align: center; color: var(--tinta-3); font-size: var(--t-sm); }
+.marcador-vehiculo {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 8px 4px 6px; border-radius: 14px; white-space: nowrap;
+  background: var(--govco-azul-oscuro); color: #fff; border: 2px solid #fff;
+  font: 600 11px/1 var(--fuente); box-shadow: 0 2px 6px rgba(16, 24, 40, .3);
+}
+.marcador-vehiculo.retrasado { background: var(--error); }
+.marcador-vehiculo b { font-weight: 600; letter-spacing: .02em; }
+.mapa.alto { height: calc(100vh - 220px); min-height: 420px; }
+.mapa.chico { height: 240px; }
+.grupo-estado { padding: 8px var(--s4); height: auto; font-size: var(--t-xs); font-weight: 600; color: var(--tinta-3); background: var(--superficie-2); border-top: 1px solid var(--borde); border-bottom: 1px solid var(--borde); }
+.leyenda-mapa { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); font-size: var(--t-xs); color: var(--tinta-2); padding: var(--s3) var(--s1) 0; }
+.leyenda-mapa span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+
+/* ---------- indicadores (RF-32) ---------- */
+.cifras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4); }
+.cifra { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-panel); box-shadow: var(--sombra-bloque); padding: var(--s4) var(--s4) var(--s3); display: flex; flex-direction: column; gap: 4px; }
+.cifra .nombre { font-size: var(--t-sm); color: var(--tinta-2); font-weight: 500; }
+.cifra .valor { font-size: var(--t-cifra); font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.cifra .formula { font-size: var(--t-xs); color: var(--tinta-3); }
+.cifra canvas { margin-top: var(--s2); width: 100% !important; height: 72px !important; }
+
+/* ---------- bandeja de novedades ---------- */
+.bandeja { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); min-height: 520px; }
+.bandeja .lista { border-right: 1px solid var(--borde); max-height: calc(100vh - 240px); overflow-y: auto; }
+.bandeja .item { display: block; padding: 10px var(--s4); border-bottom: 1px solid var(--borde); color: inherit; text-decoration: none; }
+.bandeja .item:hover { background: var(--superficie-2); }
+.bandeja .item[aria-current="true"] { background: var(--accion-suave); }
+.bandeja .item .linea1 { display: flex; gap: var(--s2); align-items: baseline; }
+.bandeja .item .linea1 time { margin-left: auto; font-size: var(--t-xs); color: var(--tinta-3); }
+.bandeja .item p { margin: 2px 0 0; font-size: var(--t-sm); color: var(--tinta-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bandeja .item.sin-leer .linea1 strong::after { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accion); margin-left: 6px; vertical-align: 2px; }
+.bandeja .detalle { padding: var(--s4) var(--s5); }
+.foto-evidencia { max-width: 100%; max-height: 320px; border-radius: var(--r-control); border: 1px solid var(--borde); }
+
+/* ---------- editor de alimentos ---------- */
+.items-tabla td { padding: 4px 6px; height: auto; border-bottom: 0; }
+.items-tabla th { background: none; padding: 4px 6px; position: static; }
+.items-tabla input, .items-tabla select { min-height: 32px; }
+
+/* ---------- programar envíos ---------- */
+.programar-instituciones td { padding: 6px 10px; }
+.programar-instituciones select { min-height: 32px; padding: 4px 6px; }
+.pie-fijo { position: sticky; bottom: 0; z-index: 5; background: var(--superficie); border-top: 1px solid var(--borde); padding: var(--s3) var(--s4); display: flex; align-items: center; gap: var(--s3); margin-top: var(--s4); border-radius: 0 0 var(--r-panel) var(--r-panel); }
+.pie-fijo .resumen { color: var(--tinta-2); }
+
+/* ---------- menús y conexión ---------- */
+.menu { position: relative; }
+.menu-lista { position: absolute; right: 0; top: calc(100% + 6px); min-width: 240px; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-panel); box-shadow: var(--sombra-menu); padding: var(--s2) 0; z-index: 70; }
+.menu-lista .cabeza { padding: var(--s2) var(--s4) var(--s3); border-bottom: 1px solid var(--borde); margin-bottom: var(--s2); }
+.menu-lista .cabeza small { display: block; }
+.menu-lista a, .menu-lista button { display: block; width: 100%; text-align: left; padding: 8px var(--s4); background: none; border: 0; font: inherit; font-size: var(--t-base); color: var(--tinta); text-decoration: none; cursor: pointer; }
+.menu-lista a:hover, .menu-lista button:hover { background: var(--fondo); }
+.boton-usuario { display: inline-flex; align-items: center; gap: var(--s2); background: none; border: 1px solid transparent; border-radius: var(--r-control); padding: 4px 8px; font: inherit; font-size: var(--t-base); color: var(--tinta); cursor: pointer; }
+.boton-usuario:hover { border-color: var(--borde); }
+.iniciales { width: 28px; height: 28px; border-radius: 50%; background: var(--govco-azul-oscuro); color: #fff; display: grid; place-items: center; font-size: var(--t-xs); font-weight: 600; }
+
+.conexion { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-sm); color: var(--tinta-2); background: none; border: 1px solid var(--borde); border-radius: var(--r-control); padding: 4px 10px; cursor: pointer; font-family: inherit; }
+.conexion::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.conexion.sin-red::before { background: var(--e-transito); }
+.conexion.pendiente::before { background: var(--accion); }
+.conexion.error::before { background: var(--error); }
+.conexion.sin-red { border-color: #e9c48a; background: var(--aviso-fondo); color: var(--aviso); }
+
+/* ---------- diálogos ---------- */
+dialog.dialogo { border: 1px solid var(--borde); border-radius: var(--r-panel); padding: 0; width: min(520px, calc(100vw - 32px)); box-shadow: var(--sombra-menu); }
+dialog.dialogo::backdrop { background: rgba(17, 24, 39, .3); }
+dialog.dialogo .cabeza { padding: var(--s4); border-bottom: 1px solid var(--borde); }
+dialog.dialogo .cuerpo { padding: var(--s4); }
+dialog.dialogo .pie { padding: var(--s3) var(--s4); border-top: 1px solid var(--borde); display: flex; justify-content: flex-end; gap: var(--s2); }
+kbd { font-family: var(--mono); font-size: var(--t-xs); border: 1px solid var(--borde-fuerte); border-bottom-width: 2px; border-radius: 3px; padding: 1px 5px; background: var(--superficie-2); }
+.atajos { display: grid; grid-template-columns: auto 1fr; gap: var(--s2) var(--s4); margin: 0; }
+.atajos dd { margin: 0; }
+
+/* ---------- acceso (login) ---------- */
+.acceso-pagina { min-height: calc(100vh - var(--alto-govco)); display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 460px); }
+.acceso-info { background: var(--govco-azul-oscuro); color: #dce6f5; padding: 64px 56px; display: flex; flex-direction: column; justify-content: space-between; }
+.acceso-info .marca-acceso { display: flex; align-items: center; gap: 12px; color: #fff; font-size: var(--t-xl); font-weight: 600; margin-bottom: var(--s6); }
+.acceso-info .marca-acceso img { width: 44px; height: 44px; border-radius: var(--r-panel); background: #fff; padding: 4px; }
+.acceso-info li::marker { color: #9db8e3; }
+.acceso-info h1 { color: #fff; font-size: 30px; font-weight: 600; max-width: 18ch; margin: var(--s3) 0 var(--s4); }
+.acceso-info p { max-width: 46ch; font-size: var(--t-md); }
+.acceso-info .entidad-nombre { font-size: var(--t-sm); color: #b9cbe8; }
+.acceso-info ul { margin: var(--s5) 0 0; padding-left: 18px; max-width: 46ch; }
+.acceso-info li { margin-bottom: 6px; }
+.acceso-form { background: var(--superficie); padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; }
+.acceso-form > * { width: 100%; max-width: 380px; }
+.acceso-form h2 { font-size: var(--t-xl); margin-bottom: var(--s1); }
+.acceso-form .sub { color: var(--tinta-3); margin-bottom: var(--s5); font-size: var(--t-base); }
+.politica { font-size: var(--t-sm); color: var(--tinta-2); }
+.politica summary { cursor: pointer; color: var(--accion); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dividido { grid-template-columns: minmax(0, 1fr); }
+  .columna-mapa { position: static; }
+  .mapa.alto { height: 360px; min-height: 0; }
+}
+@media (max-width: 860px) {
+  .acceso-pagina { grid-template-columns: 1fr; }
+  .acceso-info { padding: var(--s5); }
+  .acceso-info ul { display: none; }
+  .acceso-form { padding: var(--s5); }
+  .bandeja { grid-template-columns: 1fr; }
+  .bandeja .lista { max-height: none; border-right: 0; }
+  .cifras { grid-template-columns: 1fr; }
+  .atencion li { grid-template-columns: 1fr; gap: 6px; }
+  .resumen-dia span { flex: 1 1 45%; border-right: 0; border-bottom: 1px solid var(--borde); }
+  dl.datos { grid-template-columns: 1fr; }
+}
+
+
+/* ---------- solo para la presentación ---------- */
+.demo-aviso {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px;
+  padding: 8px 16px; background: #fff4e0; color: #6b4100; border-bottom: 1px solid #f0d6a8;
+  font-size: 13px;
+}
+.demo-aviso strong { color: #4d2f00; }
+.demo-aviso .credenciales { margin-left: auto; font-family: var(--mono); font-size: 12px; }
+#vista-app[hidden], #vista-acceso[hidden], .pantalla[hidden] { display: none !important; }
+.nav a[data-pantalla] { cursor: pointer; }
+.panel-demo { position: fixed; inset: auto 24px 24px auto; }
+.menu-lista { display: none; }
+.menu.abierto .menu-lista { display: block; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-hoy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></symbol>
+  <symbol id="i-envios" viewBox="0 0 24 24"><path d="M3 6.5h11v9H3zM14 9.5h3.5l3 3v3H14"></path><circle cx="7" cy="17.5" r="1.8"></circle><circle cx="17" cy="17.5" r="1.8"></circle></symbol>
+  <symbol id="i-novedades" viewBox="0 0 24 24"><path d="M12 3.5 21 19H3z"></path><path d="M12 10v4M12 16.6v.4"></path></symbol>
+  <symbol id="i-programar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="1.5"></rect><path d="M3.5 9.5h17M8 3v4M16 3v4M9 14h6M12 11v6"></path></symbol>
+  <symbol id="i-instituciones" viewBox="0 0 24 24"><path d="M3 10 12 4.5 21 10"></path><path d="M5 10v9h14v-9M9.5 19v-5h5v5"></path></symbol>
+  <symbol id="i-responsables" viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.5"></circle><path d="M3.5 19c.8-3.3 3.3-5 6.5-5 1.6 0 3 .4 4 1.2"></path><path d="m15 18 2 2 4-4"></path></symbol>
+  <symbol id="i-conductores" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="1.5"></rect><circle cx="9" cy="11" r="2.2"></circle><path d="M5.8 16c.6-1.5 1.8-2.3 3.2-2.3s2.6.8 3.2 2.3M14.5 10h3.5M14.5 13.5h3.5"></path></symbol>
+  <symbol id="i-vehiculos" viewBox="0 0 24 24"><path d="M4 15.5V9l2.5-3.5h11L20 9v6.5"></path><path d="M4 12h16"></path><circle cx="7.5" cy="16.5" r="1.8"></circle><circle cx="16.5" cy="16.5" r="1.8"></circle></symbol>
+  <symbol id="i-indicadores" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"></path><path d="m7.5 15 3.5-4 3 2.5 5-6"></path></symbol>
+  <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M6 3.5h8.5L19 8v12.5H6z"></path><path d="M14 3.5V8h5M9 12.5h7M9 16h5"></path></symbol>
+  <symbol id="i-auditoria" viewBox="0 0 24 24"><path d="M12 3.5 19.5 6v5.5c0 4.3-3.1 7.6-7.5 9-4.4-1.4-7.5-4.7-7.5-9V6z"></path><path d="m9 12 2.2 2.2L15.5 10"></path></symbol>
+  <symbol id="i-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"></circle><path d="M3.5 19c.7-3 3-4.8 5.5-4.8s4.8 1.8 5.5 4.8"></path><path d="M15.5 5.6a3.2 3.2 0 0 1 0 5.8M17.5 14.6c1.6.7 2.6 2.2 3 4.4"></path></symbol>
+  <symbol id="i-plegar" viewBox="0 0 24 24"><path d="m14 7-5 5 5 5M19 7l-5 5 5 5"></path></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></symbol>
+  <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></symbol>
+</svg>
+
+<div class="demo-aviso" role="note">
+  <span><strong>Versión de demostración.</strong> Pantallas reales de la plataforma PAEGo con datos ficticios; las acciones no guardan cambios.</span>
+  <span class="credenciales">Ingreso: admin@paego.local · Paego2026!</span>
+</div>
+
+<div id="vista-acceso">
+  <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+  <main class="acceso-pagina">
+    <section class="acceso-info" aria-label="Sobre PAEGo">
+      <div>
+        <div class="marca-acceso"><img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%23004884'/><path d='M256 104c-62 0-112 50-112 112 0 84 112 192 112 192s112-108 112-192c0-62-50-112-112-112z' fill='%23fff'/><circle cx='256' cy='216' r='44' fill='%233366cc'/></svg>" alt="" width="44" height="44">PAEGo</div>
+        <p class="entidad-nombre">Alcaldía de Pasto · Secretaría de Educación Municipal</p>
+        <h1>Gestión y monitoreo del Programa de Alimentación Escolar</h1>
+        <p>PAEGo registra cada envío de alimentos desde la bodega hasta la institución educativa: quién lo lleva, por dónde va y quién lo recibe.</p>
+        <ul>
+          <li>Seguimiento de los vehículos en tiempo real.</li>
+          <li>Confirmación de recepción con código de verificación y evidencia.</li>
+          <li>Historial completo e inalterable para auditoría y rendición de cuentas.</li>
+        </ul>
+      </div>
+      <p class="entidad-nombre">Plataforma de uso exclusivo de la entidad administradora del PAE.</p>
+    </section>
+    <section class="acceso-form">
+      
+      
+<h2>Ingresar a PAEGo</h2>
+<p class="sub">Use el correo y la contraseña asignados por la entidad.</p>
+<form class="formulario" data-ingresar novalidate>
+  <input type="hidden" name="csrfmiddlewaretoken" value="RkQPm0GUCutnp68H334gsYFIVvBtfhp1JQ8bspuUdmE1vlIS6BqBZK457mryLInV">
+  
+
+  <div class="campo">
+  
+    <label for="id_email">Correo <span class="obligatorio" aria-hidden="true">*</span></label>
+    <input type="email" name="email" autofocus="" maxlength="320" required="" id="id_email" value="admin@paego.local">
+  
+  
+  
+</div>
+
+  <div class="campo">
+  
+    <label for="id_password">Contraseña <span class="obligatorio" aria-hidden="true">*</span></label>
+    <input type="password" name="password" required="" id="id_password" value="Paego2026!">
+  
+  
+  
+</div>
+
+  <div class="campo">
+  
+    <label class="casilla"><input type="checkbox" name="acepta_datos" checked id="id_acepta_datos"> <span>Acepto la política de tratamiento de datos personales (Ley 1581 de 2012).</span></label>
+  
+  
+  
+</div>
+
+  <details class="politica">
+    <summary>Leer la política de tratamiento de datos</summary>
+    <p style="margin-top:var(--s2)">PAEGo trata los datos personales de administradores, conductores y responsables de recepción
+      (nombre, documento, contacto y ubicación durante las entregas) con la única finalidad de gestionar, monitorear
+      y auditar la entrega de alimentos del PAE, conforme a la Ley 1581 de 2012. El acceso está restringido por rol y
+      los datos no se comparten con terceros. Puede solicitar la consulta, corrección o supresión de sus datos ante la
+      entidad administradora. Solo se pide aceptar la primera vez.</p>
+  </details>
+  <button class="boton" type="submit" style="width:100%">Ingresar</button>
+  <a href="/restablecer/" style="font-size:var(--t-sm)">¿Olvidó su contraseña?</a>
+</form>
+
+    </section>
+  </main>
+</div>
+
+<div id="vista-app" hidden>
+  <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+  <header class="cabecera">
+  <button type="button" class="boton texto boton-menu" @click="navAbierta = !navAbierta" aria-label="Menú">
+    <svg class="icono" width="20" height="20" stroke="currentColor" fill="none" stroke-width="1.7"><use href="#i-menu"></use></svg>
+  </button>
+  <a class="entidad" href="#hoy">
+    <img class="marca" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%23004884'/><path d='M256 104c-62 0-112 50-112 112 0 84 112 192 112 192s112-108 112-192c0-62-50-112-112-112z' fill='%23fff'/><circle cx='256' cy='216' r='44' fill='%233366cc'/></svg>" alt="" width="32" height="32">
+    <span class="nombres"><strong>PAEGo</strong><span>Alcaldía de Pasto · Secretaría de Educación Municipal</span></span>
+  </a>
+  <span class="fecha">Miércoles 7 de octubre</span>
+
+  
+  <div class="menu" x-data="{ abierto: false }" @click.outside="abierto = false">
+    <button type="button" id="estado-conexion" class="conexion " @click="abierto = !abierto" aria-haspopup="true" :aria-expanded="abierto" aria-expanded="false">En línea</button>
+    <div class="menu-lista" x-show="abierto" style="min-width: 300px; display: none;">
+      <div class="cabeza"><strong>Sincronización</strong><small id="detalle-conexion" class="tenue">Todos los cambios están guardados en el servidor.</small></div>
+      <button type="button" id="boton-sincronizar">Sincronizar ahora</button>
+      <button type="button" id="ver-rechazadas">Ver operaciones rechazadas</button>
+    </div>
+  </div>
+
+  <div class="menu" x-data="{ abierto: false }" @click.outside="abierto = false">
+    <button type="button" class="boton-usuario" @click="abierto = !abierto" aria-haspopup="true" :aria-expanded="abierto" aria-expanded="false">
+      <span class="iniciales" aria-hidden="true">AA</span>
+      <span>Ana</span>
+    </button>
+    <div class="menu-lista" x-show="abierto" style="display: none;">
+      <div class="cabeza"><strong>Ana Administradora</strong><small class="tenue">admin@paego.local · Administrador</small></div>
+      <a href="/api/docs/" target="_blank" rel="noopener">Documentación de la API</a>
+      <button type="button" onclick="document.getElementById('dialogo-atajos').showModal()">Atajos de teclado</button>
+      <form method="post" action="/salir/" class="en-linea"><button type="submit">Cerrar sesión</button></form>
+    </div>
+  </div>
+</header>
+  <div class="app">
+    <nav class="nav" :class="{ abierta: navAbierta }" aria-label="Navegación principal">
+    <div class="grupo">Operación</div>
+    <a href="#hoy" data-pantalla="hoy" title="Hoy">
+      <svg class="icono"><use href="#i-hoy"></use></svg><span class="texto">Hoy</span>
+      <span class="cuenta aviso" title="Envíos retrasados">1</span></a>
+    <a href="#envios" data-pantalla="envios" title="Envíos">
+      <svg class="icono"><use href="#i-envios"></use></svg><span class="texto">Envíos</span></a>
+    <a href="#novedades" data-pantalla="novedades" title="Novedades">
+      <svg class="icono"><use href="#i-novedades"></use></svg><span class="texto">Novedades</span>
+      <span class="cuenta" title="Sin atender">1</span></a>
+
+    <div class="grupo">Planeación</div>
+    <a href="#programar" data-pantalla="programar" title="Programar envíos">
+      <svg class="icono"><use href="#i-programar"></use></svg><span class="texto">Programar envíos</span></a>
+
+    <div class="grupo">Catálogo</div>
+    <a href="#instituciones" data-pantalla="instituciones" title="Instituciones">
+      <svg class="icono"><use href="#i-instituciones"></use></svg><span class="texto">Instituciones</span></a>
+    <a href="#responsables" data-pantalla="responsables" title="Responsables de recepción">
+      <svg class="icono"><use href="#i-responsables"></use></svg><span class="texto">Responsables</span></a>
+    <a href="#conductores" data-pantalla="conductores" title="Conductores">
+      <svg class="icono"><use href="#i-conductores"></use></svg><span class="texto">Conductores</span></a>
+    <a href="#vehiculos" data-pantalla="vehiculos" title="Vehículos">
+      <svg class="icono"><use href="#i-vehiculos"></use></svg><span class="texto">Vehículos</span></a>
+
+    <div class="grupo">Control</div>
+    <a href="#indicadores" data-pantalla="indicadores" title="Indicadores">
+      <svg class="icono"><use href="#i-indicadores"></use></svg><span class="texto">Indicadores</span></a>
+    <a href="#reportes" data-pantalla="reportes" title="Reportes">
+      <svg class="icono"><use href="#i-reportes"></use></svg><span class="texto">Reportes</span></a>
+    <a href="#auditoria" data-pantalla="auditoria" title="Auditoría">
+      <svg class="icono"><use href="#i-auditoria"></use></svg><span class="texto">Auditoría</span></a>
+
+    <div class="grupo">Administración</div>
+    <a href="#usuarios" data-pantalla="usuarios" title="Usuarios">
+      <svg class="icono"><use href="#i-usuarios"></use></svg><span class="texto">Usuarios</span></a>
+
+    <button type="button" class="boton texto chico plegar" @click="navCompacta = !navCompacta" :title="navCompacta ? 'Expandir menú' : 'Contraer menú'" title="Contraer menú">
+      <svg class="icono" :style="navCompacta &amp;&amp; 'transform:scaleX(-1)'" style="false"><use href="#i-plegar"></use></svg><span class="texto">Contraer</span>
+    </button>
+  </nav>
+    <main class="principal" id="principal">
+      <section class="pantalla" id="hoy" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Operación de hoy</h1>
+    <div class="sub">Miércoles 7 de octubre de 2026 · se actualiza cada 10 segundos</div>
+  </div>
+  <div class="acciones">
+    <button type="button" class="boton sec" hx-get="/envios/nuevo/" hx-target="#panel-contenido" hx-push-url="true">Nuevo envío <span class="atajo" aria-hidden="true">n</span></button>
+    <a class="boton" href="/envios/programar/">Programar envíos</a>
+  </div>
+</div>
+
+<div class="dividido" x-data="{ sinMapa: false }" :class="{ 'mapa-oculto': sinMapa }">
+  
+  <div id="estado-hoy" hx-get="/panel/" hx-trigger="every 10s [!document.hidden], envios-actualizados from:body, novedades-actualizadas from:body" hx-swap="innerHTML">
+    <p class="resumen-dia" aria-live="polite">
+  <span><b>3</b> programados para hoy</span>
+  <span><b>1</b> en ruta</span>
+  <span><b>1</b> entregado</span>
+  <span class="alerta"><b>1</b> retrasado</span>
+  <span><b>1</b> novedad sin atender</span>
+</p>
+
+
+<section class="bloque" aria-labelledby="titulo-atencion">
+  <div class="bloque-cabeza"><h2 id="titulo-atencion">Requiere atención</h2></div>
+  <ul class="atencion">
+    
+      <li>
+        <span class="tipo retraso">Retrasado</span>
+        <span class="texto"><strong>PAE-261007-8236</strong> · I.E.M. Ciudadela de la Paz — Principal
+          <small class="tenue">Programado 07/10 10:35 · Carlos Pérez · asignado</small></span>
+        <button type="button" class="boton sec chico" hx-get="/envios/4/" hx-target="#panel-contenido" hx-push-url="true">Revisar</button>
+      </li>
+    
+    
+      <li>
+        <span class="tipo novedad">Novedad</span>
+        <span class="texto"><strong>PAE-261007-9732</strong> · Retraso: Cierre vial en la avenida Panamericana.
+          <small class="tenue">Trayecto (conductor) · 12:29 · Luisa Gómez</small></span>
+        <span class="acciones">
+          <a class="boton texto chico" href="/novedades/1/">Ver</a>
+          <form class="en-linea" method="post" action="/novedades/1/" hx-post="/novedades/1/" hx-target="#estado-hoy" hx-swap="none">
+            <button class="boton sec chico" type="submit">Atendida</button>
+          </form>
+        </span>
+      </li>
+    
+    
+  </ul>
+</section>
+
+
+<section class="bloque separado" aria-labelledby="titulo-dia">
+  <div class="bloque-cabeza">
+    <h2 id="titulo-dia">Envíos del día</h2>
+    <span class="tenue num" style="font-size:var(--t-xs)">Actualizado 12:42:32</span>
+  </div>
+  
+  <div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Hora</th><th>Envío</th><th>Conductor</th><th>Estado</th></tr></thead>
+    
+      <tbody>
+        <tr><td colspan="4" class="grupo-estado">En ruta · 1</td></tr>
+        
+          <tr class="clic" data-envio-id="2" hx-get="/envios/2/" hx-target="#panel-contenido" hx-push-url="true">
+  <td class="num">13:15</td>
+  <td><span class="celda-doble"><a href="/envios/2/" onclick="event.preventDefault()"><strong>PAE-261007-9732</strong></a><small class="tenue">I.E.M. Ciudadela de la Paz — Principal</small></span></td>
+  <td><span class="celda-doble">Luisa Gómez<small class="tenue">XYZ789</small></span></td>
+  <td><span class="estado estado--EN_TRANSITO">En tránsito</span>
+</td>
+</tr>
+
+        
+      </tbody>
+    
+      <tbody>
+        <tr><td colspan="4" class="grupo-estado">Por salir · 1</td></tr>
+        
+          <tr class="clic" data-envio-id="4" hx-get="/envios/4/" hx-target="#panel-contenido" hx-push-url="true">
+  <td class="num">10:35</td>
+  <td><span class="celda-doble"><a href="/envios/4/" onclick="event.preventDefault()"><strong>PAE-261007-8236</strong></a><small class="tenue">I.E.M. Ciudadela de la Paz — Principal</small></span></td>
+  <td><span class="celda-doble">Carlos Pérez<small class="tenue">Sin vehículo</small></span></td>
+  <td><span class="estado estado--ASIGNADO">Asignado</span> <span class="marca-texto">Retrasado</span>
+</td>
+</tr>
+
+        
+      </tbody>
+    
+      <tbody>
+        <tr><td colspan="4" class="grupo-estado">Entregados · 1</td></tr>
+        
+          <tr class="clic" data-envio-id="1" hx-get="/envios/1/" hx-target="#panel-contenido" hx-push-url="true">
+  <td class="num">07:35</td>
+  <td><span class="celda-doble"><a href="/envios/1/" onclick="event.preventDefault()"><strong>PAE-261007-B555</strong></a><small class="tenue">Escuela Normal Superior de Pasto — Principal</small></span></td>
+  <td><span class="celda-doble">Carlos Pérez<small class="tenue">ABC123</small></span></td>
+  <td><span class="estado estado--ENTREGADO">Entregado</span>
+</td>
+</tr>
+
+        
+      </tbody>
+    
+  </table>
+  </div>
+  
+</section>
+
+<script type="application/json" id="datos-hoy">[{"id": 1, "codigo": "PAE-261007-B555", "estado": "ENTREGADO", "institucion": "Escuela Normal Superior de Pasto \u2014 Principal", "conductor": "Carlos P\u00e9rez", "destino": [1.2168, -77.2883], "posicion": null, "posicion_en": null, "ruta": [], "retrasado": false}, {"id": 4, "codigo": "PAE-261007-8236", "estado": "ASIGNADO", "institucion": "I.E.M. Ciudadela de la Paz \u2014 Principal", "conductor": "Carlos P\u00e9rez", "destino": [1.1999, -77.2628], "posicion": null, "posicion_en": null, "ruta": [], "retrasado": true}, {"id": 2, "codigo": "PAE-261007-9732", "estado": "EN_TRANSITO", "institucion": "I.E.M. Ciudadela de la Paz \u2014 Principal", "conductor": "Luisa G\u00f3mez", "destino": [1.1999, -77.2628], "posicion": [1.204, -77.269], "posicion_en": "2026-10-07T17:31:46.724344+00:00", "ruta": [[1.214, -77.281], [1.2115, -77.278], [1.209, -77.275], [1.2065, -77.272], [1.204, -77.269]], "retrasado": false}]</script>
+
+  </div>
+
+  <div class="columna-mapa">
+    <div class="bloque">
+      <div class="bloque-cabeza">
+        <h2>Mapa</h2>
+        <div class="acciones"><button type="button" class="boton texto chico" @click="sinMapa = true">Ocultar</button></div>
+      </div>
+      <div class="bloque-cuerpo" style="padding:var(--s2)">
+        <div id="mapa-hoy" class="mapa alto leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" data-mapa="hoy" data-fuente="datos-hoy" data-zona="estado-hoy" role="img" aria-label="Mapa con los envíos del día y la posición de los vehículos en ruta" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(-351px, -400px, 0px) scale(1);"><img alt="" src="https://tile.openstreetmap.org/14/4674/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(354px, 482px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4675/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(610px, 482px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4674/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(354px, 738px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4675/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(610px, 738px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4674/8135.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(354px, 226px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4675/8135.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(610px, 226px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4673/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(98px, 482px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4676/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(866px, 482px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4673/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(98px, 738px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4676/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(866px, 738px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4674/8138.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(354px, 994px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4675/8138.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(610px, 994px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4673/8135.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(98px, 226px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4676/8135.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(866px, 226px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4673/8138.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(98px, 994px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4676/8138.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(866px, 994px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="685" height="814" viewBox="-57 -68 685 814" style="transform: translate3d(-57px, -68px, 0px);"><g><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#05785a" fill-opacity="1" fill-rule="evenodd" d="M130,240a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#3366cc" fill-opacity="1" fill-rule="evenodd" d="M427,437a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 "></path><path class="leaflet-interactive" stroke="#b25e00" stroke-opacity="0.8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M222 273L362 389"></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#b25e00" fill-opacity="1" fill-rule="evenodd" d="M427,437a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 "></path></g></svg></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" title="PAE-261007-9732" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; transform: translate3d(362px, 389px, 0px); z-index: 389;"><span class="marcador-vehiculo"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"></path><circle cx="7" cy="17" r="2" fill="currentColor"></circle><circle cx="17" cy="17" r="2" fill="currentColor"></circle></svg><b>9732</b></span></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(1.19683e+06px, 2.08307e+06px, 0px) scale(8192);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a></div></div></div></div>
+        <div class="leyenda-mapa">
+          <span style="--c:var(--govco-azul-oscuro)">Vehículo en ruta (etiqueta con el código)</span>
+          <span style="--c:var(--error)">Vehículo retrasado</span>
+          <span style="--c:var(--e-asignado)">Destino por salir</span>
+          <span style="--c:var(--e-transito)">Destino en ruta</span>
+          <span style="--c:var(--e-entregado)">Destino entregado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="boton sec chico" x-show="sinMapa" @click="sinMapa = false; $nextTick(() =&gt; document.getElementById('mapa-hoy')._mapa.invalidateSize())" style="position: fixed; right: 24px; bottom: 24px; display: none;">Mostrar mapa</button>
+</div>
+
+  </section>
+<section class="pantalla" id="envios" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Envíos</h1>
+    <div class="sub">Registro de despachos hacia las instituciones educativas</div>
+  </div>
+  <div class="acciones">
+    <a class="boton sec" href="/envios/programar/">Programar varios</a>
+    <a class="boton" href="/envios/nuevo/" hx-get="/envios/nuevo/" hx-target="#panel-contenido" hx-push-url="true">Nuevo envío <span class="atajo" aria-hidden="true">n</span></a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" action="/envios/" hx-get="/envios/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, input from:#id_codigo delay:350ms, submit">
+    <input type="hidden" name="vista" id="vista-actual" value="todos">
+    <div class="campo buscar"><label for="id_codigo">Buscar código</label>
+      <input type="search" name="codigo" id="id_codigo" value="" placeholder="PAE-…" data-buscar="" autocomplete="off"></div>
+    <div class="campo"><label for="id_fecha_desde">Desde</label><input type="date" name="fecha_desde" id="id_fecha_desde"></div>
+    <div class="campo"><label for="id_fecha_hasta">Hasta</label><input type="date" name="fecha_hasta" id="id_fecha_hasta"></div>
+    <div class="campo"><label for="id_institucion">Institución</label><select name="institucion" id="id_institucion">
+  <option value="" selected="">Todas</option>
+
+  <option value="1">Escuela Normal Superior de Pasto — Principal</option>
+
+  <option value="2">I.E.M. Ciudadela de la Paz — Principal</option>
+
+</select></div>
+    <div class="campo"><label for="id_conductor">Conductor</label><select name="conductor" id="id_conductor">
+  <option value="" selected="">Todos</option>
+
+  <option value="1">Carlos Pérez (1085000001)</option>
+
+  <option value="2">Luisa Gómez (1085000002)</option>
+
+</select></div>
+    <div class="campo"><label for="id_estado">Estado</label><select name="estado" id="id_estado">
+  <option value="" selected="">Todos</option>
+
+  <option value="ASIGNADO">Asignado</option>
+
+  <option value="EN_TRANSITO">En tránsito</option>
+
+  <option value="ENTREGADO">Entregado</option>
+
+  <option value="CON_NOVEDAD">Con novedad</option>
+
+  <option value="CANCELADO">Cancelado</option>
+
+</select></div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="envios-actualizados">
+    
+<nav class="pestanas" aria-label="Vistas de envíos">
+  
+    <a href="/envios/?vista=todos" hx-get="/envios/?vista=todos" hx-target="#resultados" hx-push-url="true" aria-current="true">Todos<span class="n">4</span></a>
+  
+    <a href="/envios/?vista=hoy" hx-get="/envios/?vista=hoy" hx-target="#resultados" hx-push-url="true">Hoy<span class="n">3</span></a>
+  
+    <a href="/envios/?vista=proximos" hx-get="/envios/?vista=proximos" hx-target="#resultados" hx-push-url="true">Próximos<span class="n">1</span></a>
+  
+    <a href="/envios/?vista=en_ruta" hx-get="/envios/?vista=en_ruta" hx-target="#resultados" hx-push-url="true">En ruta<span class="n">1</span></a>
+  
+    <a href="/envios/?vista=novedad" hx-get="/envios/?vista=novedad" hx-target="#resultados" hx-push-url="true">Con novedad<span class="n">0</span></a>
+  
+  
+</nav>
+<div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Programado</th><th>Envío</th><th>Conductor</th><th>Estado</th><th>Entrega</th></tr></thead>
+    <tbody>
+    
+      <tr class="clic" hx-get="/envios/3/" hx-target="#panel-contenido" hx-push-url="true">
+        <td class="num"><span class="celda-doble">08/10/2026<small class="tenue">07:30</small></span></td>
+        <td><span class="celda-doble"><a href="/envios/3/" onclick="event.preventDefault()"><strong>PAE-261008-7672</strong></a><small class="tenue">Escuela Normal Superior de Pasto — Principal</small></span></td>
+        <td><span class="celda-doble">Carlos Pérez<small class="tenue">ABC123</small></span></td>
+        <td><span class="estado estado--ASIGNADO">Asignado</span>
+</td>
+        <td class="num"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr class="clic" hx-get="/envios/2/" hx-target="#panel-contenido" hx-push-url="true">
+        <td class="num"><span class="celda-doble">07/10/2026<small class="tenue">13:15</small></span></td>
+        <td><span class="celda-doble"><a href="/envios/2/" onclick="event.preventDefault()"><strong>PAE-261007-9732</strong></a><small class="tenue">I.E.M. Ciudadela de la Paz — Principal</small></span></td>
+        <td><span class="celda-doble">Luisa Gómez<small class="tenue">XYZ789</small></span></td>
+        <td><span class="estado estado--EN_TRANSITO">En tránsito</span>
+</td>
+        <td class="num"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr class="clic" hx-get="/envios/4/" hx-target="#panel-contenido" hx-push-url="true">
+        <td class="num"><span class="celda-doble">07/10/2026<small class="tenue">10:35</small></span></td>
+        <td><span class="celda-doble"><a href="/envios/4/" onclick="event.preventDefault()"><strong>PAE-261007-8236</strong></a><small class="tenue">I.E.M. Ciudadela de la Paz — Principal</small></span></td>
+        <td><span class="celda-doble">Carlos Pérez<small class="tenue">Sin vehículo</small></span></td>
+        <td><span class="estado estado--ASIGNADO">Asignado</span> <span class="marca-texto">Retrasado</span>
+</td>
+        <td class="num"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr class="clic" hx-get="/envios/1/" hx-target="#panel-contenido" hx-push-url="true">
+        <td class="num"><span class="celda-doble">07/10/2026<small class="tenue">07:35</small></span></td>
+        <td><span class="celda-doble"><a href="/envios/1/" onclick="event.preventDefault()"><strong>PAE-261007-B555</strong></a><small class="tenue">Escuela Normal Superior de Pasto — Principal</small></span></td>
+        <td><span class="celda-doble">Carlos Pérez<small class="tenue">ABC123</small></span></td>
+        <td><span class="estado estado--ENTREGADO">Entregado</span>
+</td>
+        <td class="num"><span class="celda-doble">07/10 07:35
+            <small class="marca-texto ok">A tiempo</small></span>
+          </td>
+      </tr>
+    
+    </tbody>
+  </table>
+</div>
+
+
+
+  </div>
+</div>
+
+  </section>
+<section class="pantalla" id="detalle" hidden>
+    
+<p style="margin-bottom:var(--s3)"><a href="/envios/">← Envíos</a></p>
+<div class="bloque" style="max-width:860px;display:flex;flex-direction:column">
+  <div class="panel-cabeza">
+  <div>
+    <h2>PAE-261007-B555</h2>
+    <div class="sub">Escuela Normal Superior de Pasto — Principal · <span class="estado estado--ENTREGADO">Entregado</span>
+</div>
+  </div>
+  
+</div>
+
+<div class="panel-cuerpo" x-data="{ accion: null }">
+  
+  <div class="acciones">
+    
+    
+    <a class="boton texto chico" href="/envios/nuevo/?duplicar=1">Duplicar</a>
+  </div>
+
+  
+  
+
+  <section class="separado">
+    <dl class="datos">
+      <dt>Programado</dt><dd class="num">Miércoles 7 de octubre, 07:35 <small class="tenue">(tolerancia hasta 08:05)</small></dd>
+      <dt>Destino</dt><dd>Escuela Normal Superior de Pasto — Principal<br><small class="tenue">Calle 18 # 41-60, Pasto, Nariño</small></dd>
+      <dt>Conductor</dt><dd>Carlos Pérez · <span class="num">300000001</span></dd>
+      <dt>Vehículo</dt><dd>ABC123 (Furgón)</dd>
+      <dt>Código de verificación</dt><dd><span class="codigo-verificacion">183139</span><br><small class="tenue">Lo muestra el conductor; la institución lo digita al recibir.</small></dd>
+      <dt>Salida</dt><dd class="num">07/10/2026 06:55</dd>
+      <dt>Llegada</dt><dd class="num">07/10/2026 07:30</dd>
+      <dt>Entrega</dt><dd class="num">07/10/2026 07:35
+        <span class="marca-texto ok">A tiempo</span></dd>
+      
+      
+    </dl>
+  </section>
+
+  <section>
+    <h3>Alimentos</h3>
+    <table>
+      <thead><tr><th>Producto</th><th class="der">Programado</th><th class="der">Recibido</th></tr></thead>
+      <tbody>
+      
+        <tr><td>Leche entera UHT</td>
+          <td class="der num">320 unidades</td>
+          <td class="der num">320</td></tr>
+      
+        <tr><td>Pan integral</td>
+          <td class="der num">320 unidades</td>
+          <td class="der num">320</td></tr>
+      
+        <tr><td>Fruta (banano)</td>
+          <td class="der num">40 kilogramos</td>
+          <td class="der num">40</td></tr>
+      
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h3>Ruta recorrida <small class="tenue">· 7 posiciones</small></h3>
+    <div class="mapa chico leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" data-mapa="ruta" data-datos="{&quot;ruta&quot;: [[1.208, -77.277], [1.2097, -77.2792], [1.2114, -77.2814], [1.2131, -77.2836], [1.2148, -77.2858], [1.2165, -77.288], [1.2168, -77.2883]], &quot;destino&quot;: [1.2168, -77.2883], &quot;destino_nombre&quot;: &quot;Escuela Normal Superior de Pasto \u2014 Principal&quot;, &quot;salida&quot;: [1.208, -77.277], &quot;entrega&quot;: [1.2168, -77.2883]}" role="img" aria-label="Ruta recorrida por el vehículo" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(-66px, -51px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(0px, 0px, 0px) scale(1);"><img alt="" src="https://tile.openstreetmap.org/14/4674/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(278px, -39px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4674/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(278px, 217px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4673/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(22px, -39px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4675/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(534px, -39px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4673/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(22px, 217px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4675/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(534px, 217px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4672/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-234px, -39px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4676/8136.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(790px, -39px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4672/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-234px, 217px, 0px); opacity: 1;"><img alt="" src="https://tile.openstreetmap.org/14/4676/8137.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(790px, 217px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="989" height="286" viewBox="-16 27 989 286" style="transform: translate3d(-16px, 27px, 0px);"><g><path class="leaflet-interactive" stroke="#3366cc" stroke-opacity="0.85" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M544 222L412 119"></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#5f6672" fill-opacity="1" fill-rule="evenodd" d="M538,222a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#3366cc" fill-opacity="1" fill-rule="evenodd" d="M405,119a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#05785a" fill-opacity="1" fill-rule="evenodd" d="M405,119a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#1b1b1b" fill-opacity="1" fill-rule="evenodd" d="M405,119a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 "></path></g></svg></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(1.19674e+06px, 2.08302e+06px, 0px) scale(8192);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a></div></div></div></div>
+  </section>
+
+  <section>
+    <h3>Evidencia de entrega</h3>
+    
+      <dl class="datos">
+        <dt>Recibió</dt><dd>María Rosero · Almacenista</dd>
+        <dt>Registrada</dt><dd class="num">07/10/2026 07:35 · Responsable Escuela Normal Super</dd>
+        <dt>Ubicación</dt><dd class="num">1,216800, -77,288300</dd>
+        <dt>Integridad</dt><dd><span class="marca-texto ok">Verificada: no ha sido alterada</span></dd>
+        <dt>Huella SHA-256</dt><dd class="huella">860ddf5a41490fada3570cc9ee4e03176cf7a6c27deece0db109232df9890205</dd>
+      </dl>
+      
+    
+  </section>
+
+  
+
+  <section>
+    <h3>Historial</h3>
+    <ul class="linea-tiempo">
+      
+        <li><time datetime="2026-10-07T04:35:46.724344-05:00">07/10 04:35</time>
+          <div>Envío PAE-261007-B555 para Escuela Normal Superior de Pasto — Principal asignado a Carlos Pérez
+            <div class="quien">Ana Administradora · <span class="marca-texto ambar" title="Recibido por el servidor el 07/10/2026 12:35">registrado sin conexión</span></div></div></li>
+      
+        <li><time datetime="2026-10-07T06:55:46.724344-05:00">07/10 06:55</time>
+          <div>Salida del envío PAE-261007-B555
+            <div class="quien">Carlos Pérez · <span class="marca-texto ambar" title="Recibido por el servidor el 07/10/2026 12:35">registrado sin conexión</span></div></div></li>
+      
+        <li><time datetime="2026-10-07T07:30:46.724344-05:00">07/10 07:30</time>
+          <div>Llegada del envío PAE-261007-B555 a Escuela Normal Superior de Pasto — Principal
+            <div class="quien">Carlos Pérez · <span class="marca-texto ambar" title="Recibido por el servidor el 07/10/2026 12:35">registrado sin conexión</span></div></div></li>
+      
+        <li><time datetime="2026-10-07T07:35:46.724344-05:00">07/10 07:35</time>
+          <div>Recepción del envío PAE-261007-B555 por María Rosero
+            <div class="quien">Responsable Escuela Normal Super · <span class="marca-texto ambar" title="Recibido por el servidor el 07/10/2026 12:35">registrado sin conexión</span></div></div></li>
+      
+    </ul>
+  </section>
+</div>
+
+
+</div>
+
+  </section>
+<section class="pantalla" id="novedades" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Novedades</h1>
+    <div class="sub">Reportadas por conductores en el trayecto (RF-23) e instituciones al recibir (RF-28)</div>
+  </div>
+</div>
+
+<div class="bloque">
+  <nav class="pestanas" aria-label="Filtrar por estado">
+    <a href="?estado=pendientes" aria-current="true">Sin atender</a>
+    <a href="?estado=todas">Todas</a>
+    <form method="get" style="margin-left:auto;align-self:center;padding:6px 0">
+      <input type="hidden" name="estado" value="pendientes">
+      <label class="oculto-visual" for="filtro-tipo">Tipo</label>
+      <select id="filtro-tipo" name="tipo" onchange="this.form.submit()" style="min-height:30px;padding:3px 8px">
+        <option value="">Todos los tipos</option>
+        <option value="RETRASO">Retraso</option><option value="DANO">Daño</option><option value="FALTANTE">Faltante</option><option value="INCIDENTE">Incidente</option><option value="ENTREGA_INCOMPLETA">Entrega incompleta</option>
+      </select>
+    </form>
+  </nav>
+  <div class="bandeja">
+    <div class="lista" id="bandeja" hx-get="/novedades/?" hx-trigger="novedades-actualizadas from:body" hx-swap="innerHTML">
+      
+  <a class="item sin-leer" href="/novedades/1/?" hx-get="/novedades/1/" hx-target="#novedad-detalle" hx-push-url="/novedades/1/?" aria-current="true" onclick="this.parentElement.querySelectorAll('[aria-current]').forEach(e =&gt; e.removeAttribute('aria-current')); this.setAttribute('aria-current','true')">
+    <div class="linea1">
+      <strong>Retraso</strong>
+      <span class="tenue" style="font-size:var(--t-sm)">PAE-261007-9732</span>
+      <time datetime="2026-10-07T12:29:46.724344-05:00">07/10 12:29</time>
+    </div>
+    <p>Cierre vial en la avenida Panamericana.</p>
+  </a>
+
+
+
+
+    </div>
+    <div class="detalle" id="novedad-detalle" aria-live="polite">
+      
+<div style="display:flex;align-items:flex-start;gap:var(--s3);margin-bottom:var(--s4)">
+  <div>
+    <h2>Retraso · PAE-261007-9732</h2>
+    <div class="tenue" style="font-size:var(--t-sm)">Trayecto (conductor) · miércoles 7 de octubre, 12:29</div>
+  </div>
+  <div class="acciones" style="margin-left:auto">
+    
+      <form method="post" action="/novedades/1/" hx-post="/novedades/1/" hx-target="#novedad-detalle">
+        <input type="hidden" name="volver" value="/novedades/">
+        <button class="boton" type="submit">Marcar como atendida</button>
+      </form>
+    
+  </div>
+</div>
+
+<p style="font-size:var(--t-md)">Cierre vial en la avenida Panamericana.</p>
+
+<dl class="datos" style="margin-top:var(--s4)">
+  <dt>Envío</dt><dd><a href="/envios/2/" hx-get="/envios/2/" hx-target="#panel-contenido">PAE-261007-9732</a> · <span class="estado estado--EN_TRANSITO">En tránsito</span>
+</dd>
+  <dt>Institución</dt><dd>I.E.M. Ciudadela de la Paz — Principal</dd>
+  <dt>Reportó</dt><dd>Luisa Gómez · Conductor</dd>
+  <dt>Ubicación</dt><dd class="num">1,206000, -77,272000</dd>
+  <dt>Recibida</dt><dd>07/10/2026 12:35 <span class="marca-texto tenue">registrada sin conexión</span></dd>
+</dl>
+
+
+
+
+
+    </div>
+  </div>
+</div>
+
+  </section>
+<section class="pantalla" id="programar" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Programar envíos</h1>
+    <div class="sub">Cree en un solo paso los envíos de un día para varias instituciones con el mismo menú. Se usa el último conductor y vehículo de cada institución; puede cambiarlos.</div>
+  </div>
+</div>
+
+<form method="post" action="/envios/programar/" novalidate="" data-offline-tipo="envio.lote" data-offline-volver="/envios/" x-data="{ filtro: '', marcadas: 0 }" x-init="marcadas = $el.querySelectorAll('input[name=instituciones]:checked').length" @change="marcadas = $el.querySelectorAll('input[name=instituciones]:checked').length" data-offline-listo="1">
+  
+  <input type="hidden" name="uuid_lote" value="4e707218-b0b5-4ba1-8f95-cbae9b3b65a5">
+
+  
+
+  <div class="bloque">
+    <div class="bloque-cabeza"><h2>1. Fecha y hora</h2></div>
+    <div class="bloque-cuerpo">
+      <div class="campos" style="max-width:520px">
+        <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha" name="fecha" value="2026-10-08" required=""></div>
+        <div class="campo"><label for="hora">Hora programada</label><input type="time" id="hora" name="hora" value="07:00" required=""></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-cabeza">
+      <h2>2. Instituciones</h2>
+      <div class="acciones">
+        <label class="oculto-visual" for="buscar-institucion">Buscar institución</label>
+        <input type="search" id="buscar-institucion" placeholder="Buscar institución" x-model="filtro" data-buscar="" style="min-height:30px;width:220px">
+        <button type="button" class="boton texto chico" @click="$root.querySelectorAll('tr[data-nombre]:not([hidden]) input[name=instituciones]').forEach(c =&gt; c.checked = true); marcadas = $root.querySelectorAll('input[name=instituciones]:checked').length">Marcar visibles</button>
+        <button type="button" class="boton texto chico" @click="$root.querySelectorAll('input[name=instituciones]').forEach(c =&gt; c.checked = false); marcadas = 0">Ninguna</button>
+      </div>
+    </div>
+    <div class="tabla-scroll">
+      <table class="programar-instituciones">
+        <thead><tr><th style="width:36px"><span class="oculto-visual">Incluir</span></th><th>Institución</th><th>Conductor</th><th>Vehículo</th></tr></thead>
+        <tbody>
+          
+            <tr data-nombre="escuela normal superior de pasto — principal" :hidden="!!filtro &amp;&amp; !$el.dataset.nombre.includes(filtro.toLowerCase())">
+              <td><input type="checkbox" name="instituciones" value="1" id="inst-1"></td>
+              <td><label for="inst-1" style="font-weight:500;color:var(--tinta)">Escuela Normal Superior de Pasto — Principal</label>
+                <small class="tenue" style="display:block">Calle 18 # 41-60, Pasto, Nariño</small>
+                </td>
+              <td><select name="conductor_1" aria-label="Conductor para Escuela Normal Superior de Pasto — Principal">
+                <option value="">Elegir…</option>
+                <option value="1" selected="">Carlos Pérez</option><option value="2">Luisa Gómez</option>
+              </select></td>
+              <td><select name="vehiculo_1" aria-label="Vehículo para Escuela Normal Superior de Pasto — Principal">
+                <option value="">Sin vehículo</option>
+                <option value="1" selected="">ABC123 · Furgón</option><option value="2">XYZ789 · Furgón</option>
+              </select></td>
+            </tr>
+          
+            <tr data-nombre="i.e.m. ciudadela de la paz — principal" :hidden="!!filtro &amp;&amp; !$el.dataset.nombre.includes(filtro.toLowerCase())">
+              <td><input type="checkbox" name="instituciones" value="2" id="inst-2"></td>
+              <td><label for="inst-2" style="font-weight:500;color:var(--tinta)">I.E.M. Ciudadela de la Paz — Principal</label>
+                <small class="tenue" style="display:block">Barrio La Paz, Pasto, Nariño</small>
+                </td>
+              <td><select name="conductor_2" aria-label="Conductor para I.E.M. Ciudadela de la Paz — Principal">
+                <option value="">Elegir…</option>
+                <option value="1">Carlos Pérez</option><option value="2" selected="">Luisa Gómez</option>
+              </select></td>
+              <td><select name="vehiculo_2" aria-label="Vehículo para I.E.M. Ciudadela de la Paz — Principal">
+                <option value="">Sin vehículo</option>
+                <option value="1">ABC123 · Furgón</option><option value="2" selected="">XYZ789 · Furgón</option>
+              </select></td>
+            </tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-cabeza"><h2>3. Menú del día</h2><span class="tenue" style="font-size:var(--t-sm)">Se aplica a todas las instituciones marcadas</span></div>
+    <div class="bloque-cuerpo">
+      
+<div data-items="" data-listo="1">
+  <table class="items-tabla">
+    <thead><tr><th>Producto</th><th style="width:120px">Cantidad</th><th style="width:150px">Unidad</th><th style="width:40px"><span class="oculto-visual">Quitar</span></th></tr></thead>
+    <tbody>
+      
+    
+    <tr>
+      <td><input name="item_producto" required="" placeholder="Ej.: leche entera UHT" aria-label="Producto"></td>
+      <td><input name="item_cantidad" type="number" step="0.01" min="0.01" required="" aria-label="Cantidad" class="num"></td>
+      <td><select name="item_unidad" aria-label="Unidad"><option value="UNIDAD">Unidades</option><option value="RACION">Raciones</option><option value="KG">Kilogramos</option><option value="G">Gramos</option><option value="L">Litros</option><option value="CAJA">Cajas</option><option value="PAQUETE">Paquetes</option><option value="BULTO">Bultos</option></select></td>
+      <td><button type="button" class="boton texto chico" data-quitar="" aria-label="Quitar alimento">×</button></td>
+    </tr>
+  </tbody>
+  </table>
+  <template>
+    <tr>
+      <td><input name="item_producto" required="" placeholder="Ej.: leche entera UHT" aria-label="Producto"></td>
+      <td><input name="item_cantidad" type="number" step="0.01" min="0.01" required="" aria-label="Cantidad" class="num"></td>
+      <td><select name="item_unidad" aria-label="Unidad"><option value="UNIDAD">Unidades</option><option value="RACION">Raciones</option><option value="KG">Kilogramos</option><option value="G">Gramos</option><option value="L">Litros</option><option value="CAJA">Cajas</option><option value="PAQUETE">Paquetes</option><option value="BULTO">Bultos</option></select></td>
+      <td><button type="button" class="boton texto chico" data-quitar="" aria-label="Quitar alimento">×</button></td>
+    </tr>
+  </template>
+  <button type="button" class="boton texto chico" data-agregar="" style="margin-top:var(--s1)">+ Agregar alimento</button>
+</div>
+
+      <div class="campo separado" style="max-width:640px">
+        <label for="observaciones">Observaciones para todos los envíos</label>
+        <textarea id="observaciones" name="observaciones" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="pie-fijo">
+      <span class="resumen" x-text="marcadas === 1 ? '1 institución seleccionada' : marcadas + ' instituciones seleccionadas'">0 instituciones seleccionadas</span>
+      <div class="acciones" style="margin-left:auto">
+        <a class="boton texto" href="/envios/">Cancelar</a>
+        <button class="boton" type="submit" :disabled="marcadas === 0" x-text="marcadas === 1 ? 'Crear 1 envío' : 'Crear ' + marcadas + ' envíos'" disabled="disabled">Crear 0 envíos</button>
+      </div>
+    </div>
+  </div>
+<input type="hidden" name="_tipo_operacion" value="envio.lote"><input type="hidden" name="_volver" value="/envios/"></form>
+
+  </section>
+<section class="pantalla" id="instituciones" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Instituciones educativas</h1>
+    <div class="sub">Instituciones que reciben los alimentos del PAE.</div>
+  </div>
+  <div class="acciones">
+    <a class="boton" href="/instituciones/nuevo/" hx-get="/instituciones/nuevo/" hx-target="#panel-contenido" hx-push-url="true">Registrar institución</a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/instituciones/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, input from:#buscar delay:300ms, submit">
+    <div class="campo buscar"><label for="buscar">Buscar</label><input type="search" id="buscar" name="q" value="" data-buscar="" autocomplete="off"></div>
+    <div class="campo"><label for="estado">Estado</label>
+      <select id="estado" name="estado">
+        <option value="activos" selected="">Activos</option>
+        <option value="inactivos">Desactivados</option>
+        <option value="todos">Todos</option>
+      </select></div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="catalogo-actualizado">
+    <div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Nombre</th><th>Sede</th><th>Dirección</th><th>Teléfono</th><th>Estado</th><th class="der"><span class="oculto-visual">Acciones</span></th></tr></thead>
+    <tbody>
+    
+      <tr class="clic" hx-get="/instituciones/1/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">Escuela Normal Superior de Pasto</strong></td><td>Principal</td><td>Calle 18 # 41-60, Pasto, Nariño</td><td>6027000000</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/instituciones/1/estado/" class="en-linea" hx-post="/instituciones/1/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+      <tr class="clic" hx-get="/instituciones/2/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">I.E.M. Ciudadela de la Paz</strong></td><td>Principal</td><td>Barrio La Paz, Pasto, Nariño</td><td>6027000001</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/instituciones/2/estado/" class="en-linea" hx-post="/instituciones/2/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+    </tbody>
+  </table>
+</div>
+
+
+
+  </div>
+</div>
+
+  </section>
+<section class="pantalla" id="responsables" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Responsables de recepción</h1>
+    <div class="sub">Personal de cada institución que confirma la recepción desde la aplicación móvil.</div>
+  </div>
+  <div class="acciones">
+    <a class="boton" href="/responsables/nuevo/" hx-get="/responsables/nuevo/" hx-target="#panel-contenido" hx-push-url="true">Registrar responsable</a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/responsables/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, input from:#buscar delay:300ms, submit">
+    <div class="campo buscar"><label for="buscar">Buscar</label><input type="search" id="buscar" name="q" value="" data-buscar="" autocomplete="off"></div>
+    <div class="campo"><label for="estado">Estado</label>
+      <select id="estado" name="estado">
+        <option value="activos" selected="">Activos</option>
+        <option value="inactivos">Desactivados</option>
+        <option value="todos">Todos</option>
+      </select></div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="catalogo-actualizado">
+    <div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Nombre</th><th>Institución</th><th>Cargo</th><th>Correo</th><th>Estado</th><th class="der"><span class="oculto-visual">Acciones</span></th></tr></thead>
+    <tbody>
+    
+      <tr class="clic" hx-get="/responsables/1/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">Responsable Escuela Normal Super</strong></td><td>Escuela Normal Superior de Pasto — Principal</td><td>Almacenista</td><td>institucion1@paego.local</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/responsables/1/estado/" class="en-linea" hx-post="/responsables/1/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+      <tr class="clic" hx-get="/responsables/2/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">Responsable I.E.M. Ciudadela de</strong></td><td>I.E.M. Ciudadela de la Paz — Principal</td><td>Coordinador</td><td>institucion2@paego.local</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/responsables/2/estado/" class="en-linea" hx-post="/responsables/2/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+    </tbody>
+  </table>
+</div>
+
+
+
+  </div>
+</div>
+
+  </section>
+<section class="pantalla" id="conductores" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Conductores</h1>
+    <div class="sub">Cada conductor tiene un usuario para la aplicación móvil.</div>
+  </div>
+  <div class="acciones">
+    <a class="boton" href="/conductores/nuevo/" hx-get="/conductores/nuevo/" hx-target="#panel-contenido" hx-push-url="true">Registrar conductor</a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/conductores/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, input from:#buscar delay:300ms, submit">
+    <div class="campo buscar"><label for="buscar">Buscar</label><input type="search" id="buscar" name="q" value="" data-buscar="" autocomplete="off"></div>
+    <div class="campo"><label for="estado">Estado</label>
+      <select id="estado" name="estado">
+        <option value="activos" selected="">Activos</option>
+        <option value="inactivos">Desactivados</option>
+        <option value="todos">Todos</option>
+      </select></div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="catalogo-actualizado">
+    <div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Nombre</th><th>Documento</th><th>Teléfono</th><th>Correo</th><th>Estado</th><th class="der"><span class="oculto-visual">Acciones</span></th></tr></thead>
+    <tbody>
+    
+      <tr class="clic" hx-get="/conductores/1/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">Carlos Pérez</strong></td><td>1085000001</td><td>300000001</td><td>conductor1@paego.local</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/conductores/1/estado/" class="en-linea" hx-post="/conductores/1/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+      <tr class="clic" hx-get="/conductores/2/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">Luisa Gómez</strong></td><td>1085000002</td><td>300000002</td><td>conductor2@paego.local</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/conductores/2/estado/" class="en-linea" hx-post="/conductores/2/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+    </tbody>
+  </table>
+</div>
+
+
+
+  </div>
+</div>
+
+  </section>
+<section class="pantalla" id="vehiculos" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Vehículos</h1>
+    <div class="sub">Vehículos asociados a los conductores.</div>
+  </div>
+  <div class="acciones">
+    <a class="boton" href="/vehiculos/nuevo/" hx-get="/vehiculos/nuevo/" hx-target="#panel-contenido" hx-push-url="true">Registrar vehículo</a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/vehiculos/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, input from:#buscar delay:300ms, submit">
+    <div class="campo buscar"><label for="buscar">Buscar</label><input type="search" id="buscar" name="q" value="" data-buscar="" autocomplete="off"></div>
+    <div class="campo"><label for="estado">Estado</label>
+      <select id="estado" name="estado">
+        <option value="activos" selected="">Activos</option>
+        <option value="inactivos">Desactivados</option>
+        <option value="todos">Todos</option>
+      </select></div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="catalogo-actualizado">
+    <div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Placa</th><th>Tipo</th><th>Capacidad (kg)</th><th>Conductor</th><th>Estado</th><th class="der"><span class="oculto-visual">Acciones</span></th></tr></thead>
+    <tbody>
+    
+      <tr class="clic" hx-get="/vehiculos/1/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">ABC123</strong></td><td>Furgón</td><td>1500,00</td><td>Carlos Pérez (1085000001)</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/vehiculos/1/estado/" class="en-linea" hx-post="/vehiculos/1/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+      <tr class="clic" hx-get="/vehiculos/2/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">XYZ789</strong></td><td>Furgón</td><td>1500,00</td><td>Luisa Gómez (1085000002)</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <form method="post" action="/vehiculos/2/estado/" class="en-linea" hx-post="/vehiculos/2/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+        </td>
+      </tr>
+    
+    </tbody>
+  </table>
+</div>
+
+
+
+  </div>
+</div>
+
+  </section>
+<section class="pantalla" id="indicadores" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Indicadores</h1>
+    <div class="sub">Trazabilidad, control operativo y transparencia según la Tabla 3 del proyecto (RF-32)</div>
+  </div>
+  <div class="acciones"><a class="boton sec" href="/reportes/">Ir a reportes</a></div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/indicadores/" hx-target="#resultado-indicadores" hx-push-url="true" hx-trigger="change">
+    <div class="campo"><label for="id_desde">Desde</label><input type="date" name="desde" value="2026-08-12" id="id_desde"></div><div class="campo"><label for="id_hasta">Hasta</label><input type="date" name="hasta" value="2026-10-07" id="id_hasta"></div><div class="campo"><label for="id_institucion">Institución</label><select name="institucion" id="id_institucion">
+  <option value="" selected="">Todas</option>
+
+  <option value="1">Escuela Normal Superior de Pasto — Principal</option>
+
+  <option value="2">I.E.M. Ciudadela de la Paz — Principal</option>
+
+</select></div><div class="campo"><label for="id_conductor">Conductor</label><select name="conductor" id="id_conductor">
+  <option value="" selected="">Todos</option>
+
+  <option value="1">Carlos Pérez (1085000001)</option>
+
+  <option value="2">Luisa Gómez (1085000002)</option>
+
+</select></div>
+    <noscript><button class="boton sec chico" type="submit">Aplicar</button></noscript>
+    <span class="indicador">Calculando…</span>
+  </form>
+  
+</div>
+
+<div id="resultado-indicadores" class="separado">
+  <p class="tenue" style="margin-bottom:var(--s3)">
+  Del 12 de agosto al 7 de octubre de 2026 ·
+  <b class="num" style="color:var(--tinta)">1</b> entregas de 3 envíos.
+  Los porcentajes se calculan sobre las entregas realizadas.
+</p>
+
+<div class="cifras">
+  <div class="cifra">
+    <span class="nombre">Entregas con registro completo</span>
+    <span class="valor">100,0 %</span>
+    <span class="formula">1 de 1 · fecha, hora, responsable, ubicación y evidencia</span>
+    <canvas data-serie="registro_completo" data-unidad="%" aria-label="Tendencia semanal de entregas con registro completo" role="img" style="display: block; box-sizing: border-box; height: 172px; width: 240px;" width="240" height="172"></canvas>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Entregas a tiempo</span>
+    <span class="valor">100,0 %</span>
+    <span class="formula">1 de 1 · tolerancia de 30 min</span>
+    <canvas data-serie="a_tiempo" data-unidad="%" aria-label="Tendencia semanal de entregas a tiempo" role="img" style="display: block; box-sizing: border-box; height: 172px; width: 240px;" width="240" height="172"></canvas>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Entregas con evidencia verificable</span>
+    <span class="valor">100,0 %</span>
+    <span class="formula">1 de 1 · código y huella SHA-256 íntegros</span>
+    <canvas data-serie="con_evidencia" data-unidad="%" aria-label="Tendencia semanal de entregas con evidencia" role="img" style="display: block; box-sizing: border-box; height: 172px; width: 240px;" width="240" height="172"></canvas>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Novedades registradas</span>
+    <span class="valor">1</span>
+    <span class="formula">Retraso 1 · conteo del periodo</span>
+    <canvas data-serie="novedades" data-unidad="" aria-label="Novedades por semana" role="img" style="display: block; box-sizing: border-box; height: 172px; width: 240px;" width="240" height="172"></canvas>
+  </div>
+</div>
+
+<details class="bloque separado">
+  <summary class="bloque-cabeza" style="cursor:pointer"><h2 style="display:inline">Datos por semana</h2></summary>
+  <div class="tabla-scroll">
+    <table>
+      <thead><tr><th>Semana desde</th><th class="der">Entregas</th><th class="der">Registro completo</th><th class="der">A tiempo</th><th class="der">Con evidencia</th><th class="der">Novedades</th></tr></thead>
+      <tbody>
+        
+          <tr><td class="num">12/08</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">17/08</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">24/08</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">31/08</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">07/09</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">14/09</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">21/09</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">28/09</td><td class="der num">0</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">—</td>
+            <td class="der num">0</td></tr>
+        
+          <tr><td class="num">05/10</td><td class="der num">1</td>
+            <td class="der num">100,0 %</td>
+            <td class="der num">100,0 %</td>
+            <td class="der num">100,0 %</td>
+            <td class="der num">1</td></tr>
+        
+      </tbody>
+    </table>
+  </div>
+</details>
+
+<div class="separado" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:var(--s4)">
+  <section class="bloque" style="margin:0">
+    <div class="bloque-cabeza"><h2>Por institución</h2></div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Institución</th><th class="der">Entregas</th><th class="der">A tiempo</th><th class="der">Completo</th><th class="der">Evidencia</th><th class="der">Novedades</th></tr></thead>
+        <tbody>
+          
+            <tr><td>Escuela Normal Superior de Pasto — Principal</td><td class="der num">1</td>
+              <td class="der num">100,0 %</td>
+              <td class="der num">100,0 %</td>
+              <td class="der num">100,0 %</td>
+              <td class="der num">0</td></tr>
+          
+            <tr><td>I.E.M. Ciudadela de la Paz — Principal</td><td class="der num">0</td>
+              <td class="der num">—</td>
+              <td class="der num">—</td>
+              <td class="der num">—</td>
+              <td class="der num">1</td></tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="bloque" style="margin:0">
+    <div class="bloque-cabeza"><h2>Por conductor</h2></div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Conductor</th><th class="der">Entregas</th><th class="der">A tiempo</th><th class="der">Completo</th><th class="der">Evidencia</th><th class="der">Novedades</th></tr></thead>
+        <tbody>
+          
+            <tr><td>Carlos Pérez</td><td class="der num">1</td>
+              <td class="der num">100,0 %</td>
+              <td class="der num">100,0 %</td>
+              <td class="der num">100,0 %</td>
+              <td class="der num">0</td></tr>
+          
+            <tr><td>Luisa Gómez</td><td class="der num">0</td>
+              <td class="der num">—</td>
+              <td class="der num">—</td>
+              <td class="der num">—</td>
+              <td class="der num">1</td></tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<p class="tenue" style="font-size:var(--t-xs);margin-top:var(--s2)">Los porcentajes por institución y por conductor se calculan sobre sus propias entregas. «—» indica que no hubo entregas.</p>
+
+<script type="application/json" id="serie-indicadores">[{"semana": "12/08", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "17/08", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "24/08", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "31/08", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "07/09", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "14/09", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "21/09", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "28/09", "registro_completo": null, "a_tiempo": null, "con_evidencia": null, "novedades": 0, "entregas": 0}, {"semana": "05/10", "registro_completo": 100.0, "a_tiempo": 100.0, "con_evidencia": 100.0, "novedades": 1, "entregas": 1}]</script>
+
+</div>
+
+  </section>
+<section class="pantalla" id="reportes" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Reportes</h1>
+    <div class="sub">Envíos por periodo, institución y conductor, exportables a PDF y Excel (RF-36, RF-37)</div>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/reportes/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    <div class="campo"><label for="id_desde">Desde</label><input type="date" name="desde" id="id_desde"></div><div class="campo"><label for="id_hasta">Hasta</label><input type="date" name="hasta" id="id_hasta"></div><div class="campo"><label for="id_institucion">Institución</label><select name="institucion" id="id_institucion">
+  <option value="" selected="">Todas</option>
+
+  <option value="1">Escuela Normal Superior de Pasto — Principal</option>
+
+  <option value="2">I.E.M. Ciudadela de la Paz — Principal</option>
+
+</select></div><div class="campo"><label for="id_conductor">Conductor</label><select name="conductor" id="id_conductor">
+  <option value="" selected="">Todos</option>
+
+  <option value="1">Carlos Pérez (1085000001)</option>
+
+  <option value="2">Luisa Gómez (1085000002)</option>
+
+</select></div>
+    <button class="boton sec chico" type="submit">Generar</button>
+  </form>
+  <div id="resultados">
+
+  <p class="vacio">Elija un periodo y pulse «Generar». Sin fechas, el reporte incluye todos los envíos.</p>
+
+</div>
+</div>
+
+  </section>
+<section class="pantalla" id="auditoria" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Registro de auditoría</h1>
+    <div class="sub">Cada acción con usuario, fecha, hora y ubicación (RF-33). No se puede modificar ni eliminar (RNF-12).</div>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/auditoria/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    <div class="campo"><label for="accion">Acción</label>
+      <select id="accion" name="accion"><option value="">Todas</option>
+        <option value="INICIO_SESION">Inicio de sesión</option><option value="CIERRE_SESION">Cierre de sesión</option><option value="RESTABLECER_CONTRASENA">Restablecimiento de contraseña</option><option value="ACEPTA_TRATAMIENTO_DATOS">Aceptación de tratamiento de datos</option><option value="CREAR">Creación</option><option value="EDITAR">Edición</option><option value="DESACTIVAR">Desactivación</option><option value="ACTIVAR">Activación</option><option value="ENVIO_CREADO">Envío creado y asignado</option><option value="ENVIO_EDITADO">Envío modificado</option><option value="ENVIO_REASIGNADO">Envío reasignado</option><option value="ENVIO_CANCELADO">Envío cancelado</option><option value="SALIDA">Salida del vehículo</option><option value="LLEGADA">Llegada a la institución</option><option value="NOVEDAD">Novedad reportada</option><option value="RECEPCION_CONFIRMADA">Recepción confirmada</option><option value="RECEPCION_CON_NOVEDAD">Recepción con novedad</option><option value="CIERRE_CON_NOVEDAD">Envío cerrado con novedad</option><option value="SINCRONIZACION_RECHAZADA">Operación sin conexión rechazada</option><option value="EXPORTAR_REPORTE">Exportación de reporte</option></select></div>
+    <div class="campo"><label for="usuario">Usuario</label>
+      <select id="usuario" name="usuario"><option value="">Todos</option>
+        <option value="1">Ana Administradora</option><option value="2">Carlos Pérez</option><option value="3">Luisa Gómez</option><option value="4">Responsable Escuela Normal Super</option><option value="5">Responsable I.E.M. Ciudadela de</option></select></div>
+    <div class="campo"><label for="desde">Desde</label><input type="date" id="desde" name="desde" value=""></div>
+    <div class="campo"><label for="hasta">Hasta</label><input type="date" id="hasta" name="hasta" value=""></div>
+    <label class="casilla" style="align-self:center"><input type="checkbox" name="diferido" value="1"> Solo registrados sin conexión</label>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados"><div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Detalle</th><th>Envío</th><th>Ubicación</th></tr></thead>
+    <tbody>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:42:31</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Inicio de sesión</td>
+        <td>Inicio de sesión (web)</td>
+        <td style="white-space:nowrap"><span class="tenue">—</span></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:41:31</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Inicio de sesión</td>
+        <td>Inicio de sesión (web)</td>
+        <td style="white-space:nowrap"><span class="tenue">—</span></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:40:49</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Inicio de sesión</td>
+        <td>Inicio de sesión (web)</td>
+        <td style="white-space:nowrap"><span class="tenue">—</span></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:40:22</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Inicio de sesión</td>
+        <td>Inicio de sesión (web)</td>
+        <td style="white-space:nowrap"><span class="tenue">—</span></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:37:29</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Inicio de sesión</td>
+        <td>Inicio de sesión (web)</td>
+        <td style="white-space:nowrap"><span class="tenue">—</span></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:37:02</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Inicio de sesión</td>
+        <td>Inicio de sesión (web)</td>
+        <td style="white-space:nowrap"><span class="tenue">—</span></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:37:02</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Aceptación de tratamiento de datos</td>
+        <td>Aceptó la política de tratamiento de datos</td>
+        <td style="white-space:nowrap"><span class="tenue">—</span></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:35:46</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Envío creado y asignado</td>
+        <td>Envío PAE-261007-8236 para I.E.M. Ciudadela de la Paz — Principal asignado a Carlos Pérez</td>
+        <td style="white-space:nowrap"><a href="/envios/4/" hx-get="/envios/4/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-8236</a></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:35:46</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Envío creado y asignado</td>
+        <td>Envío PAE-261008-7672 para Escuela Normal Superior de Pasto — Principal asignado a Carlos Pérez</td>
+        <td style="white-space:nowrap"><a href="/envios/3/" hx-get="/envios/3/" hx-target="#panel-contenido" hx-push-url="true">PAE-261008-7672</a></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:35:46</td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Envío creado y asignado</td>
+        <td>Envío PAE-261007-9732 para I.E.M. Ciudadela de la Paz — Principal asignado a Luisa Gómez</td>
+        <td style="white-space:nowrap"><a href="/envios/2/" hx-get="/envios/2/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-9732</a></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:29:46<br><small class="marca-texto ambar" title="Recibido el 07/10/2026 12:35">sin conexión</small></td>
+        <td>Luisa Gómez</td>
+        <td style="white-space:nowrap">Novedad reportada</td>
+        <td>Novedad «Retraso» en PAE-261007-9732: Cierre vial en la avenida Panamericana.</td>
+        <td style="white-space:nowrap"><a href="/envios/2/" hx-get="/envios/2/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-9732</a></td>
+        <td class="num" style="white-space:nowrap">1,206000, -77,272000</td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 12:15:46<br><small class="marca-texto ambar" title="Recibido el 07/10/2026 12:35">sin conexión</small></td>
+        <td>Luisa Gómez</td>
+        <td style="white-space:nowrap">Salida del vehículo</td>
+        <td>Salida del envío PAE-261007-9732</td>
+        <td style="white-space:nowrap"><a href="/envios/2/" hx-get="/envios/2/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-9732</a></td>
+        <td class="num" style="white-space:nowrap">1,214000, -77,281000</td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 07:35:46<br><small class="marca-texto ambar" title="Recibido el 07/10/2026 12:35">sin conexión</small></td>
+        <td>Responsable Escuela Normal Super</td>
+        <td style="white-space:nowrap">Recepción confirmada</td>
+        <td>Recepción del envío PAE-261007-B555 por María Rosero</td>
+        <td style="white-space:nowrap"><a href="/envios/1/" hx-get="/envios/1/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-B555</a></td>
+        <td class="num" style="white-space:nowrap">1,216800, -77,288300</td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 07:30:46<br><small class="marca-texto ambar" title="Recibido el 07/10/2026 12:35">sin conexión</small></td>
+        <td>Carlos Pérez</td>
+        <td style="white-space:nowrap">Llegada a la institución</td>
+        <td>Llegada del envío PAE-261007-B555 a Escuela Normal Superior de Pasto — Principal</td>
+        <td style="white-space:nowrap"><a href="/envios/1/" hx-get="/envios/1/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-B555</a></td>
+        <td class="num" style="white-space:nowrap">1,216800, -77,288300</td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 06:55:46<br><small class="marca-texto ambar" title="Recibido el 07/10/2026 12:35">sin conexión</small></td>
+        <td>Carlos Pérez</td>
+        <td style="white-space:nowrap">Salida del vehículo</td>
+        <td>Salida del envío PAE-261007-B555</td>
+        <td style="white-space:nowrap"><a href="/envios/1/" hx-get="/envios/1/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-B555</a></td>
+        <td class="num" style="white-space:nowrap">1,208000, -77,277000</td>
+      </tr>
+    
+      <tr>
+        <td class="num" style="white-space:nowrap">07/10/2026 04:35:46<br><small class="marca-texto ambar" title="Recibido el 07/10/2026 12:35">sin conexión</small></td>
+        <td>Ana Administradora</td>
+        <td style="white-space:nowrap">Envío creado y asignado</td>
+        <td>Envío PAE-261007-B555 para Escuela Normal Superior de Pasto — Principal asignado a Carlos Pérez</td>
+        <td style="white-space:nowrap"><a href="/envios/1/" hx-get="/envios/1/" hx-target="#panel-contenido" hx-push-url="true">PAE-261007-B555</a></td>
+        <td class="num" style="white-space:nowrap"><span class="tenue">—</span></td>
+      </tr>
+    
+    </tbody>
+  </table>
+</div>
+
+
+</div>
+</div>
+
+  </section>
+<section class="pantalla" id="usuarios" hidden>
+    
+<div class="titulo-pagina">
+  <div>
+    <h1>Usuarios</h1>
+    <div class="sub">Todos los usuarios y su rol (RF-04, RF-05). Los conductores y responsables se crean desde su propio módulo, que les asigna el rol.</div>
+  </div>
+  <div class="acciones">
+    <a class="boton" href="/usuarios/nuevo/" hx-get="/usuarios/nuevo/" hx-target="#panel-contenido" hx-push-url="true">Nuevo administrador</a>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="/usuarios/" hx-target="#resultados" hx-push-url="true" hx-trigger="change, input from:#q delay:300ms, submit">
+    <div class="campo buscar"><label for="q">Buscar</label><input type="search" id="q" name="q" value="" placeholder="Nombre o correo" data-buscar="" autocomplete="off"></div>
+    <div class="campo"><label for="rol">Rol</label>
+      <select id="rol" name="rol"><option value="">Todos</option>
+        <option value="ADMINISTRADOR">Administrador</option><option value="CONDUCTOR">Conductor</option><option value="INSTITUCION">Institución educativa</option>
+      </select></div>
+    <noscript><button class="boton sec chico" type="submit">Filtrar</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="usuarios-actualizados">
+    <div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Último ingreso</th><th>Estado</th><th class="der"><span class="oculto-visual">Acciones</span></th></tr></thead>
+    <tbody>
+    
+      <tr class=" clic" hx-get="/usuarios/1/editar/" hx-target="#panel-contenido" hx-push-url="true">
+        <td><strong style="font-weight:500">Ana Administradora</strong></td>
+        <td>admin@paego.local</td>
+        <td>Administrador</td>
+        <td class="num">07/10/2026 12:42</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          <span class="tenue" style="font-size:var(--t-sm)">Usted</span>
+        </td>
+      </tr>
+    
+      <tr class="">
+        <td><strong style="font-weight:500">Carlos Pérez</strong></td>
+        <td>conductor1@paego.local</td>
+        <td>Conductor</td>
+        <td class="num">—</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          
+          <form method="post" action="/usuarios/2/estado/" class="en-linea" hx-post="/usuarios/2/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+          
+        </td>
+      </tr>
+    
+      <tr class="">
+        <td><strong style="font-weight:500">Luisa Gómez</strong></td>
+        <td>conductor2@paego.local</td>
+        <td>Conductor</td>
+        <td class="num">—</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          
+          <form method="post" action="/usuarios/3/estado/" class="en-linea" hx-post="/usuarios/3/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+          
+        </td>
+      </tr>
+    
+      <tr class="">
+        <td><strong style="font-weight:500">Responsable Escuela Normal Super</strong></td>
+        <td>institucion1@paego.local</td>
+        <td>Institución educativa</td>
+        <td class="num">—</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          
+          <form method="post" action="/usuarios/4/estado/" class="en-linea" hx-post="/usuarios/4/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+          
+        </td>
+      </tr>
+    
+      <tr class="">
+        <td><strong style="font-weight:500">Responsable I.E.M. Ciudadela de</strong></td>
+        <td>institucion2@paego.local</td>
+        <td>Institución educativa</td>
+        <td class="num">—</td>
+        <td><span class="marca-texto ok">Activo</span></td>
+        <td class="der" onclick="event.stopPropagation()">
+          
+          <form method="post" action="/usuarios/5/estado/" class="en-linea" hx-post="/usuarios/5/estado/" hx-swap="none">
+            
+            <button class="boton chico peligro" type="submit">Desactivar</button>
+          </form>
+          
+        </td>
+      </tr>
+    
+    </tbody>
+  </table>
+</div>
+
+
+
+  </div>
+</div>
+
+  </section>
+    </main>
+  </div>
+</div>
+
+<div class="avisos" id="avisos" aria-live="polite"></div>
+
+<script>
+  // Sin HTMX en la presentación: los mapas se inician al mostrar cada pantalla.
+  window.htmx = { onLoad: function () {} };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script>
+/* PAEGo — mapas con Leaflet (RF-07, RF-29, RF-35).
+ *
+ * Inicialización declarativa: cualquier elemento con data-mapa se activa al
+ * cargarse (también dentro del panel lateral, que llega por HTMX).
+ *   data-mapa="selector"  coordenadas de una institución (RF-07)
+ *   data-mapa="ruta"      ruta recorrida de un envío (RF-35)
+ *   data-mapa="hoy"       operación del día en tiempo real (RF-29)
+ */
+(function () {
+  "use strict";
+
+  const PASTO = [1.2136, -77.2811];
+  /* Teselas de OpenStreetMap. Su política de uso exige que el navegador envíe el
+   * origen (Referer); por eso config/settings usa "strict-origin-when-cross-origin". */
+  const TESELAS = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const ATRIBUCION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const colorEstado = (estado) =>
+    ({
+      ASIGNADO: css("--e-asignado"),
+      EN_TRANSITO: css("--e-transito"),
+      ENTREGADO: css("--e-entregado"),
+      CON_NOVEDAD: css("--e-novedad"),
+      CANCELADO: css("--e-cancelado"),
+    })[estado] || css("--tinta-3");
+
+  function crear(el, centro, zoom) {
+    const mapa = L.map(el, { zoomControl: true, attributionControl: true }).setView(centro || PASTO, zoom || 13);
+    mapa.attributionControl.setPrefix(false);
+    L.tileLayer(TESELAS, { attribution: ATRIBUCION, maxZoom: 19 }).addTo(mapa);
+    el._mapa = mapa;
+    // El contenedor cambia de tamaño (panel lateral que se abre, mapa que se
+    // oculta y se muestra, ventana redimensionada): recalcular siempre.
+    if (window.ResizeObserver) new ResizeObserver(() => mapa.invalidateSize()).observe(el);
+    else setTimeout(() => mapa.invalidateSize(), 300);
+    return mapa;
+  }
+
+  function punto(color, radio) {
+    return { radius: radio || 6, color: "#fff", weight: 2, fillColor: color, fillOpacity: 1 };
+  }
+
+  /* Vehículo en ruta: marcador con el código del envío para reconocerlo sin abrirlo. */
+  function vehiculo(posicion, codigo, retrasado) {
+    const icono = L.divIcon({
+      className: "",
+      html:
+        '<span class="marcador-vehiculo' + (retrasado ? " retrasado" : "") + '">' +
+        '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="17" r="2" fill="currentColor"/><circle cx="17" cy="17" r="2" fill="currentColor"/></svg>' +
+        "<b>" + escapar(codigo.split("-").pop()) + "</b></span>",
+      iconSize: null,
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -14],
+    });
+    return L.marker(posicion, { icon: icono, keyboard: true, title: codigo, riseOnHover: true });
+  }
+
+  function escapar(t) {
+    const d = document.createElement("div");
+    d.textContent = t == null ? "" : String(t);
+    return d.innerHTML;
+  }
+
+  const hora = (iso) => (iso ? new Date(iso).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : "—");
+
+  /* ---- selector de coordenadas ---- */
+  function selector(el) {
+    const lat = document.getElementById(el.dataset.lat);
+    const lng = document.getElementById(el.dataset.lng);
+    const inicial = lat.value && lng.value ? [parseFloat(lat.value), parseFloat(lng.value)] : null;
+    const mapa = crear(el, inicial || PASTO, inicial ? 16 : 13);
+    let marcador = inicial ? L.circleMarker(inicial, punto(css("--accion"), 8)).addTo(mapa) : null;
+    const fijar = (p) => {
+      if (marcador) marcador.setLatLng(p);
+      else marcador = L.circleMarker(p, punto(css("--accion"), 8)).addTo(mapa);
+    };
+    mapa.on("click", (e) => {
+      lat.value = e.latlng.lat.toFixed(6);
+      lng.value = e.latlng.lng.toFixed(6);
+      fijar(e.latlng);
+    });
+    [lat, lng].forEach((c) =>
+      c.addEventListener("change", () => {
+        const p = [parseFloat(lat.value), parseFloat(lng.value)];
+        if (Number.isNaN(p[0]) || Number.isNaN(p[1])) return;
+        fijar(p);
+        mapa.setView(p, 16);
+      })
+    );
+  }
+
+  /* ---- ruta recorrida de un envío ---- */
+  function ruta(el) {
+    const d = JSON.parse(el.dataset.datos);
+    const mapa = crear(el, d.destino, 14);
+    const limites = [d.destino];
+    if (d.ruta.length > 1) {
+      L.polyline(d.ruta, { color: css("--accion"), weight: 4, opacity: 0.85 }).addTo(mapa);
+      limites.push(...d.ruta);
+    }
+    if (d.salida) { L.circleMarker(d.salida, punto(css("--tinta-3"))).addTo(mapa).bindTooltip("Salida"); limites.push(d.salida); }
+    if (d.ruta.length) L.circleMarker(d.ruta[d.ruta.length - 1], punto(css("--accion"), 7)).addTo(mapa).bindTooltip("Última posición");
+    if (d.entrega) { L.circleMarker(d.entrega, punto(css("--e-entregado"), 7)).addTo(mapa).bindTooltip("Recepción confirmada"); limites.push(d.entrega); }
+    L.circleMarker(d.destino, punto(css("--tinta"), 7)).addTo(mapa).bindTooltip(escapar(d.destino_nombre));
+    if (limites.length > 1) mapa.fitBounds(limites, { padding: [24, 24], maxZoom: 16 });
+  }
+
+  /* ---- operación del día ---- */
+  function hoy(el) {
+    const mapa = crear(el, PASTO, 13);
+    const capa = L.layerGroup().addTo(mapa);
+    const marcadores = {};
+    let encuadrado = false;
+
+    function pintar() {
+      const fuente = document.getElementById(el.dataset.fuente);
+      if (!fuente) return;
+      let envios;
+      try { envios = JSON.parse(fuente.textContent); } catch (e) { return; }
+      capa.clearLayers();
+      const limites = [];
+      envios.forEach((e) => {
+        if (!Array.isArray(e.destino) || e.destino.some((v) => typeof v !== "number")) return;
+        const color = colorEstado(e.estado);
+        if (e.ruta && e.ruta.length > 1) {
+          L.polyline(e.ruta, { color: e.retrasado ? css("--error") : color, weight: 4, opacity: 0.8 }).addTo(capa);
+        }
+        const destino = L.circleMarker(e.destino, punto(color, 7))
+          .addTo(capa)
+          .bindTooltip(escapar(e.codigo) + " · " + escapar(e.institucion));
+        limites.push(e.destino);
+        let principal = destino;
+        if (e.posicion) {
+          principal = vehiculo(e.posicion, e.codigo, e.retrasado)
+            .addTo(capa)
+            .bindPopup(
+              "<strong>" + escapar(e.codigo) + "</strong><br>" + escapar(e.conductor) +
+              "<br>Hacia " + escapar(e.institucion) + "<br>Posición " + hora(e.posicion_en)
+            );
+          limites.push(e.posicion);
+        }
+        marcadores[e.id] = principal;
+      });
+      if (!encuadrado && limites.length) {
+        mapa.fitBounds(limites, { padding: [36, 36], maxZoom: 15 });
+        encuadrado = true;
+      }
+    }
+
+    pintar();
+    document.addEventListener("htmx:afterSwap", (e) => {
+      if (e.detail.target.id === el.dataset.zona) pintar();
+    });
+    // Clic en una fila de la lista: centrar en el mapa.
+    document.addEventListener("click", (e) => {
+      const fila = e.target.closest("[data-envio-id]");
+      if (!fila) return;
+      const m = marcadores[fila.dataset.envioId];
+      if (m) {
+        mapa.flyTo(m.getLatLng(), Math.max(mapa.getZoom(), 15), { duration: 0.5 });
+        if (m.getPopup && m.getPopup()) m.openPopup(); else if (m.openTooltip) m.openTooltip();
+      }
+    });
+    el._redimensionar = () => mapa.invalidateSize();
+  }
+
+  const TIPOS = { selector, ruta, hoy };
+
+  function iniciar(raiz) {
+    raiz = raiz || document;
+    const propios = raiz.matches && raiz.matches("[data-mapa]") ? [raiz] : [];
+    propios.concat(Array.from(raiz.querySelectorAll("[data-mapa]"))).forEach((el) => {
+      if (el._mapa) return;
+      if (!window.L) {
+        // Sin la librería (sin internet y sin caché): avisar en lugar de un recuadro gris.
+        el.innerHTML = '<p class="mapa-sin-datos">No se pudo cargar el mapa. Revise la conexión a internet y recargue la página.</p>';
+        return;
+      }
+      const tipo = TIPOS[el.dataset.mapa];
+      if (!tipo) return;
+      try {
+        tipo(el);
+      } catch (error) {
+        console.error("PAEGo: no se pudo dibujar el mapa", error);
+        el.innerHTML = '<p class="mapa-sin-datos">No se pudo dibujar el mapa con los datos recibidos.</p>';
+      }
+    });
+  }
+
+  if (window.htmx) htmx.onLoad(iniciar);
+  else document.addEventListener("DOMContentLoaded", () => iniciar());
+
+  window.PaegoMapas = { iniciar };
+})();
+
+</script>
+<script>
+/* PAEGo — tendencias semanales de los indicadores (RF-32).
+ *
+ * Pequeños múltiplos: un gráfico de una sola serie por indicador, en el azul
+ * institucional. Sin leyenda (el título de la cifra nombra la serie), sin doble
+ * eje y con tooltip al pasar el cursor. La tabla «Datos por semana» es la
+ * alternativa accesible.
+ */
+(function () {
+  "use strict";
+  const graficos = [];
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  function dibujar() {
+    graficos.splice(0).forEach((g) => g.destroy());
+    const fuente = document.getElementById("serie-indicadores");
+    if (!fuente || !window.Chart) return;
+    const serie = JSON.parse(fuente.textContent);
+    const etiquetas = serie.map((s) => s.semana);
+    const color = css("--accion");
+    const rejilla = css("--borde");
+
+    document.querySelectorAll("canvas[data-serie]").forEach((lienzo) => {
+      const clave = lienzo.dataset.serie;
+      const unidad = lienzo.dataset.unidad;
+      const esPorcentaje = unidad === "%";
+      const valores = serie.map((s) => s[clave]);
+      graficos.push(
+        new Chart(lienzo, {
+          type: esPorcentaje ? "line" : "bar",
+          data: {
+            labels: etiquetas,
+            datasets: [{
+              data: valores,
+              borderColor: color,
+              backgroundColor: color,
+              borderWidth: 2,
+              // Con pocas semanas con datos la línea no se ve: se marcan los puntos.
+              pointRadius: valores.filter((v) => v != null).length < 4 ? 3 : 0,
+              pointHoverRadius: 4,
+              pointBackgroundColor: color,
+              spanGaps: true,
+              tension: 0,
+              borderRadius: 2,
+              maxBarThickness: 14,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                displayColors: false,
+                callbacks: {
+                  title: (items) => "Semana del " + items[0].label,
+                  label: (item) => (item.raw == null ? "Sin entregas" : item.raw + (esPorcentaje ? " %" : " novedades")),
+                },
+              },
+            },
+            layout: { padding: { top: 6, right: 6, bottom: 2, left: 2 } },
+            scales: {
+              x: { display: false },
+              y: {
+                // Las cifras exactas están en el tooltip y en «Datos por semana».
+                display: true,
+                min: esPorcentaje ? 0 : undefined,
+                max: esPorcentaje ? 100 : undefined,
+                beginAtZero: true,
+                ticks: { display: false, maxTicksLimit: 3 },
+                grid: { color: rejilla, drawTicks: false },
+                border: { display: false },
+              },
+            },
+          },
+        })
+      );
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", dibujar);
+  document.addEventListener("htmx:afterSwap", (e) => {
+    if (e.detail.target.id === "resultado-indicadores") dibujar();
+  });
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  const RUTAS = {"/panel/": "hoy", "/envios/": "envios", "/envios/1/": "detalle", "/novedades/": "novedades", "/envios/programar/": "programar", "/instituciones/": "instituciones", "/responsables/": "responsables", "/conductores/": "conductores", "/vehiculos/": "vehiculos", "/indicadores/": "indicadores", "/reportes/": "reportes", "/auditoria/": "auditoria", "/usuarios/": "usuarios"};  // ruta del servidor -> id de pantalla
+  const acceso = document.getElementById("vista-acceso");
+  const app = document.getElementById("vista-app");
+
+  function avisar(texto) {
+    const zona = document.getElementById("avisos");
+    const div = document.createElement("div");
+    div.className = "aviso";
+    div.textContent = texto;
+    zona.appendChild(div);
+    setTimeout(() => div.remove(), 3200);
+  }
+
+  function mostrar(id) {
+    if (!document.getElementById(id)) id = "hoy";
+    acceso.hidden = true;
+    app.hidden = false;
+    document.querySelectorAll(".pantalla").forEach((s) => { s.hidden = s.id !== id; });
+    document.querySelectorAll(".nav a[data-pantalla]").forEach((a) => {
+      if (a.dataset.pantalla === id || (id === "detalle" && a.dataset.pantalla === "envios")) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    const seccion = document.getElementById(id);
+    window.PaegoMapas && window.PaegoMapas.iniciar(seccion);
+    if (id === "indicadores") document.dispatchEvent(new CustomEvent("htmx:afterSwap", { detail: { target: { id: "resultado-indicadores" } } }));
+    window.scrollTo(0, 0);
+  }
+
+  function ir(id) {
+    if (location.hash === "#" + id) mostrar(id); else location.hash = id;
+  }
+
+  window.addEventListener("hashchange", () => {
+    const id = location.hash.slice(1);
+    if (!id || id === "ingresar") { app.hidden = true; acceso.hidden = false; } else mostrar(id);
+  });
+
+  document.querySelector("form[data-ingresar]").addEventListener("submit", (e) => { e.preventDefault(); ir("hoy"); });
+
+  // Enlaces y botones que en la plataforma van al servidor.
+  document.addEventListener("click", (e) => {
+    const menuBoton = e.target.closest(".menu > button");
+    document.querySelectorAll(".menu.abierto").forEach((m) => { if (!menuBoton || m !== menuBoton.parentElement) m.classList.remove("abierto"); });
+    if (menuBoton) { menuBoton.parentElement.classList.toggle("abierto"); return; }
+
+    if (e.target.closest("form[data-ingresar]")) return;
+    const salir = e.target.closest("form[action*='salir'] button");
+    if (salir) { e.preventDefault(); location.hash = "ingresar"; return; }
+
+    const el = e.target.closest("a[href], [hx-get], [hx-post], button[type=submit], tr.clic");
+    if (!el || el.closest(".leaflet-container")) return;
+    const destino = el.getAttribute("hx-get") || el.getAttribute("href") || "";
+    if (destino.startsWith("#")) return;
+    if (destino.startsWith("http") && el.target === "_blank") return;
+    e.preventDefault();
+    const ruta = destino.split("?")[0];
+    if (RUTAS[ruta]) { ir(RUTAS[ruta]); return; }
+    if (/^\/envios\/\d+\/$/.test(ruta)) { ir("detalle"); return; }
+    avisar("En la versión de demostración esta acción no está disponible.");
+  }, true);
+
+  document.addEventListener("submit", (e) => {
+    if (e.target.matches("form[data-ingresar]")) return;
+    e.preventDefault();
+    avisar("En la versión de demostración no se guardan cambios.");
+  }, true);
+
+  const inicial = location.hash.slice(1);
+  if (inicial && inicial !== "ingresar") mostrar(inicial);
+})();
+</script>
+</body>
+</html>

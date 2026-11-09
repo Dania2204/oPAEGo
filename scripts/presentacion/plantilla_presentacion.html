@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#3366cc">
+<title>PAEGo · Presentación</title>
+<link rel="icon" href="__ICONO__" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/*__CSS__*/
+
+/* ---------- solo para la presentación ---------- */
+.demo-aviso {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px;
+  padding: 8px 16px; background: #fff4e0; color: #6b4100; border-bottom: 1px solid #f0d6a8;
+  font-size: 13px;
+}
+.demo-aviso strong { color: #4d2f00; }
+.demo-aviso .credenciales { margin-left: auto; font-family: var(--mono); font-size: 12px; }
+#vista-app[hidden], #vista-acceso[hidden], .pantalla[hidden] { display: none !important; }
+.nav a[data-pantalla] { cursor: pointer; }
+.panel-demo { position: fixed; inset: auto 24px 24px auto; }
+.menu-lista { display: none; }
+.menu.abierto .menu-lista { display: block; }
+</style>
+</head>
+<body>
+<!--__ICONOS__-->
+
+<div class="demo-aviso" role="note">
+  <span><strong>Versión de demostración.</strong> Pantallas reales de la plataforma PAEGo con datos ficticios; las acciones no guardan cambios.</span>
+  <span class="credenciales">Ingreso: admin@paego.local · Paego2026!</span>
+</div>
+
+<div id="vista-acceso">
+  <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+  <!--__ACCESO__-->
+</div>
+
+<div id="vista-app" hidden>
+  <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+  <!--__CABECERA__-->
+  <div class="app">
+    <!--__NAV__-->
+    <main class="principal" id="principal">
+      <!--__PANTALLAS__-->
+    </main>
+  </div>
+</div>
+
+<div class="avisos" id="avisos" aria-live="polite"></div>
+
+<script>
+  // Sin HTMX en la presentación: los mapas se inician al mostrar cada pantalla.
+  window.htmx = { onLoad: function () {} };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script>
+/*__MAPAS__*/
+</script>
+<script>
+/*__INDICADORES__*/
+</script>
+<script>
+(function () {
+  "use strict";
+  const RUTAS = __RUTAS__;  // ruta del servidor -> id de pantalla
+  const acceso = document.getElementById("vista-acceso");
+  const app = document.getElementById("vista-app");
+
+  function avisar(texto) {
+    const zona = document.getElementById("avisos");
+    const div = document.createElement("div");
+    div.className = "aviso";
+    div.textContent = texto;
+    zona.appendChild(div);
+    setTimeout(() => div.remove(), 3200);
+  }
+
+  function mostrar(id) {
+    if (!document.getElementById(id)) id = "hoy";
+    acceso.hidden = true;
+    app.hidden = false;
+    document.querySelectorAll(".pantalla").forEach((s) => { s.hidden = s.id !== id; });
+    document.querySelectorAll(".nav a[data-pantalla]").forEach((a) => {
+      if (a.dataset.pantalla === id || (id === "detalle" && a.dataset.pantalla === "envios")) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    const seccion = document.getElementById(id);
+    window.PaegoMapas && window.PaegoMapas.iniciar(seccion);
+    if (id === "indicadores") document.dispatchEvent(new CustomEvent("htmx:afterSwap", { detail: { target: { id: "resultado-indicadores" } } }));
+    window.scrollTo(0, 0);
+  }
+
+  function ir(id) {
+    if (location.hash === "#" + id) mostrar(id); else location.hash = id;
+  }
+
+  window.addEventListener("hashchange", () => {
+    const id = location.hash.slice(1);
+    if (!id || id === "ingresar") { app.hidden = true; acceso.hidden = false; } else mostrar(id);
+  });
+
+  document.querySelector("form[data-ingresar]").addEventListener("submit", (e) => { e.preventDefault(); ir("hoy"); });
+
+  // Enlaces y botones que en la plataforma van al servidor.
+  document.addEventListener("click", (e) => {
+    const menuBoton = e.target.closest(".menu > button");
+    document.querySelectorAll(".menu.abierto").forEach((m) => { if (!menuBoton || m !== menuBoton.parentElement) m.classList.remove("abierto"); });
+    if (menuBoton) { menuBoton.parentElement.classList.toggle("abierto"); return; }
+
+    if (e.target.closest("form[data-ingresar]")) return;
+    const salir = e.target.closest("form[action*='salir'] button");
+    if (salir) { e.preventDefault(); location.hash = "ingresar"; return; }
+
+    const el = e.target.closest("a[href], [hx-get], [hx-post], button[type=submit], tr.clic");
+    if (!el || el.closest(".leaflet-container")) return;
+    const destino = el.getAttribute("hx-get") || el.getAttribute("href") || "";
+    if (destino.startsWith("#")) return;
+    if (destino.startsWith("http") && el.target === "_blank") return;
+    e.preventDefault();
+    const ruta = destino.split("?")[0];
+    if (RUTAS[ruta]) { ir(RUTAS[ruta]); return; }
+    if (/^\/envios\/\d+\/$/.test(ruta)) { ir("detalle"); return; }
+    avisar("En la versión de demostración esta acción no está disponible.");
+  }, true);
+
+  document.addEventListener("submit", (e) => {
+    if (e.target.matches("form[data-ingresar]")) return;
+    e.preventDefault();
+    avisar("En la versión de demostración no se guardan cambios.");
+  }, true);
+
+  const inicial = location.hash.slice(1);
+  if (inicial && inicial !== "ingresar") mostrar(inicial);
+})();
+</script>
+</body>
+</html>
