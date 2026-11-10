@@ -21,6 +21,7 @@ from apps.catalogo.serializers import (
     ConductorSerializer,
     InstitucionSerializer,
     ResponsableRecepcionSerializer,
+    SupervisorSerializer,
     VehiculoSerializer,
 )
 from apps.envios import servicios as envios
@@ -36,7 +37,7 @@ from apps.envios.serializers import (
     UbicacionEntradaSerializer,
 )
 from apps.estudiantes import servicios as estudiantes
-from apps.estudiantes.models import Estudiante
+from apps.estudiantes.models import Estudiante, Supervisor
 from apps.estudiantes.serializers import (
     AutorizarSerializer,
     EntregarSerializer,
@@ -206,6 +207,8 @@ OPERACIONES = {
     "vehiculo.editar": _catalogo(Vehiculo, VehiculoSerializer, False),
     "responsable.crear": _catalogo(ResponsableRecepcion, ResponsableRecepcionSerializer, True),
     "responsable.editar": _catalogo(ResponsableRecepcion, ResponsableRecepcionSerializer, False),
+    "supervisor.crear": _catalogo(Supervisor, SupervisorSerializer, True),
+    "supervisor.editar": _catalogo(Supervisor, SupervisorSerializer, False),
 }
 
 

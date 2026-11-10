@@ -4,6 +4,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from apps.cuentas.models import Rol
+from apps.estudiantes.models import Supervisor
 
 from .models import Conductor, Institucion, ResponsableRecepcion, Vehiculo
 
@@ -186,3 +187,30 @@ class VehiculoSerializer(serializers.ModelSerializer):
         if valor <= 0:
             raise serializers.ValidationError("La capacidad debe ser mayor que cero.")
         return valor
+
+
+class SupervisorSerializer(_ConUsuarioSerializer):
+    """Supervisor PAE: registra a los estudiantes y la entrega diaria en su institución."""
+
+    rol_usuario = Rol.SUPERVISOR
+    institucion = serializers.PrimaryKeyRelatedField(
+        queryset=Institucion.objects.filter(activo=True)
+    )
+    institucion_nombre = serializers.CharField(source="institucion.__str__", read_only=True)
+
+    class Meta:
+        model = Supervisor
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "nombre",
+            "institucion",
+            "institucion_nombre",
+            "activo",
+            "creado_en",
+            "actualizado_en",
+        ]
+        read_only_fields = ["activo", "creado_en", "actualizado_en"]

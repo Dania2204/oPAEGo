@@ -4,7 +4,7 @@
 <div class="titulo-pagina">
   <div>
     <h1>{{ cfg.titulo }}</h1>
-    <div class="sub">{% if modulo == "conductores" %}Cada conductor tiene un usuario para la aplicación móvil.{% elif modulo == "responsables" %}Personal de cada institución que confirma la recepción desde la aplicación móvil.{% elif modulo == "vehiculos" %}Vehículos asociados a los conductores.{% else %}Instituciones que reciben los alimentos del PAE.{% endif %}</div>
+    <div class="sub">{% if modulo == "conductores" %}Cada conductor tiene un usuario para la aplicación móvil.{% elif modulo == "responsables" %}Personal de cada institución que confirma la recepción desde la aplicación móvil.{% elif modulo == "supervisores" %}Registran a los estudiantes y la entrega diaria del PAE desde la aplicación móvil.{% elif modulo == "vehiculos" %}Vehículos asociados a los conductores.{% else %}Instituciones que reciben los alimentos del PAE.{% endif %}</div>
   </div>
   <div class="acciones">
     <a class="boton" href="{% url 'catalogo:nuevo' modulo %}" hx-get="{% url 'catalogo:nuevo' modulo %}" hx-target="#panel-contenido" hx-push-url="true">Registrar {{ cfg.singular }}</a>

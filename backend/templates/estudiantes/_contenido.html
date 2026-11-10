@@ -1,0 +1,63 @@
+<div class="cifras">
+  <div class="cifra">
+    <span class="nombre">Recibieron el PAE</span>
+    <span class="valor">{{ cobertura.recibieron }} <span class="tenue" style="font-size:var(--t-m)">de {{ cobertura.activos }}</span></span>
+    <span class="formula">{% if cobertura.porcentaje is not None %}{{ cobertura.porcentaje }} % de los estudiantes activos{% endif %} · {{ fecha|date:"l j \d\e F" }}</span>
+  </div>
+  <div class="cifra">
+    <span class="nombre">Con rostro inscrito</span>
+    <span class="valor">{{ con_rostro }}</span>
+    <span class="formula">con autorización del acudiente; el resto se registra de forma manual</span>
+  </div>
+</div>
+
+<section class="separado">
+  <h2 style="font-size:var(--t-m);margin-bottom:var(--s2)">Por curso</h2>
+  <div class="tabla-scroll">
+    <table>
+      <thead><tr><th>Curso</th><th class="der">Activos</th><th class="der">Con rostro</th><th class="der">Recibieron</th><th class="der">%</th></tr></thead>
+      <tbody>
+      {% for c in cursos %}
+        <tr class="clic{% if c.grado == grado and c.grupo == grupo %} elegido{% endif %}"
+            hx-get="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}&grado={{ c.grado }}&grupo={{ c.grupo }}"
+            hx-target="#resultados" hx-push-url="true">
+          <td><a href="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}&grado={{ c.grado }}&grupo={{ c.grupo }}"><strong style="font-weight:500">{{ c.curso }}</strong></a></td>
+          <td class="der num">{{ c.activos }}</td>
+          <td class="der num">{{ c.con_rostro }}</td>
+          <td class="der num">{{ c.recibieron }}</td>
+          <td class="der num">{% if c.activos %}{% widthratio c.recibieron c.activos 100 %}{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="vacio">No hay estudiantes activos.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if estudiantes is not None %}
+<section class="separado">
+  <h2 style="font-size:var(--t-m);margin-bottom:var(--s2)">{{ curso_elegido.curso|default:"Curso" }} · {{ fecha|date:"j \d\e F" }}</h2>
+  <div class="tabla-scroll">
+    <table>
+      <thead><tr><th>Estudiante</th><th>Documento</th><th>Entrega del día</th><th>Autorización</th><th>Rostro</th></tr></thead>
+      <tbody>
+      {% for e in estudiantes %}
+        {% with entrega=e.entregas_del_dia.0 %}
+        <tr class="clic" hx-get="{% url 'estudiantes:detalle' e.pk %}" hx-target="#panel-contenido" hx-push-url="true">
+          <td><strong style="font-weight:500">{{ e.apellidos }}</strong>, {{ e.nombres }}</td>
+          <td class="tenue num">{{ e.tipo_documento }} {{ e.numero_documento }}</td>
+          <td>{% if entrega %}<span class="estado estado--RECIBIO">Recibió</span> <span class="tenue">{{ entrega.get_metodo_display|lower }} · {{ entrega.ocurrido_en|time:"H:i" }}</span>
+              {% else %}<span class="estado estado--PENDIENTE">Pendiente</span>{% endif %}</td>
+          <td>{% if e.autorizacion_vigente %}<span class="marca-texto ok">Vigente</span>{% else %}<span class="marca-texto tenue">Sin autorización</span>{% endif %}</td>
+          <td>{% if e.num_plantillas %}<span class="marca-texto ok">Inscrito</span>{% else %}<span class="marca-texto tenue">No</span>{% endif %}</td>
+        </tr>
+        {% endwith %}
+      {% empty %}
+        <tr><td colspan="5" class="vacio">No hay estudiantes en este curso.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Estudiantes PAE{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Estudiantes PAE</h1>
+    <div class="sub">Quién recibió el PAE cada día. El supervisor lo registra desde la aplicación móvil, con reconocimiento facial o de forma manual.</div>
+  </div>
+  {% if institucion %}
+  <div class="acciones">
+    <a class="boton sec" href="{% url 'estudiantes:exportar' %}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}{% if grado %}&grado={{ grado }}&grupo={{ grupo }}{% endif %}">Exportar a Excel</a>
+  </div>
+  {% endif %}
+</div>
+
+{% if not instituciones %}
+  <div class="bloque">
+    <p class="nota">Aún no hay estudiantes importados. Cárguelos desde el Anexo 6A de SIMAT con
+      <code>python manage.py importar_estudiantes &lt;archivo.xlsx&gt; --dane &lt;CODIGO_DANE&gt; --institucion "&lt;nombre&gt;"</code>.
+      Solo se importa la identidad mínima (documento, nombre y curso).</p>
+  </div>
+{% else %}
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="{% url 'estudiantes:lista' %}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    {% if instituciones|length > 1 %}
+    <div class="campo"><label for="institucion">Institución</label>
+      <select id="institucion" name="institucion">
+        {% for i in instituciones %}<option value="{{ i.pk }}" {% if i.pk == institucion.pk %}selected{% endif %}>{{ i }}</option>{% endfor %}
+      </select></div>
+    {% else %}<input type="hidden" name="institucion" value="{{ institucion.pk }}">{% endif %}
+    <div class="campo"><label for="fecha">Día</label>
+      <input type="date" id="fecha" name="fecha" value="{{ fecha|date:'Y-m-d' }}" max="{{ hoy|date:'Y-m-d' }}"></div>
+    <input type="hidden" name="grado" value="{{ grado }}"><input type="hidden" name="grupo" value="{{ grupo }}">
+    <noscript><button class="boton sec chico" type="submit">Ver</button></noscript>
+  </form>
+  <div id="resultados" data-refrescar="estudiantes-actualizado">
+    {% include "estudiantes/_contenido.html" %}
+  </div>
+</div>
+<p class="tenue" style="font-size:var(--t-xs);margin-top:var(--s2)">
+  Datos de menores (Ley 1581 de 2012): solo se guarda documento, nombre y curso. La cara se registra únicamente con autorización del acudiente, como plantilla cifrada (nunca fotos), y siempre se puede registrar la entrega sin cámara.
+</p>
+{% endif %}
+{% endblock %}
