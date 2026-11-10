@@ -1,0 +1,70 @@
+# RNF-14: respaldo diario de la base de datos de producción.
+#
+# Requiere dos secretos del repositorio:
+#   RESPALDO_DATABASE_URL  URL pública de PostgreSQL de Railway
+#                          (variable DATABASE_PUBLIC_URL del servicio Postgres).
+#   RESPALDO_CLAVE         frase larga para cifrar el respaldo.
+# Sin ellos el job se salta con un aviso en vez de fallar.
+#
+# La base tiene datos personales (Ley 1581 de 2012): el respaldo se cifra con
+# GPG (AES-256) antes de subirse como artefacto y se conserva 30 días.
+# Restaurar:
+#   gpg --decrypt pae_go_FECHA.dump.gpg > pae_go.dump
+#   pg_restore --clean --no-owner -d "$DATABASE_URL" pae_go.dump
+name: Respaldo de la base de datos
+
+on:
+  schedule:
+    - cron: "0 7 * * *" # 02:00 en Colombia (UTC-5)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo-bd
+  cancel-in-progress: false
+
+jobs:
+  respaldo:
+    name: pg_dump cifrado
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.RESPALDO_DATABASE_URL }}
+      CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+    steps:
+      - name: Verificar secretos
+        id: secretos
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$CLAVE" ]; then
+            echo "::notice::Faltan RESPALDO_DATABASE_URL o RESPALDO_CLAVE; no se hace el respaldo."
+            echo "listo=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listo=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # pg_dump 17 respalda servidores 17 o anteriores.
+      - name: Respaldar
+        if: steps.secretos.outputs.listo == 'true'
+        run: |
+          set -euo pipefail
+          ARCHIVO="pae_go_$(date -u +%Y%m%d_%H%M%S).dump"
+          docker run --rm -e DATABASE_URL postgres:17-alpine \
+            sh -c 'pg_dump "$DATABASE_URL" --format=custom --no-owner' > "$ARCHIVO"
+          # El respaldo debe poder leerse (lista su contenido sin restaurarlo).
+          docker run --rm -i postgres:17-alpine pg_restore --list < "$ARCHIVO" > contenido.txt
+          grep -q "TABLE DATA public envios_envio" contenido.txt
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 \
+            --symmetric --cipher-algo AES256 --output "$ARCHIVO.gpg" "$ARCHIVO" 3<<< "$CLAVE"
+          rm "$ARCHIVO" contenido.txt
+          echo "ARCHIVO=$ARCHIVO.gpg" >> "$GITHUB_ENV"
+          echo "### Respaldo $ARCHIVO.gpg ($(du -h "$ARCHIVO.gpg" | cut -f1))" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.secretos.outputs.listo == 'true'
+        with:
+          name: respaldo-bd-${{ github.run_id }}
+          path: ${{ env.ARCHIVO }}
+          retention-days: 30
+          if-no-files-found: error
