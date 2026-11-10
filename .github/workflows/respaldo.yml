@@ -61,7 +61,7 @@ jobs:
           echo "ARCHIVO=$ARCHIVO.gpg" >> "$GITHUB_ENV"
           echo "### Respaldo $ARCHIVO.gpg ($(du -h "$ARCHIVO.gpg" | cut -f1))" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.secretos.outputs.listo == 'true'
         with:
           name: respaldo-bd-${{ github.run_id }}
