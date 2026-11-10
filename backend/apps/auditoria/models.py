@@ -35,6 +35,11 @@ class Accion(models.TextChoices):
     CIERRE_CON_NOVEDAD = "CIERRE_CON_NOVEDAD", "Envío cerrado con novedad"
     SINCRONIZACION_RECHAZADA = "SINCRONIZACION_RECHAZADA", "Operación sin conexión rechazada"
     EXPORTAR_REPORTE = "EXPORTAR_REPORTE", "Exportación de reporte"
+    AUTORIZACION_BIOMETRICA = "AUTORIZACION_BIOMETRICA", "Autorización biométrica registrada"
+    AUTORIZACION_REVOCADA = "AUTORIZACION_REVOCADA", "Autorización biométrica revocada"
+    ROSTRO_INSCRITO = "ROSTRO_INSCRITO", "Rostro de estudiante inscrito"
+    ROSTRO_BORRADO = "ROSTRO_BORRADO", "Plantillas faciales borradas"
+    ENTREGA_ESTUDIANTE = "ENTREGA_ESTUDIANTE", "Entrega del PAE a estudiante"
 
 
 class RegistroAuditoria(models.Model):

@@ -8,6 +8,8 @@ class Rol(models.TextChoices):
     ADMINISTRADOR = "ADMINISTRADOR", "Administrador"
     CONDUCTOR = "CONDUCTOR", "Conductor"
     INSTITUCION = "INSTITUCION", "Institución educativa"
+    # Registra a los estudiantes y la entrega diaria del PAE en su institución.
+    SUPERVISOR = "SUPERVISOR", "Supervisor PAE"
 
 
 class UsuarioManager(BaseUserManager):
@@ -66,3 +68,7 @@ class Usuario(AbstractUser):
     @property
     def es_institucion(self):
         return self.rol == Rol.INSTITUCION
+
+    @property
+    def es_supervisor(self):
+        return self.rol == Rol.SUPERVISOR
