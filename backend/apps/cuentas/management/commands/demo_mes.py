@@ -1,7 +1,7 @@
 """Genera un mes de operación realista para probar y mostrar la plataforma.
 
     python manage.py demo_mes [--dias 20] [--envios-dia 6-10] [--semilla 2026]
-                              [--sin-ruteo] [--reiniciar]
+                              [--sin-ruteo] [--reiniciar] [--institucion TEXTO]
 
 Crea instituciones y conductores reales de Pasto (apps/catalogo/datos_pasto.py) y
 ~un mes de envíos en distintos estados, con recorridos GPS por calles
@@ -67,6 +67,12 @@ class Command(BaseCommand):
             action="store_true",
             help="Borra los envíos existentes antes de generar (requiere BD sin auditoría).",
         )
+        parser.add_argument(
+            "--institucion",
+            default="",
+            help="Solo las instituciones cuyo nombre contenga este texto "
+            "(p. ej. «Normal Superior» para el piloto).",
+        )
 
     @transaction.atomic
     def handle(self, *args, **opciones):
@@ -78,6 +84,11 @@ class Command(BaseCommand):
             emin, emax = (int(x) for x in opciones["envios_dia"].split("-"))
         except ValueError as exc:
             raise CommandError("--envios-dia debe ser «min-max», p. ej. 6-10.") from exc
+
+        filtro = opciones["institucion"].strip().lower()
+        self.catalogo = [d for d in datos_pasto.INSTITUCIONES if filtro in d["nombre"].lower()]
+        if not self.catalogo:
+            raise CommandError(f"Ninguna institución coincide con «{opciones['institucion']}».")
 
         from apps.envios.models import Envio
 
@@ -122,7 +133,7 @@ class Command(BaseCommand):
 
     def _instituciones(self):
         creadas = []
-        for datos in datos_pasto.INSTITUCIONES:
+        for datos in self.catalogo:
             contacto_nombre, contacto_telefono = datos["contacto"]
             inst, _ = Institucion.objects.get_or_create(
                 nombre=datos["nombre"],
@@ -344,7 +355,11 @@ class Command(BaseCommand):
     def _envios_de_hoy(self, admin, instituciones, conductores, ahora):
         total = 0
         elegidas = self.rnd.sample(instituciones, min(6, len(instituciones)))
-        for i, inst in enumerate(elegidas):
+        casos = list(enumerate(elegidas))
+        if len(elegidas) == 1:
+            # Una sola institución: un envío en tránsito ahora y el de mañana asignado.
+            casos = [(0, elegidas[0]), (3, elegidas[0])]
+        for i, inst in casos:
             conductor = self.rnd.choice(conductores)
             if i < 2:
                 # En tránsito ahora (uno de ellos ya retrasado → alerta RF-30).

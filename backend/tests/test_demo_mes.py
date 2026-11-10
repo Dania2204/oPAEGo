@@ -63,3 +63,35 @@ def test_idempotente_sin_reiniciar(demo):
     antes = Envio.objects.count()
     call_command("demo_mes", "--sin-ruteo", "--dias", "6", "--envios-dia", "2-3", "--semilla", "7")
     assert Envio.objects.count() == antes
+
+
+@pytest.mark.django_db
+def test_una_sola_institucion():
+    from apps.catalogo.models import Institucion
+    from apps.envios.models import Envio
+
+    call_command(
+        "demo_mes",
+        "--sin-ruteo",
+        "--dias",
+        "6",
+        "--semilla",
+        "7",
+        "--institucion",
+        "normal superior",
+    )
+    assert list(Institucion.objects.values_list("nombre", flat=True)) == [
+        "Escuela Normal Superior de Pasto"
+    ]
+    estados = set(Envio.objects.values_list("estado", flat=True))
+    assert Estado.EN_TRANSITO in estados
+    assert Estado.ASIGNADO in estados
+    assert Envio.objects.filter(creado_en__lt=timezone.now() - timedelta(days=1)).exists()
+
+
+@pytest.mark.django_db
+def test_institucion_inexistente_falla():
+    from django.core.management.base import CommandError
+
+    with pytest.raises(CommandError):
+        call_command("demo_mes", "--sin-ruteo", "--institucion", "no existe")
