@@ -142,6 +142,7 @@ para los builds de CI y release). Para la versión web de Flutter agregar su ori
 | Arranque (`migrate` + `collectstatic` + `seed_demo` + gunicorn) | ~15 s de CPU |
 | Conductor mandando posición cada 3 s | ~20 peticiones/min ≈ 0,5 s de CPU por minuto; latencia p50 377 ms, p95 499 ms |
 | Primera petición tras 25 min sin tráfico | 1,0 s (el proceso siguió vivo: F1 no lo descargó en ese lapso) |
+| Arranque en frío real (reinicio del contenedor, sin `seed_demo`) | 40,6 s hasta el primer 200 |
 | Prueba E2E de Flutter (`PAEGO_E2E_URL=<WEB_URI> flutter test test/e2e`) | 4/4 en 9 s |
 
 Con 60 min de CPU al día, F1 alcanza para ~100 horas-conductor diarias de transmisión GPS (p. ej.
