@@ -9,7 +9,7 @@ gunicorn==26.2.0
 openpyxl==3.1.5
 pillow==13.0.0
 psycopg[binary]==3.3.6
-reportlab==5.0.1
+reportlab==5.1.0
 sentry-sdk==2.74.0
 whitenoise==6.12.0
 
