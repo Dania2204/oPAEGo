@@ -178,7 +178,6 @@ class EntregaEstudiante(models.Model):
     ocurrido_en = models.DateTimeField()
     registrado_en = models.DateTimeField(auto_now_add=True)
     diferido = models.BooleanField(default=False)
-    uuid_cliente = models.UUIDField(null=True, blank=True, unique=True)
 
     objects = _EntregaQuerySet.as_manager()
 

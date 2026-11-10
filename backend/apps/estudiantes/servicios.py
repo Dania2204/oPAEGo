@@ -256,7 +256,6 @@ def registrar_entrega(
     similitud=None,
     motivo="",
     ocurrido_en=None,
-    uuid_cliente=None,
     request=None,
 ):
     """El estudiante recibió el PAE. Una sola vez por día; facial o manual."""
@@ -306,7 +305,6 @@ def registrar_entrega(
                 similitud=similitud,
                 ocurrido_en=ocurrido_en,
                 diferido=(timezone.now() - ocurrido_en) > umbral_diferido,
-                uuid_cliente=uuid_cliente,
             )
             registrar(
                 usuario,

@@ -35,6 +35,14 @@ from apps.envios.serializers import (
     ReasignarSerializer,
     UbicacionEntradaSerializer,
 )
+from apps.estudiantes import servicios as estudiantes
+from apps.estudiantes.models import Estudiante
+from apps.estudiantes.serializers import (
+    AutorizarSerializer,
+    EntregarSerializer,
+    InscribirSerializer,
+    RevocarSerializer,
+)
 
 from .models import OperacionCliente
 
@@ -119,6 +127,39 @@ def _envio_confirmar(usuario, datos, request):
     return {**_resultado(envio), "estado": envio.estado}
 
 
+# ------------------------------------------------------- estudiantes PAE
+def _estudiante(datos, serializer_class):
+    v = _validar(serializer_class, datos)
+    estudiante = get_object_or_404(
+        Estudiante.objects.select_related("institucion", "autorizacion"), pk=v.pop("estudiante")
+    )
+    return estudiante, v
+
+
+def _estudiante_autorizar(usuario, datos, request):
+    estudiante, v = _estudiante(datos, AutorizarSerializer)
+    estudiantes.autorizar(usuario, estudiante, request=request, **v)
+    return _resultado(estudiante)
+
+
+def _estudiante_revocar(usuario, datos, request):
+    estudiante, v = _estudiante(datos, RevocarSerializer)
+    estudiantes.revocar_autorizacion(usuario, estudiante, request=request, **v)
+    return _resultado(estudiante)
+
+
+def _estudiante_inscribir(usuario, datos, request):
+    estudiante, v = _estudiante(datos, InscribirSerializer)
+    muestras = estudiantes.inscribir_rostro(usuario, estudiante, request=request, **v)
+    return {**_resultado(estudiante), "muestras": muestras}
+
+
+def _estudiante_entregar(usuario, datos, request):
+    estudiante, v = _estudiante(datos, EntregarSerializer)
+    entrega = estudiantes.registrar_entrega(usuario, estudiante, request=request, **v)
+    return {**_resultado(entrega), "estudiante": estudiante.pk, "fecha": entrega.fecha}
+
+
 # ------------------------------------------------------------- catálogo
 def _catalogo(modelo, serializer_class, crear):
     def manejador(usuario, datos, request):
@@ -153,6 +194,10 @@ OPERACIONES = {
     "envio.llegada": _envio_llegada,
     "envio.novedad": _envio_novedad,
     "envio.confirmar": _envio_confirmar,
+    "estudiante.autorizar": _estudiante_autorizar,
+    "estudiante.revocar": _estudiante_revocar,
+    "estudiante.inscribir": _estudiante_inscribir,
+    "estudiante.entregar": _estudiante_entregar,
     "institucion.crear": _catalogo(Institucion, InstitucionSerializer, True),
     "institucion.editar": _catalogo(Institucion, InstitucionSerializer, False),
     "conductor.crear": _catalogo(Conductor, ConductorSerializer, True),
