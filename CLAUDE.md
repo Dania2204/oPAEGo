@@ -45,7 +45,7 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
   `respaldo.yml`: pg_dump diario (02:00 Colombia) de producción, verificado con `pg_restore --list`,
   cifrado con GPG AES-256 y guardado 30 días como artefacto; necesita `RESPALDO_DATABASE_URL`
   (DATABASE_PUBLIC_URL de Railway) y `RESPALDO_CLAVE` (sin ellos se salta). Local: `scripts/respaldo_bd.*`.
-- Credenciales demo: `admin@paego.local`, `conductor1..6@paego.local`, `institucion1..10@paego.local`,
+- Credenciales demo: `admin@paego.local`, `conductor1..6@paego.local`, `institucion1..10@paego.local`, `supervisor1@paego.local` (Azure),
   `conductor.prueba@paego.local`; contraseña `Paego2026!`.
 - Despliegue en Azure (producción actual, https://azwafmsbgbksw4m22.azurewebsites.net): `azure.yaml` + `infra/*.bicep`
   (App Service Linux F1 por defecto, región `chilecentral` — F1 sin cuota en northcentralus —

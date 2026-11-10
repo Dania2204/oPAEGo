@@ -100,7 +100,7 @@ az webapp log tail -g rg-paego-prod -n (azd env get-value WEB_APP_NAME)
 
 ```powershell
 # Agregar temporalmente la IP del PC al firewall de PostgreSQL:
-az postgres flexible-server firewall-rule create -g rg-paego-prod -n (azd env get-value POSTGRES_HOST).Split('.')[0] -r mi-pc --start-ip-address <IP> --end-ip-address <IP>
+az postgres flexible-server firewall-rule create -g rg-paego-prod -s (azd env get-value POSTGRES_HOST).Split('.')[0] -n mi-pc --start-ip-address <IP> --end-ip-address <IP>
 pg_dump "<DATABASE_PUBLIC_URL de Railway>" -Fc --no-owner -f railway.dump
 pg_restore --clean --no-owner -d "postgres://paegoadmin:<contraseña>@<POSTGRES_HOST>:5432/pae_go?sslmode=require" railway.dump
 # Y quitar la regla al terminar (firewall-rule delete).
