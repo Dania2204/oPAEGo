@@ -24,6 +24,7 @@ python -m venv .venv && .venv\Scripts\activate && pip install -r requirements.tx
 copy .env.example .env
 python manage.py migrate
 python manage.py demo_mes            # ~1 mes de datos realistas (idempotente); --sin-ruteo sin internet
+                                     # --institucion "Normal Superior": solo la institución del piloto
 python manage.py seed_demo           # demo mínimo
 python manage.py runserver           # settings por defecto: config.settings.dev
 

@@ -106,6 +106,19 @@ pg_restore --clean --no-owner -d "postgres://paegoadmin:<contraseña>@<POSTGRES_
 # Y quitar la regla al terminar (firewall-rule delete).
 ```
 
+### Cargar el mes de datos demo (`demo_mes`)
+
+`demo_mes` exige una base sin envíos (la auditoría inmutable no deja borrarlos), así que hay que
+recrear `pae_go`. Desde el PC, con una regla temporal de firewall para su IP:
+
+```powershell
+# DATABASE_URL = postgres://paegoadmin:<contraseña>@<POSTGRES_HOST>:5432/pae_go?sslmode=require
+# (recrear la base pae_go desde la base postgres, p. ej. DROP DATABASE pae_go WITH (FORCE); CREATE DATABASE pae_go)
+python manage.py migrate; python manage.py createcachetable
+python manage.py demo_mes --institucion "Normal Superior"
+az webapp restart -g rg-paego-prod -n (azd env get-value WEB_APP_NAME)   # conexiones viejas → 500
+```
+
 ## 6. Despliegue continuo desde GitHub
 
 ```powershell
