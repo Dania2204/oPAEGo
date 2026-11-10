@@ -34,8 +34,12 @@ class PerfilSerializer(serializers.ModelSerializer):
         return conductor.pk if conductor else None
 
     def get_institucion_id(self, obj) -> int | None:
-        responsable = getattr(obj, "responsable_recepcion", None)
-        return responsable.institucion_id if responsable else None
+        # Institución: el rector (responsable de recepción) o el supervisor PAE.
+        for perfil in ("responsable_recepcion", "supervisor"):
+            vinculo = getattr(obj, perfil, None)
+            if vinculo is not None:
+                return vinculo.institucion_id
+        return None
 
 
 class InicioSesionSerializer(TokenObtainPairSerializer):

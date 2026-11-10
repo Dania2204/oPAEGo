@@ -172,3 +172,9 @@ def test_configuracion_publica_los_parametros(api_supervisor):
     assert r.data["biometria_disponible"] is True
     assert r.data["umbral_similitud_facial"] == 0.80
     assert (r.data["muestras_rostro_min"], r.data["muestras_rostro_max"]) == (3, 5)
+
+
+def test_perfil_del_supervisor_trae_su_institucion(api_supervisor, institucion):
+    r = api_supervisor.get("/api/auth/yo/")
+    assert r.data["rol"] == "SUPERVISOR"
+    assert r.data["institucion_id"] == institucion.pk
