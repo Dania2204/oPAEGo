@@ -3,7 +3,8 @@
 from datetime import timedelta
 
 from django.conf import settings
-from django.db.models import OuterRef, Subquery
+from django.db.models import F, OuterRef, Subquery, Window
+from django.db.models.functions import RowNumber
 from django.utils import timezone
 
 from apps.envios.estados import Estado
@@ -24,14 +25,11 @@ def envios_en_transito():
             ultima_en=Subquery(ultima.values("ocurrido_en")[:1]),
         )
     )
+    envios = list(envios)
+    rutas = _ultimas_rutas([e.pk for e in envios])
     resultado = []
     for envio in envios:
-        ruta = list(
-            envio.ubicaciones.order_by("-ocurrido_en").values_list("latitud", "longitud")[
-                :PUNTOS_RUTA_MAPA
-            ]
-        )
-        ruta.reverse()
+        ruta = rutas.get(envio.pk, [])
         resultado.append(
             {
                 "id": envio.pk,
@@ -55,6 +53,28 @@ def envios_en_transito():
             }
         )
     return resultado
+
+
+def _ultimas_rutas(envio_ids):
+    """Últimos PUNTOS_RUTA_MAPA puntos de cada envío, en orden cronológico,
+    con una sola consulta (antes era una por envío)."""
+    if not envio_ids:
+        return {}
+    puntos = (
+        Ubicacion.objects.filter(envio_id__in=envio_ids)
+        .annotate(
+            orden=Window(
+                RowNumber(), partition_by=[F("envio_id")], order_by=F("ocurrido_en").desc()
+            )
+        )
+        .filter(orden__lte=PUNTOS_RUTA_MAPA)
+        .order_by("envio_id", "ocurrido_en", "id")
+        .values_list("envio_id", "latitud", "longitud")
+    )
+    rutas = {}
+    for envio_id, lat, lng in puntos:
+        rutas.setdefault(envio_id, []).append((lat, lng))
+    return rutas
 
 
 def alertas_retraso():
