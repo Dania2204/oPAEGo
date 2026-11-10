@@ -13,6 +13,7 @@ param djangoSecretKey string
 param geminiApiKey string
 param corsAllowedOrigins array
 param seedDemo string
+param appServiceSku string
 param tags object
 
 var token = uniqueString(subscription().id, resourceGroup().id, location, environmentName)
@@ -92,6 +93,8 @@ resource kvUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 }
 
 // ── PostgreSQL Flexible Server ──────────────────────────────────────────────
+// B1ms con 32 GB: entra en la oferta gratuita de Azure for Students (750 h/mes
+// de B1ms + 32 GB de almacenamiento y 32 GB de respaldo durante 12 meses).
 resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
   name: 'azpg${token}'
   location: postgresLocation
@@ -150,7 +153,7 @@ resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
   location: location
   tags: tags
   kind: 'linux'
-  sku: { name: 'B1', tier: 'Basic' }
+  sku: { name: appServiceSku, tier: appServiceSku == 'F1' ? 'Free' : 'Basic' }
   properties: { reserved: true } // Linux
 }
 
@@ -174,7 +177,9 @@ resource web 'Microsoft.Web/sites@2024-04-01' = {
     keyVaultReferenceIdentity: identidad.id
     siteConfig: {
       linuxFxVersion: 'PYTHON|3.13'
-      alwaysOn: true
+      // F1 no admite Always On: la app se descarga tras ~20 min sin uso y la
+      // primera petición siguiente tarda en responder (arranque en frío).
+      alwaysOn: appServiceSku != 'F1'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       http20Enabled: true
@@ -230,3 +235,4 @@ output webUri string = 'https://${web.properties.defaultHostName}'
 output webAppName string = web.name
 output postgresHost string = postgres.properties.fullyQualifiedDomainName
 output keyVaultName string = kv.name
+output planName string = plan.name

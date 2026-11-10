@@ -45,6 +45,13 @@ param geminiApiKey string = ''
 @description('Orígenes permitidos por CORS (p. ej. la app Flutter compilada para web).')
 param corsAllowedOrigins array = []
 
+// F1 (gratis, 60 min de CPU al día, sin Always On) para el día a día; B1 para
+// demostraciones y uso real. Se cambia sin redesplegar:
+//   az appservice plan update -g rg-<entorno> -n <plan> --sku B1
+@allowed(['F1', 'B1', 'B2'])
+@description('Plan de App Service.')
+param appServiceSku string = 'F1'
+
 // Texto y no bool: azd sustituye las variables de main.parameters.json como texto.
 @allowed(['true', 'false'])
 @description('Cargar los datos de demostración (seed_demo) al arrancar.')
@@ -71,6 +78,7 @@ module recursos 'resources.bicep' = {
     geminiApiKey: geminiApiKey
     corsAllowedOrigins: corsAllowedOrigins
     seedDemo: seedDemo
+    appServiceSku: appServiceSku
     tags: tags
   }
 }
@@ -82,3 +90,4 @@ output WEB_URI string = recursos.outputs.webUri
 output WEB_APP_NAME string = recursos.outputs.webAppName
 output POSTGRES_HOST string = recursos.outputs.postgresHost
 output AZURE_KEY_VAULT_NAME string = recursos.outputs.keyVaultName
+output APP_SERVICE_PLAN_NAME string = recursos.outputs.planName

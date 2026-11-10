@@ -5,7 +5,7 @@ Infraestructura como código (Bicep) para desplegar la plataforma web de PAEGo c
 
 ```mermaid
 graph LR
-  app[App Flutter / navegador] -- HTTPS --> web[App Service Linux B1<br/>Python 3.13 + gunicorn]
+  app[App Flutter / navegador] -- HTTPS --> web[App Service Linux F1/B1<br/>Python 3.13 + gunicorn]
   web -- TLS --> pg[(PostgreSQL Flexible 17<br/>B1ms · base pae_go)]
   web -. identidad administrada .-> kv[Key Vault<br/>clave Django · URL BD · Gemini]
   web -- registros --> log[Log Analytics + Application Insights]
@@ -21,10 +21,28 @@ graph LR
 | `backend/.webappignore` | Lo que no se sube (`.env`, `.venv`, `media/`…). |
 | `.github/workflows/azure.yml` | Despliegue continuo (`azd deploy`) tras el CI verde de `main`. |
 
-Costo de referencia (East US, precios de lista): App Service B1 ≈ US$0,017/h y
-PostgreSQL B1ms ≈ US$0,017/h → unos **US$28/mes** con 32 GB de almacenamiento.
-Con Azure for Students (US$100) alcanza para unos 3–4 meses. Detener o borrar los
-recursos cuando no se usen (ver al final).
+### Costo
+
+Con **Azure for Students** queda prácticamente en US$0:
+
+| Recurso | Plan | Costo |
+|---|---|---|
+| PostgreSQL Flexible B1ms, 32 GB | Oferta gratuita 12 meses (750 h/mes + 32 GB + 32 GB de respaldo) | US$0 |
+| App Service | **F1** por defecto: gratis siempre, 60 min de CPU al día, sin Always On | US$0 |
+| Key Vault, Log Analytics, Application Insights | por uso (Log Analytics: 5 GB/mes gratis) | centavos |
+
+Limitaciones de F1: la app se descarga tras ~20 min sin uso (la primera petición tarda) y,
+si se acaban los 60 min de CPU del día, responde 403 hasta el día siguiente. El conductor
+manda su posición cada 3 s, así que para una demostración o un piloto conviene subir a B1
+**solo esos días** (US$0,018/h ≈ US$0,43 al día en North Central US) y bajar después:
+
+```powershell
+$plan = azd env get-value APP_SERVICE_PLAN_NAME
+az appservice plan update -g rg-paego-prod -n $plan --sku B1   # demostración
+az appservice plan update -g rg-paego-prod -n $plan --sku F1   # de vuelta a gratis
+```
+
+Para que un `azd provision` posterior no lo devuelva a F1: `azd env set APP_SERVICE_SKU B1`.
 
 ## 1. Preparar el PC (una vez)
 
@@ -104,7 +122,9 @@ para los builds de CI y release). Para la versión web de Flutter agregar su ori
 ## Apagar o borrar
 
 - Pausar la base: `az postgres flexible-server stop -g rg-paego-prod -n <servidor>` (se
-  reinicia sola a los 7 días). El plan B1 cobra mientras exista, aunque la app esté detenida.
+  reinicia sola a los 7 días). Dentro de la oferta gratuita no hace falta; sí al pasar los 12
+  meses. El plan B1 cobra mientras exista aunque la app esté detenida: para "pausarlo", bajarlo
+  a F1.
 - Borrar todo: `azd down`. El Key Vault queda en eliminación temporal 7 días con protección de
   purga (no se puede purgar antes): para volver a crear el entorno antes de ese plazo usar
   otro nombre de entorno.

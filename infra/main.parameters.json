@@ -9,6 +9,7 @@
     "postgresAdminPassword": { "value": "${POSTGRES_ADMIN_PASSWORD}" },
     "djangoSecretKey": { "value": "${DJANGO_SECRET_KEY}" },
     "geminiApiKey": { "value": "${GEMINI_API_KEY=}" },
-    "seedDemo": { "value": "${PAEGO_SEED_DEMO=true}" }
+    "seedDemo": { "value": "${PAEGO_SEED_DEMO=true}" },
+    "appServiceSku": { "value": "${APP_SERVICE_SKU=F1}" }
   }
 }
