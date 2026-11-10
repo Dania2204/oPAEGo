@@ -11,6 +11,9 @@ param postgresAdminPassword string
 param djangoSecretKey string
 @secure()
 param geminiApiKey string
+@secure()
+param biometriaClave string
+param umbralSimilitudFacial string
 param corsAllowedOrigins array
 param seedDemo string
 param appServiceSku string
@@ -147,6 +150,12 @@ resource secretoGemini 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = if (!emp
   properties: { value: geminiApiKey }
 }
 
+resource secretoBiometria 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = if (!empty(biometriaClave)) {
+  parent: kv
+  name: 'biometria-clave'
+  properties: { value: biometriaClave }
+}
+
 // ── App Service ─────────────────────────────────────────────────────────────
 resource plan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'azsp${token}'
@@ -198,6 +207,11 @@ resource web 'Microsoft.Web/sites@2024-04-01' = {
           name: 'GEMINI_API_KEY'
           value: empty(geminiApiKey) ? '' : '@Microsoft.KeyVault(SecretUri=${referencia}/gemini-api-key)'
         }
+        {
+          name: 'BIOMETRIA_CLAVE'
+          value: empty(biometriaClave) ? '' : '@Microsoft.KeyVault(SecretUri=${referencia}/biometria-clave)'
+        }
+        { name: 'PAEGO_UMBRAL_SIMILITUD_FACIAL', value: umbralSimilitudFacial }
         { name: 'DJANGO_ALLOWED_HOSTS', value: host }
         { name: 'DJANGO_CSRF_TRUSTED_ORIGINS', value: 'https://${host}' }
         { name: 'URL_PUBLICA', value: 'https://${host}' }

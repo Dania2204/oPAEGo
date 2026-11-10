@@ -1,7 +1,7 @@
 """Importa los estudiantes de una institución desde el Anexo 6A de SIMAT.
 
     python manage.py importar_estudiantes <archivo.xlsx> --dane 152001000661 \\
-            --institucion "Normal Superior" [--dry-run]
+            --institucion "Normal Superior" [--grados 0,1,...,11] [--dry-run]
 
 Para registrar la entrega del PAE por estudiante se necesita saber quiénes son.
 Del Anexo solo se leen las columnas de identidad mínima (PER_ID, documento,
@@ -11,6 +11,8 @@ nacimiento, ...). Ley 1581: minimización de datos de menores.
 
 Idempotente por PER_ID: actualiza a quien ya existe, crea a los nuevos y da de
 baja (inactivo y sin plantillas faciales) a quien ya no aparece en el archivo.
+`--grados` limita la importación a esos códigos de grado (p. ej. de transición a
+11°, la población del PAE): quien no es beneficiario no se guarda.
 El archivo de SIMAT nunca se guarda en el repositorio (carpeta bd/ en .gitignore).
 """
 
@@ -71,6 +73,11 @@ class Command(BaseCommand):
             help="Nombre (o parte) de la institución en PAEGo a la que se asignan.",
         )
         parser.add_argument(
+            "--grados",
+            help="Códigos de grado SIMAT a importar, separados por coma (p. ej. 0,1,2,...,11). "
+            "Por defecto, todos.",
+        )
+        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Solo muestra el resumen; no escribe en la base de datos.",
@@ -82,11 +89,18 @@ class Command(BaseCommand):
             raise CommandError(f"No existe el archivo: {archivo}")
         institucion = self._institucion(opciones["institucion"])
         danes = {str(d).strip() for d in opciones["dane"]}
+        grados = (
+            {g.strip() for g in opciones["grados"].split(",") if g.strip()}
+            if opciones.get("grados")
+            else None
+        )
 
         leidos = {}
         try:
             for fila in leer_anexo(archivo, COLUMNAS):
                 if _texto(fila["CODIGO_DANE"]) not in danes:
+                    continue
+                if grados is not None and _texto(fila["GRADO"]) not in grados:
                     continue
                 per_id = _texto(fila["PER_ID"])
                 if not per_id:

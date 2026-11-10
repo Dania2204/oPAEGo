@@ -120,3 +120,13 @@ def test_archivo_sin_columnas(institucion, tmp_path):
     wb.save(ruta)
     with pytest.raises(CommandError):
         _importar(str(ruta))
+
+
+def test_solo_los_grados_pedidos(institucion, tmp_path):
+    filas = [*FILAS, _fila("152001000661", 9004, 1085000004.0, "PAZ", "EVA", "43", "1")]
+    _importar(_xlsx(tmp_path, filas), "--grados", "0,1,2,3,4,5,6,7,8,9,10,11")
+    assert set(Estudiante.objects.values_list("simat_per_id", flat=True)) == {
+        "9001",
+        "9002",
+        "9003",
+    }
