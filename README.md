@@ -18,7 +18,8 @@ oPAEGo/
 │   │   ├── envios/         envíos, ítems, estados, ubicaciones, novedades, evidencia RF-13…28
 │   │   ├── monitoreo/      mapa en tiempo real, alertas, notificaciones, KPIs  RF-29…32
 │   │   ├── auditoria/      registro inmutable, historial, reportes PDF/Excel   RF-33…37
-│   │   └── sincronizacion/ operaciones sin conexión idempotentes               RF-38
+│   │   ├── sincronizacion/ operaciones sin conexión idempotentes               RF-38
+│   │   └── estudiantes/    supervisor PAE, autorización, rostro, entrega diaria RF-39…42
 │   ├── templates/ static/  panel web del administrador (PWA, MapLibre)
 │   ├── tests/              pruebas automáticas (pytest)
 │   └── rendimiento/        pruebas de desempeño (locust) para ISO/IEC 25010
@@ -127,13 +128,35 @@ python manage.py importar_simat <anexo6a.xlsx> --dane <CODIGO_DANE> --sedes sede
 
 - **Privacidad (Ley 1581 de 2012).** El comando solo cuenta por sede, grado y jornada; **nunca
   almacena datos personales de los estudiantes** (nombre, documento, dirección, etc.). El modelo
-  `catalogo.MatriculaSede` guarda únicamente totales.
+  `catalogo.MatriculaSede` guarda únicamente totales. La entrega por estudiante (siguiente
+  sección) usa otro comando, `importar_estudiantes`, que guarda solo la identidad mínima.
 - `--dane` se repite para varias instituciones; `--dry-run` muestra el resumen sin escribir.
 - El Anexo no trae el nombre de la institución ni sus coordenadas, así que se toman de un CSV
   aparte (`--sedes`) con las columnas `consecutivo_sede,nombre,sede,direccion,latitud,longitud`.
   Una sede sin coordenadas se omite con una advertencia.
 - Es **idempotente**: reimportar reemplaza los conteos de cada sede y año sin duplicar nada
   (clave natural `consecutivo_sede`, el `CONS_SEDE` del Anexo).
+
+### Supervisor PAE: entrega diaria por estudiante (RF-39…42, propuestos)
+
+Un rol nuevo, **SUPERVISOR**, registra desde la app móvil qué estudiantes reciben el PAE cada día:
+por curso, reconociendo la cara en el teléfono (sin red) o, siempre como alternativa, de forma
+manual con motivo. El administrador lo ve en «Estudiantes PAE» (cobertura del día por curso y por
+estudiante, autorizaciones, exportar a Excel) y crea los supervisores en «Supervisores PAE».
+
+```bash
+python manage.py importar_estudiantes <anexo6a.xlsx> --dane <CODIGO_DANE> --institucion "Normal Superior" --dry-run
+```
+
+- **Identidad mínima:** del Anexo 6A solo se guardan documento, nombres, apellidos, grado, grupo
+  y jornada. Idempotente por `PER_ID`; quien ya no aparece queda inactivo y sin biometría.
+- **Biometría (dato sensible, menores):** sin autorización vigente del acudiente no se inscribe
+  un rostro. Se guardan plantillas numéricas (3–5 vectores) **cifradas con Fernet**
+  (`BIOMETRIA_CLAVE`, Key Vault en Azure), nunca fotos. Revocar o dar de baja **borra** las
+  plantillas y queda en la auditoría (que nunca guarda vectores).
+- **Reglas:** una entrega por estudiante y día (restricción en la BD); FACIAL exige similitud ≥
+  `UMBRAL_SIMILITUD_FACIAL` (0,80 por defecto, calibrar en el piloto); MANUAL exige motivo.
+- La app trabaja sin red con la cola RF-38 (`estudiante.autorizar|inscribir|entregar|revocar`).
 
 ### Demo de un mes (`demo_mes`)
 
@@ -292,6 +315,12 @@ modo. Las instituciones siguen sin acceso a la web.
 | 35 | Ruta recorrida | `GET /api/envios/{id}/ubicaciones/` · mapa en el detalle | `test_flujo_completo` |
 | 36–37 | Reportes y exportación PDF/Excel | `/api/reportes/?formato=pdf\|xlsx` · `/reportes/` | `test_reportes_exportables` |
 | 38 | Operación sin conexión y sincronización | `/api/sincronizacion/lote/` · PWA | `test_sincronizacion.py` |
+| 39* | Rol supervisor PAE por institución | `Rol.SUPERVISOR`, `estudiantes.Supervisor` · `/supervisores/` | `test_admin_crea_un_supervisor`, `test_supervisor_lista_solo_su_institucion` |
+| 40* | Autorización del acudiente e inscripción facial | `estudiante.autorizar`, `estudiante.inscribir` (lote) · detalle en `/estudiantes/` | `test_flujo_completo_por_el_lote`, `test_inscripcion_sin_autorizacion_se_rechaza` |
+| 41* | Entrega diaria por estudiante (facial o manual) | `estudiante.entregar` (lote) · `GET /api/estudiantes/plantillas/` | `test_segunda_entrega_del_dia_se_rechaza`, `test_estudiantes.py` |
+| 42* | Cobertura por estudiante y exportación | `GET /api/estudiantes/cursos/`, `/historial/` · `/estudiantes/`, `/estudiantes/exportar/` | `test_cobertura_y_lista_del_curso`, `test_exportar_excel` |
+
+\* Requisitos propuestos para integrar en el documento de tesis.
 
 | RNF | Cómo se cumple |
 |---|---|
@@ -309,3 +338,4 @@ modo. Las instituciones siguen sin acceso a la web.
 | 19 | OpenAPI/Swagger en `/api/docs/` |
 | 20 | Evidencia con código de verificación y huella SHA-256 |
 | 21 | Sincronización idempotente por `uuid_cliente` |
+| 22* | Biometría de menores: autorización previa, plantillas cifradas, sin fotos, borrado al revocar y alternativa manual |

@@ -66,10 +66,15 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
 - `config/api_urls.py` monta toda la API bajo `/api/` (namespace `api`); `config/urls.py` monta el
   panel web (cada app trae su `urls.py` con vistas de plantilla) y el service worker en `/sw.js`.
 - Apps en `backend/apps/`, cada una con `api.py` (DRF) + `views.py` (panel) + `servicios.py`:
-  `cuentas` (usuario propio `cuentas.Usuario`, roles `ADMINISTRADOR|CONDUCTOR|INSTITUCION`, JWT,
-  permisos), `catalogo` (instituciones, conductores, vehículos, responsables, import SIMAT),
+  `cuentas` (usuario propio `cuentas.Usuario`, roles `ADMINISTRADOR|CONDUCTOR|INSTITUCION|SUPERVISOR`,
+  JWT, permisos), `catalogo` (instituciones, conductores, vehículos, responsables, import SIMAT),
   `envios`, `monitoreo` (mapa, alertas, KPIs, posición en vivo, ruteo OSRM), `auditoria`
-  (registro inmutable + reportes PDF/Excel), `sincronizacion` (lotes offline).
+  (registro inmutable + reportes PDF/Excel), `sincronizacion` (lotes offline), `estudiantes`
+  (supervisor PAE: estudiantes del SIMAT con identidad mínima vía `importar_estudiantes`,
+  autorización biométrica del acudiente, plantillas faciales cifradas con Fernet
+  `BIOMETRIA_CLAVE` — en dev se deriva de `SECRET_KEY`, sin ella la API responde 503 al inscribir —,
+  entrega diaria FACIAL|MANUAL inmutable, una por día; reglas en `estudiantes/servicios.py`,
+  panel `/estudiantes/`, catálogo `/supervisores/`; el reconocimiento ocurre en la app).
   `nutricion` (solo API: `POST /api/nutricion/asistente/` reenvía el chat de la app a Gemini con
   `GEMINI_API_KEY` del servidor, para que la clave no viaje en el APK; 503 sin clave, 502 si Gemini
   falla; cupo por usuario `LIMITE_NUTRICION`, clase `LimitePorUsuario` de `cuentas/limite.py`).
