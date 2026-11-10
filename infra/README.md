@@ -15,7 +15,7 @@ graph LR
 |---|---|
 | `azure.yaml` | Servicio `web` = carpeta `backend/` en App Service (Python). |
 | `infra/main.bicep` | Crea el grupo `rg-<entorno>` y llama a `resources.bicep`. |
-| `infra/resources.bicep` | Identidad, Key Vault (RBAC) y secretos, PostgreSQL, plan B1, web app, monitoreo. |
+| `infra/resources.bicep` | Identidad, Key Vault (RBAC) y secretos, PostgreSQL, plan F1/B1, web app, monitoreo. |
 | `infra/main.parameters.json` | Toma los valores de las variables del entorno de azd. |
 | `backend/startup.sh` | Arranque: `migrate`, `createcachetable`, `collectstatic`, `seed_demo` (opcional), gunicorn. |
 | `backend/.webappignore` | Lo que no se sube (`.env`, `.venv`, `media/`…). |
@@ -34,7 +34,7 @@ Con **Azure for Students** queda prácticamente en US$0:
 Limitaciones de F1: la app se descarga tras ~20 min sin uso (la primera petición tarda) y,
 si se acaban los 60 min de CPU del día, responde 403 hasta el día siguiente. El conductor
 manda su posición cada 3 s, así que para una demostración o un piloto conviene subir a B1
-**solo esos días** (US$0,018/h ≈ US$0,43 al día en North Central US) y bajar después:
+**solo esos días** (US$0,0238/h ≈ US$0,57 al día en Chile Central) y bajar después:
 
 ```powershell
 $plan = azd env get-value APP_SERVICE_PLAN_NAME
@@ -49,9 +49,12 @@ Para que un `azd provision` posterior no lo devuelva a F1: `azd env set APP_SERV
 ```powershell
 winget install microsoft.azd
 winget install Microsoft.AzureCLI
-azd auth login
 az login
+azd config set auth.useAzCliAuth true   # azd usa la sesión de az
 ```
+
+Si `azd` dice que no hay suscripciones justo después de activar Azure for Students, borrar
+`%USERPROFILE%\.azd\subscriptions.cache` y volver a intentar.
 
 ## 2. Elegir la región
 
@@ -62,14 +65,16 @@ Las suscripciones de **Azure for Students** solo permiten desplegar en algunas r
 az policy assignment list --query "[].{nombre:displayName, regiones:parameters.listOfAllowedLocations.value}" -o json
 ```
 
-Usar una de esas (p. ej. `eastus2`, `centralus`, `brazilsouth`). Si PostgreSQL no se puede
-crear allí, definir `POSTGRES_LOCATION` con otra región permitida.
+En la suscripción del proyecto la política permite `northcentralus`, `belgiumcentral`, `westus2`,
+`chilecentral` y `brazilsouth`, pero **F1 tiene cuota 0 en `northcentralus` y falla en
+`westus2`**. Se usa **`chilecentral`** (F1 y B1 funcionan, y es la más cercana a Pasto). Si
+PostgreSQL no se puede crear en la región elegida, definir `POSTGRES_LOCATION` con otra permitida.
 
 ## 3. Crear el entorno y los secretos
 
 ```powershell
 azd env new paego-prod
-azd env set AZURE_LOCATION eastus2
+azd env set AZURE_LOCATION chilecentral
 # Secretos (quedan en .azure/, que está en .gitignore; nunca commitearlos):
 azd env set POSTGRES_ADMIN_PASSWORD "<contraseña larga>"
 azd env set DJANGO_SECRET_KEY (python -c "import secrets; print(secrets.token_urlsafe(64))")
@@ -129,7 +134,23 @@ para los builds de CI y release). Para la versión web de Flutter agregar su ori
   purga (no se puede purgar antes): para volver a crear el entorno antes de ese plazo usar
   otro nombre de entorno.
 
+## Medición en F1 (Chile Central, noviembre 2026)
+
+| Qué | Resultado |
+|---|---|
+| `azd up` completo | 8,7 min (infraestructura 6,6 + código 2) · `azd deploy` solo: ~2 min |
+| Arranque (`migrate` + `collectstatic` + `seed_demo` + gunicorn) | ~15 s de CPU |
+| Conductor mandando posición cada 3 s | ~20 peticiones/min ≈ 0,5 s de CPU por minuto; latencia p50 377 ms, p95 499 ms |
+| Prueba E2E de Flutter (`PAEGO_E2E_URL=<WEB_URI> flutter test test/e2e`) | 4/4 en 9 s |
+
+Con 60 min de CPU al día, F1 alcanza para ~100 horas-conductor diarias de transmisión GPS (p. ej.
+6 conductores × 5 h ≈ 15–20 min de CPU), más el panel. El límite real de F1 para la sustentación
+es el arranque en frío y no tener Always On; para eso subir a B1 ese día.
+
 ## Notas
+
+- App Service manda `X-Forwarded-For` como `ip:puerto`; `apps/auditoria/servicios.py` quita el
+  puerto y valida la IP (antes el login respondía 500).
 
 - Las fotos de evidencia se guardan en `/home/paego/media` (persistente). Igual que en
   Railway, en producción Django no las sirve por URL; verlas desde el panel requiere

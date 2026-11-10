@@ -47,7 +47,8 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
 - Credenciales demo: `admin@paego.local`, `conductor1..6@paego.local`, `institucion1..10@paego.local`,
   `conductor.prueba@paego.local`; contraseña `Paego2026!`.
 - Despliegue en Azure (alternativa, rama `feature/despliegue-azure`): `azure.yaml` + `infra/*.bicep`
-  (App Service Linux B1 + PostgreSQL Flexible 17 B1ms + Key Vault con identidad administrada +
+  (App Service Linux F1 por defecto, región `chilecentral` — F1 sin cuota en northcentralus —
+  + PostgreSQL Flexible 17 B1ms + Key Vault con identidad administrada +
   Log Analytics). `azd provision --preview` y luego `azd up`; arranque en `backend/startup.sh`
   (LF obligatorio, `.gitattributes`). Guía completa en `infra/README.md`. `prod.py` acepta
   `WEBSITE_HOSTNAME`; `MEDIA_ROOT` configurable (`/home/paego/media` en Azure).
