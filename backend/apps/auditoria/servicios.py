@@ -1,6 +1,7 @@
 """Servicio único para escribir en el registro de auditoría (RF-33)."""
 
 import contextvars
+import ipaddress
 from contextlib import contextmanager
 from datetime import timedelta
 
@@ -25,13 +26,33 @@ def hora_simulada(ts):
         _hora_simulada.reset(token)
 
 
+def _normalizar_ip(valor):
+    """IP válida o None. Quita el puerto que agregan algunos proxies.
+
+    Azure App Service manda `X-Forwarded-For: 1.2.3.4:56789` (IPv6: `[::1]:56789`);
+    además la cabecera la puede escribir el cliente, así que nunca se confía en
+    que sea una IP: un valor inválido no debe tumbar la petición.
+    """
+    valor = (valor or "").strip()
+    if valor.startswith("[") and "]" in valor:
+        valor = valor[1 : valor.index("]")]
+    elif valor.count(":") == 1:
+        valor = valor.split(":", 1)[0]
+    try:
+        return str(ipaddress.ip_address(valor))
+    except ValueError:
+        return None
+
+
 def _ip(request):
     if request is None:
         return None
     reenviada = request.META.get("HTTP_X_FORWARDED_FOR")
     if reenviada:
-        return reenviada.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
+        ip = _normalizar_ip(reenviada.split(",")[0])
+        if ip:
+            return ip
+    return _normalizar_ip(request.META.get("REMOTE_ADDR"))
 
 
 def registrar(
