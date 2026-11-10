@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Wireframes web · Supervisor PAE</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --azul:#3366cc; --azul-osc:#004884; --gov:#05357a; --fondo:#f2f4f8; --borde:#e3e7ef;
+          --texto:#1d2433; --tenue:#646b7a; --verde:#0b7a33; --verde-f:#e3f4e9; --ambar:#a15c00;
+          --ambar-f:#fdf1dc; --rojo:#b42318; --chip:#dfe5f1; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Work Sans',sans-serif; color:var(--texto); background:#fff; }
+  .pantalla { width:1440px; min-height:960px; background:var(--fondo); display:flex; flex-direction:column; margin-bottom:40px; position:relative; overflow:hidden; }
+  .gov { height:34px; background:var(--gov); color:#fff; font-weight:700; font-size:13px; padding:0 37px; display:flex; align-items:center; }
+  .cab { height:76px; background:#fff; border-bottom:1px solid var(--borde); display:flex; align-items:center; padding:0 26px; gap:44px; }
+  .marca { display:flex; align-items:center; gap:14px; }
+  .logo { width:44px; height:44px; border-radius:6px; background:var(--azul); }
+  .marca b { font-size:19px; display:block; } .marca small { color:var(--tenue); font-size:13px; }
+  .cab .fecha { color:var(--tenue); font-size:15px; }
+  .linea { background:var(--verde-f); color:var(--verde); border-radius:20px; padding:6px 14px; font-size:15px; font-weight:500; }
+  .linea::before { content:'●'; margin-right:6px; font-size:11px; }
+  .usuario { display:flex; align-items:center; gap:12px; font-size:15px; font-weight:500; }
+  .avatar { width:40px; height:40px; border-radius:50%; background:#e3e9f7; }
+  .cuerpo { display:flex; flex:1; }
+  nav { width:312px; background:#fff; border-right:1px solid var(--borde); padding:30px 16px; }
+  nav h6 { font-size:12px; color:var(--tenue); font-weight:600; margin:20px 13px 10px; letter-spacing:.02em; }
+  nav h6:first-child { margin-top:0; }
+  nav a { display:flex; align-items:center; gap:13px; padding:10px 13px; border-radius:6px; font-size:16px; color:var(--texto); text-decoration:none; }
+  nav a::before { content:''; width:20px; height:20px; border-radius:4px; background:var(--chip); }
+  nav a.activo { background:#e8eefb; color:var(--azul); font-weight:600; }
+  nav a.nuevo::after { content:'nuevo'; margin-left:auto; font-size:11px; color:var(--azul); border:1px solid #c6d4f1; border-radius:4px; padding:1px 6px; font-weight:500; }
+  main { flex:1; padding:40px 37px; }
+  .titulo { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; }
+  h1 { font-size:28px; font-weight:600; margin-bottom:6px; }
+  .sub { color:var(--tenue); font-size:15px; }
+  .btn { white-space:nowrap; display:inline-block; border-radius:6px; padding:10px 18px; font-size:15px; font-weight:600; border:1px solid var(--azul); color:var(--azul); background:#fff; }
+  .btn.prim { background:var(--azul); color:#fff; }
+  .btn.peligro { border-color:#e5b4ae; color:var(--rojo); }
+  .btn.chico { padding:7px 14px; font-size:14px; }
+  .caja { background:#fff; border:1px solid var(--borde); border-radius:6px; margin-bottom:22px; }
+  .caja > h2 { font-size:17px; font-weight:600; padding:18px 22px; border-bottom:1px solid var(--borde); }
+  .filtros { display:flex; gap:16px; padding:18px 22px; border-bottom:1px solid var(--borde); align-items:flex-end; }
+  label { font-size:13px; color:var(--tenue); display:block; margin-bottom:6px; }
+  .campo { border:1px solid #cdd3de; border-radius:4px; height:40px; padding:0 12px; display:flex; align-items:center; font-size:15px; background:#fff; min-width:180px; justify-content:space-between; }
+  .campo.flecha::after { content:'▾'; color:var(--tenue); font-size:11px; }
+  .campo.vacio { color:#a3a9b5; }
+  .cifras { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; padding:20px 22px; }
+  .cifra { border:1px solid var(--borde); border-radius:6px; padding:18px 20px; }
+  .cifra small { color:var(--tenue); font-size:14px; display:block; }
+  .cifra b { font-size:34px; font-weight:700; display:block; margin:6px 0; }
+  .cifra b span { color:var(--tenue); font-weight:500; }
+  .cifra p { color:var(--tenue); font-size:13px; }
+  .barra { height:6px; background:#e7ebf2; border-radius:3px; overflow:hidden; margin-top:8px; }
+  .barra i { display:block; height:100%; background:var(--azul); }
+  table { width:100%; border-collapse:collapse; font-size:15px; }
+  th { text-align:left; font-size:14px; font-weight:600; color:var(--tenue); background:#f6f7fa; padding:12px 22px; border-bottom:1px solid var(--borde); }
+  td { padding:12px 22px; border-bottom:1px solid var(--borde); }
+  tr:last-child td { border-bottom:0; }
+  td.n, th.n { text-align:right; }
+  tr.sel td { background:#eef3fc; }
+  tr.sel td:first-child { box-shadow:inset 3px 0 0 var(--azul); }
+  a.l { color:var(--azul); text-decoration:underline; }
+  .estado { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:4px; font-size:13px; font-weight:500; }
+  .estado::before { content:'●'; font-size:9px; }
+  .ok { background:var(--verde-f); color:var(--verde); }
+  .pend { background:#e8eefb; color:var(--azul); }
+  .warn { background:var(--ambar-f); color:var(--ambar); }
+  .tenue { color:var(--tenue); font-size:13px; }
+  .nota { color:var(--tenue); font-size:13px; margin-top:6px; }
+  /* Panel lateral */
+  .velo { position:absolute; inset:0; background:rgba(16,24,40,.32); }
+  .panel { position:absolute; top:0; right:0; bottom:0; width:560px; background:#fff; box-shadow:-8px 0 24px rgba(0,0,0,.12); display:flex; flex-direction:column; }
+  .panel .cabeza { padding:22px 26px; border-bottom:1px solid var(--borde); display:flex; justify-content:space-between; }
+  .panel .cabeza h3 { font-size:21px; font-weight:600; }
+  .panel .cerrar { color:var(--azul); font-size:20px; }
+  .panel .sec { padding:20px 26px; border-bottom:1px solid var(--borde); }
+  .panel h4 { font-size:16px; font-weight:600; margin-bottom:10px; }
+  .panel p { font-size:14px; line-height:1.5; }
+  .form .fila { margin-bottom:14px; }
+  .form .campo { width:100%; }
+  .check { display:flex; gap:10px; align-items:flex-start; font-size:14px; margin:6px 0 16px; }
+  .check i { width:18px; height:18px; border:1.5px solid #8a93a6; border-radius:3px; flex:none; margin-top:1px; }
+  .check i.si { background:var(--azul); border-color:var(--azul); }
+  .aviso { background:#f6f7fa; border-left:3px solid var(--azul); padding:12px 14px; font-size:13px; color:#3c4455; border-radius:4px; }
+  .def { display:grid; grid-template-columns:150px 1fr; gap:8px 12px; font-size:14px; }
+  .def dt { color:var(--tenue); }
+</style>
+</head>
+<body>
+
+<!-- ═════════ Plantilla del shell (cabecera + navegación) ═════════ -->
+<template id="shell">
+  <div class="gov">GOV.CO</div>
+  <div class="cab">
+    <div class="marca"><div class="logo"></div><div><b>PAEGo</b><small>Alcaldía de Pasto · Secretaría de Educación</small></div></div>
+    <span class="fecha">martes 10 de noviembre</span>
+    <span class="linea">En línea</span>
+    <span class="usuario"><span class="avatar"></span>Admin</span>
+  </div>
+</template>
+<template id="nav">
+  <nav>
+    <h6>OPERACIÓN</h6><a data-k="hoy">Hoy</a><a data-k="envios">Envíos</a><a data-k="estudiantes" class="nuevo">Estudiantes PAE</a><a data-k="novedades">Novedades</a>
+    <h6>PLANEACIÓN</h6><a>Programar envíos</a>
+    <h6>CATÁLOGO</h6><a>Instituciones</a><a>Responsables</a><a data-k="supervisores" class="nuevo">Supervisores PAE</a><a>Conductores</a><a>Vehículos</a>
+    <h6>CONTROL</h6><a>Indicadores</a><a>Cobertura</a><a>Reportes</a><a>Auditoría</a>
+    <h6>ADMINISTRACIÓN</h6><a>Usuarios</a>
+  </nav>
+</template>
+
+<!-- ═════════ 18 · Estudiantes PAE ═════════ -->
+<section class="pantalla" id="w18" data-activo="estudiantes">
+  <div class="cuerpo"><main>
+    <div class="titulo">
+      <div><h1>Estudiantes PAE</h1><p class="sub">Quién recibió el PAE cada día. El supervisor lo registra desde la aplicación móvil, con reconocimiento facial o de forma manual.</p></div>
+      <span class="btn">Exportar a Excel</span>
+    </div>
+    <div class="caja">
+      <div class="filtros">
+        <div><label>Institución</label><div class="campo flecha" style="min-width:330px">Escuela Normal Superior de Pasto</div></div>
+        <div><label>Día</label><div class="campo" style="min-width:170px">10/11/2026 <span class="tenue">▦</span></div></div>
+      </div>
+      <div class="cifras">
+        <div class="cifra"><small>Recibieron el PAE</small><b>1.874 <span>de 2.534</span></b><div class="barra"><i style="width:74%"></i></div><p style="margin-top:8px">74,0 % de los estudiantes activos · martes 10 de noviembre</p></div>
+        <div class="cifra"><small>Con rostro inscrito</small><b>1.402</b><p>con autorización del acudiente; el resto se registra de forma manual</p></div>
+        <div class="cifra"><small>Registros sin cámara hoy</small><b>318</b><p>entregas manuales con motivo (sin autorización, falla o poca luz)</p></div>
+      </div>
+      <h2 style="border-top:1px solid var(--borde)">Por curso</h2>
+      <table>
+        <tr><th>Curso</th><th class="n">Activos</th><th class="n">Con rostro</th><th class="n">Recibieron</th><th class="n">%</th><th style="width:260px">Avance</th></tr>
+        <tr><td><a class="l">6° A</a></td><td class="n">36</td><td class="n">22</td><td class="n">30</td><td class="n">83</td><td><div class="barra"><i style="width:83%"></i></div></td></tr>
+        <tr><td><a class="l">6° B</a></td><td class="n">35</td><td class="n">19</td><td class="n">24</td><td class="n">69</td><td><div class="barra"><i style="width:69%"></i></div></td></tr>
+        <tr class="sel"><td><a class="l">7° B</a></td><td class="n">34</td><td class="n">25</td><td class="n">27</td><td class="n">79</td><td><div class="barra"><i style="width:79%"></i></div></td></tr>
+        <tr><td><a class="l">8° A</a></td><td class="n">33</td><td class="n">18</td><td class="n">20</td><td class="n">61</td><td><div class="barra"><i style="width:61%"></i></div></td></tr>
+        <tr><td class="tenue" colspan="6">… 69 cursos más</td></tr>
+      </table>
+    </div>
+    <div class="caja">
+      <h2>7° B · martes 10 de noviembre</h2>
+      <table>
+        <tr><th>Estudiante</th><th>Documento</th><th>Entrega del día</th><th>Autorización</th><th>Rostro</th></tr>
+        <tr><td><b style="font-weight:500">Ortega Benavides</b>, Laura Sofía</td><td>TI 1085 000 101</td><td><span class="estado ok">Recibió</span> <span class="tenue">reconocimiento facial · 10:12</span></td><td class="tenue">Vigente</td><td class="tenue">Sí</td></tr>
+        <tr><td><b style="font-weight:500">Pantoja Ruiz</b>, Mateo</td><td>TI 1085 000 102</td><td><span class="estado ok">Recibió</span> <span class="tenue">registro manual · 10:15</span></td><td class="tenue">Sin autorización</td><td class="tenue">No</td></tr>
+        <tr><td><b style="font-weight:500">Quiroz Narváez</b>, Valentina</td><td>TI 1085 000 103</td><td><span class="estado pend">Pendiente</span></td><td class="tenue">Vigente</td><td class="tenue">Sí</td></tr>
+        <tr><td><b style="font-weight:500">Rivas Cabrera</b>, Juan Esteban</td><td>TI 1085 000 104</td><td><span class="estado ok">Recibió</span> <span class="tenue">reconocimiento facial · 10:16</span></td><td class="tenue">Vigente</td><td class="tenue">Sí</td></tr>
+        <tr><td><b style="font-weight:500">Salazar Moncayo</b>, Isabella</td><td>TI 1085 000 105</td><td><span class="estado pend">Pendiente</span></td><td class="tenue">Sin autorización</td><td class="tenue">No</td></tr>
+      </table>
+    </div>
+    <p class="nota">Datos de menores (Ley 1581 de 2012): solo se guarda documento, nombre y curso. La cara se registra únicamente con autorización del acudiente, como plantilla cifrada (nunca fotos), y siempre se puede registrar la entrega sin cámara.</p>
+  </main></div>
+</section>
+
+<!-- ═════════ 19 · Detalle: registrar autorización ═════════ -->
+<section class="pantalla" id="w19" data-activo="estudiantes" data-fondo="w18">
+  <div class="velo"></div>
+  <div class="panel">
+    <div class="cabeza"><div><h3>Isabella Salazar Moncayo</h3><p class="tenue">7° B · TI 1085 000 105</p></div><span class="cerrar">✕</span></div>
+    <div class="sec">
+      <h4>Autorización biométrica del acudiente</h4>
+      <p class="tenue" style="margin-bottom:14px">Sin autorización: el supervisor registra su entrega de forma manual.</p>
+      <div class="form">
+        <div class="fila"><label>Nombre del acudiente</label><div class="campo">Rosa Moncayo Erazo</div></div>
+        <div class="fila"><label>Documento del acudiente</label><div class="campo">27 000 555</div></div>
+        <div class="fila"><label>Parentesco</label><div class="campo">Madre</div><p class="nota">Madre, padre, abuela, tutor…</p></div>
+        <div class="check"><i class="si"></i><span>Tengo la autorización firmada por el acudiente (previa, expresa e informada).</span></div>
+        <span class="btn prim chico">Registrar autorización</span>
+      </div>
+    </div>
+    <div class="sec" style="border-bottom:0">
+      <div class="aviso">Los datos biométricos de menores son sensibles (Ley 1581, art. 5 y 7). Con la autorización, el supervisor puede inscribir el rostro desde la app; si se revoca, las plantillas se borran.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 20 · Detalle: autorizado, entregas recientes ═════════ -->
+<section class="pantalla" id="w20" data-activo="estudiantes" data-fondo="w18">
+  <div class="velo"></div>
+  <div class="panel">
+    <div class="cabeza"><div><h3>Laura Sofía Ortega Benavides</h3><p class="tenue">7° B · TI 1085 000 101</p></div><span class="cerrar">✕</span></div>
+    <div class="sec">
+      <h4>Autorización biométrica del acudiente</h4>
+      <p style="margin-bottom:12px"><span class="estado ok">Vigente</span> desde 2 de noviembre de 2026 · Carmen Benavides (madre, documento 30 111 222).</p>
+      <p class="tenue" style="margin-bottom:14px">Rostro inscrito: 5 plantillas cifradas · modelo qualcomm-mobilefacenet-v0.66.0</p>
+      <div class="form"><div class="fila"><label>Motivo de la revocación</label><div class="campo vacio" style="height:62px;align-items:flex-start;padding-top:10px">Opcional</div></div></div>
+      <span class="btn peligro chico">Revocar autorización</span>
+    </div>
+    <div class="sec" style="border-bottom:0;padding:0">
+      <h4 style="padding:20px 26px 10px">Entregas recientes</h4>
+      <table>
+        <tr><th>Día</th><th>Método</th><th>Hora</th><th>Supervisor</th></tr>
+        <tr><td>10 nov</td><td>Reconocimiento facial <span class="tenue">· 0,91</span></td><td>10:12</td><td>Sara Supervisora</td></tr>
+        <tr><td>9 nov</td><td>Reconocimiento facial <span class="tenue">· 0,88</span></td><td>10:09</td><td>Sara Supervisora</td></tr>
+        <tr><td>6 nov</td><td>Manual <span class="tenue">· poca luz</span></td><td>10:20</td><td>Sara Supervisora</td></tr>
+        <tr><td>5 nov</td><td>Reconocimiento facial <span class="tenue">· 0,93</span></td><td>10:11</td><td>Sara Supervisora</td></tr>
+        <tr><td>4 nov</td><td>Reconocimiento facial <span class="tenue">· 0,90</span></td><td>10:14</td><td>Sara Supervisora</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 21 · Supervisores PAE ═════════ -->
+<section class="pantalla" id="w21" data-activo="supervisores">
+  <div class="cuerpo"><main>
+    <div class="titulo">
+      <div><h1>Supervisores PAE</h1><p class="sub">Registran a los estudiantes y la entrega diaria del PAE desde la aplicación móvil.</p></div>
+      <span class="btn prim">Registrar supervisor</span>
+    </div>
+    <div class="caja">
+      <div class="filtros">
+        <div><label>Buscar</label><div class="campo vacio" style="min-width:300px">Nombre o correo</div></div>
+        <div><label>Estado</label><div class="campo flecha">Activos</div></div>
+      </div>
+      <table>
+        <tr><th>Nombre</th><th>Institución</th><th>Correo</th><th>Estado</th><th></th></tr>
+        <tr><td><b style="font-weight:500">Sara Supervisora</b></td><td>Escuela Normal Superior de Pasto — Principal</td><td>supervisor1@paego.local</td><td><span class="estado ok">Activo</span></td><td class="n"><span class="btn peligro chico">Desactivar</span></td></tr>
+        <tr><td><b style="font-weight:500">Andrés Cerón Paz</b></td><td>Escuela Normal Superior de Pasto — Principal</td><td>supervisor2@paego.local</td><td><span class="estado ok">Activo</span></td><td class="n"><span class="btn peligro chico">Desactivar</span></td></tr>
+      </table>
+    </div>
+  </main></div>
+</section>
+
+<!-- ═════════ 22 · Nuevo supervisor ═════════ -->
+<section class="pantalla" id="w22" data-activo="supervisores" data-fondo="w21">
+  <div class="velo"></div>
+  <div class="panel">
+    <div class="cabeza"><div><h3>Registrar supervisor</h3><p class="tenue">Supervisor PAE de una institución</p></div><span class="cerrar">✕</span></div>
+    <div class="sec form" style="border-bottom:0">
+      <div class="fila"><label>Nombres</label><div class="campo">Andrés</div></div>
+      <div class="fila"><label>Apellidos</label><div class="campo">Cerón Paz</div></div>
+      <div class="fila"><label>Correo</label><div class="campo">supervisor2@paego.local</div></div>
+      <div class="fila"><label>Teléfono</label><div class="campo vacio">Opcional</div></div>
+      <div class="fila"><label>Contraseña</label><div class="campo">••••••••••</div><p class="nota">Mínimo 10 caracteres. La persona ingresa con este correo en la app móvil.</p></div>
+      <div class="fila"><label>Institución</label><div class="campo flecha">Escuela Normal Superior de Pasto — Principal</div><p class="nota">Solo verá y registrará a los estudiantes de esta institución.</p></div>
+      <div style="display:flex;gap:12px;margin-top:8px"><span class="btn prim chico">Guardar</span><span class="btn chico">Cancelar</span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Arma cada pantalla con el shell y la navegación; los paneles van sobre su fondo.
+  const shell = document.getElementById('shell').innerHTML;
+  const nav = document.getElementById('nav').innerHTML;
+  document.querySelectorAll('section.pantalla').forEach((s) => {
+    const fondo = s.dataset.fondo;
+    if (fondo) {
+      const base = document.getElementById(fondo).querySelector('.cuerpo').cloneNode(true);
+      s.insertBefore(base, s.firstChild);
+    } else if (!s.querySelector('nav')) {
+      s.querySelector('.cuerpo').insertAdjacentHTML('afterbegin', nav);
+    }
+    s.insertAdjacentHTML('afterbegin', shell);
+    s.querySelectorAll('nav a').forEach((a) => a.classList.toggle('activo', a.dataset.k === s.dataset.activo));
+  });
+</script>
+</body>
+</html>
