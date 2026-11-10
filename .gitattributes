@@ -1,0 +1,2 @@
+# Los scripts de shell corren en Linux (App Service, CI): siempre con LF.
+*.sh text eol=lf

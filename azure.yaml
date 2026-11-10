@@ -1,0 +1,18 @@
+# Despliegue de la plataforma web PAEGo en Azure con Azure Developer CLI (azd).
+#   azd auth login
+#   azd env new paego-prod
+#   azd provision --preview     # ver qué se va a crear antes de crearlo
+#   azd up                      # crear la infraestructura (infra/) y desplegar backend/
+# Detalle en infra/README.md.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: paego
+metadata:
+  template: paego-django-appservice
+services:
+  web:
+    project: ./backend
+    language: python
+    host: appservice
+infra:
+  provider: bicep
+  path: infra

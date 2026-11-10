@@ -1,0 +1,82 @@
+# Despliegue continuo a Azure App Service con azd (alternativa a cd.yml/Railway).
+#
+# Solo despliega el código (azd deploy): la infraestructura se crea una vez con
+# `azd up` desde un PC (ver infra/README.md). Se ejecuta cuando el CI de main
+# termina en verde, o a mano.
+#
+# Autenticación sin contraseñas (OIDC / credencial federada). `azd pipeline config`
+# crea la identidad y define estas variables del repositorio:
+#   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_ENV_NAME, AZURE_LOCATION
+# Sin AZURE_CLIENT_ID el job se salta con un aviso en vez de fallar.
+name: CD Azure
+
+on:
+  workflow_run:
+    workflows: ["CI plataforma web"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # token OIDC para iniciar sesión en Azure
+
+concurrency:
+  group: despliegue-azure
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    name: Desplegar en Azure App Service
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+    steps:
+      - name: Verificar configuración
+        id: config
+        run: |
+          if [ -z "$AZURE_CLIENT_ID" ]; then
+            echo "::notice::Falta AZURE_CLIENT_ID (correr 'azd pipeline config'); no se despliega."
+            echo "listo=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listo=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.listo == 'true'
+        with:
+          # Lo que pasó el CI, no lo último de la rama.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: Azure/setup-azd@v2
+        if: steps.config.outputs.listo == 'true'
+      - name: Iniciar sesión en Azure (OIDC)
+        if: steps.config.outputs.listo == 'true'
+        run: |
+          azd auth login \
+            --client-id "$AZURE_CLIENT_ID" \
+            --tenant-id "$AZURE_TENANT_ID" \
+            --federated-credential-provider github
+      - name: Desplegar
+        if: steps.config.outputs.listo == 'true'
+        run: |
+          azd env new "$AZURE_ENV_NAME" --subscription "$AZURE_SUBSCRIPTION_ID" --location "$AZURE_LOCATION" --no-prompt || \
+            azd env select "$AZURE_ENV_NAME"
+          azd env refresh --no-prompt
+          azd deploy web --no-prompt
+      - name: Comprobar que responde
+        if: steps.config.outputs.listo == 'true'
+        run: |
+          URL="$(azd env get-value WEB_URI)"
+          for i in $(seq 1 30); do
+            codigo=$(curl -s -o /dev/null -w "%{http_code}" "$URL/ingresar/")
+            [ "$codigo" = "200" ] && echo "### Desplegado en $URL" >> "$GITHUB_STEP_SUMMARY" && exit 0
+            sleep 10
+          done
+          echo "::error::$URL/ingresar/ no respondió 200 (último código: $codigo)"; exit 1

@@ -46,6 +46,11 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
   (DATABASE_PUBLIC_URL de Railway) y `RESPALDO_CLAVE` (sin ellos se salta). Local: `scripts/respaldo_bd.*`.
 - Credenciales demo: `admin@paego.local`, `conductor1..6@paego.local`, `institucion1..10@paego.local`,
   `conductor.prueba@paego.local`; contraseña `Paego2026!`.
+- Despliegue en Azure (alternativa, rama `feature/despliegue-azure`): `azure.yaml` + `infra/*.bicep`
+  (App Service Linux B1 + PostgreSQL Flexible 17 B1ms + Key Vault con identidad administrada +
+  Log Analytics). `azd provision --preview` y luego `azd up`; arranque en `backend/startup.sh`
+  (LF obligatorio, `.gitattributes`). Guía completa en `infra/README.md`. `prod.py` acepta
+  `WEBSITE_HOSTNAME`; `MEDIA_ROOT` configurable (`/home/paego/media` en Azure).
 - Despliegue: Railway, `railway up --service web` desde `backend/` (sin git). Los comandos de
   start/pre-deploy están configurados en el servicio de Railway, no en el repo. Prod:
   `config.settings.prod`, gunicorn + WhiteNoise.

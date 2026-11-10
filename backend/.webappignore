@@ -1,0 +1,11 @@
+# Archivos locales que azd no sube a Azure App Service
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+.pytest_cache/
+.ruff_cache/
+.media-test/
+media/
+staticfiles/

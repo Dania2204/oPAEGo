@@ -41,6 +41,13 @@ MIDDLEWARE = [
 # Dominios desde los que se aceptan formularios (p. ej. https://paego.up.railway.app).
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])  # noqa: F405
 
+# Azure App Service publica su dominio en WEBSITE_HOSTNAME: se acepta sin tener
+# que repetirlo en DJANGO_ALLOWED_HOSTS ni en los orígenes de CSRF.
+_HOST_AZURE = env("WEBSITE_HOSTNAME", default="")  # noqa: F405
+if _HOST_AZURE:
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, _HOST_AZURE]  # noqa: F405
+    CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, f"https://{_HOST_AZURE}"]
+
 # Registros en JSON (una línea por evento) para filtrarlos en Railway.
 LOGGING = configuracion(
     env("LOG_FORMATO", default="json"),  # noqa: F405

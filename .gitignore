@@ -34,3 +34,6 @@ htmlcov/
 
 # Copia comprimida de docs/wireframes (los PNG ya están versionados)
 docs/wireframes.zip
+
+# Entornos de Azure Developer CLI (contienen secretos)
+.azure/
