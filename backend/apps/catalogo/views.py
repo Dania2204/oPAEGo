@@ -22,9 +22,10 @@ from apps.comun import (
     responder,
 )
 from apps.cuentas.permisos import AdministradorRequeridoMixin
+from apps.estudiantes.models import Supervisor
 
 from . import servicios
-from .forms import ConductorForm, InstitucionForm, ResponsableForm, VehiculoForm
+from .forms import ConductorForm, InstitucionForm, ResponsableForm, SupervisorForm, VehiculoForm
 from .models import Conductor, Institucion, ResponsableRecepcion, Vehiculo
 
 
@@ -114,6 +115,21 @@ MODULOS = {
             ("usuario.email", "Correo"),
         ],
         ["usuario__first_name", "usuario__last_name", "cargo", "institucion__nombre"],
+        select_related=["usuario", "institucion"],
+        con_usuario=True,
+    ),
+    "supervisores": Modulo(
+        "supervisor",
+        Supervisor,
+        SupervisorForm,
+        "Supervisores PAE",
+        "supervisor",
+        [
+            ("usuario.get_full_name", "Nombre"),
+            ("institucion", "Institución"),
+            ("usuario.email", "Correo"),
+        ],
+        ["usuario__first_name", "usuario__last_name", "institucion__nombre"],
         select_related=["usuario", "institucion"],
         con_usuario=True,
     ),

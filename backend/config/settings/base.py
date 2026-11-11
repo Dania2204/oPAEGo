@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.monitoreo",
     "apps.sincronizacion",
     "apps.nutricion",
+    "apps.estudiantes",
 ]
 
 # No se usan sesiones de Django: la autenticación de la web y de la API es
@@ -195,7 +196,17 @@ PAEGO = {
     "UMBRAL_DIFERIDO_MIN": env.int("PAEGO_UMBRAL_DIFERIDO_MIN", default=5),
     # RF-38: tolerancia al reloj adelantado del dispositivo.
     "TOLERANCIA_RELOJ_MIN": env.int("PAEGO_TOLERANCIA_RELOJ_MIN", default=5),
+    # Entrega a estudiantes: similitud coseno mínima para aceptar un reconocimiento
+    # facial (se calibra en el piloto) y muestras por estudiante al inscribirlo.
+    "UMBRAL_SIMILITUD_FACIAL": env.float("PAEGO_UMBRAL_SIMILITUD_FACIAL", default=0.80),
+    "MUESTRAS_ROSTRO_MIN": 3,
+    "MUESTRAS_ROSTRO_MAX": 5,
 }
+
+# Clave Fernet que cifra las plantillas faciales de los estudiantes (dato sensible,
+# Ley 1581 art. 5-7). En producción viene del Key Vault; sin ella la biometría queda
+# deshabilitada (la entrega manual sigue funcionando).
+BIOMETRIA_CLAVE = env("BIOMETRIA_CLAVE", default="")
 
 # Registros por consola (config/registro.py). LOG_FORMATO=json en producción.
 from config.registro import configuracion as _registro  # noqa: E402

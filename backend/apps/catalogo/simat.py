@@ -5,10 +5,40 @@ jornada (codificación DANE/SIMAT). Aquí se traducen a texto para los mensajes 
 comando de importación y el reporte de cobertura. Un código desconocido se muestra
 tal cual, de modo que un cambio en la codificación nunca oculta información.
 
-Nota de privacidad: este módulo y todo el flujo de importación trabajan solo con
-conteos agregados. Los datos personales de los estudiantes (nombre, documento,
-dirección, etc.) nunca se almacenan (minimización de datos, Ley 1581).
+Nota de privacidad (Ley 1581, minimización): `importar_simat` solo guarda conteos.
+`importar_estudiantes` (entrega del PAE por estudiante) guarda únicamente la
+identidad mínima: documento, nombres, apellidos y curso. `leer_anexo` solo entrega
+las columnas que se le piden, así que el resto del Anexo (dirección, teléfono,
+SISBÉN, víctima, discapacidad, etnia, ...) nunca sale del archivo.
 """
+
+import openpyxl
+
+
+class AnexoInvalido(ValueError):
+    """El archivo no es un Anexo 6A utilizable."""
+
+
+def leer_anexo(archivo, columnas):
+    """Itera las filas del Anexo 6A como diccionarios con SOLO `columnas` (streaming)."""
+    wb = openpyxl.load_workbook(archivo, read_only=True, data_only=True)
+    try:
+        it = wb.active.iter_rows(values_only=True)
+        try:
+            cabecera = [str(c).strip() if c is not None else "" for c in next(it)]
+        except StopIteration:
+            raise AnexoInvalido("El archivo está vacío.") from None
+        faltan = [c for c in columnas if c not in cabecera]
+        if faltan:
+            raise AnexoInvalido(f"Al archivo le faltan columnas: {', '.join(faltan)}")
+        indices = {c: cabecera.index(c) for c in columnas}
+        for valores in it:
+            if valores is None:
+                continue
+            yield {c: valores[i] for c, i in indices.items()}
+    finally:
+        wb.close()
+
 
 # Grado (columna GRADO). Preescolar en negativos, básica y media 0–11,
 # ciclos de educación para adultos (CLEI) 21–26.

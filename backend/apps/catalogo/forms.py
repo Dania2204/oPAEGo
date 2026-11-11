@@ -46,6 +46,15 @@ class ResponsableForm(_UsuarioForm):
     telefono = forms.CharField(label="Teléfono", max_length=30, required=False)
 
 
+class SupervisorForm(_UsuarioForm):
+    institucion = forms.ModelChoiceField(
+        label="Institución",
+        queryset=Institucion.objects.filter(activo=True),
+        empty_label="Elegir institución…",
+        help_text="Donde registra a los estudiantes y la entrega diaria del PAE.",
+    )
+
+
 class VehiculoForm(forms.Form):
     placa = forms.CharField(max_length=10)
     tipo = forms.CharField(max_length=50, help_text="Camión, furgón, camioneta…")

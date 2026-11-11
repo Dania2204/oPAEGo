@@ -13,6 +13,9 @@
 .estado--ENTREGADO { color: var(--e-entregado); background: var(--e-entregado-fondo); }
 .estado--CON_NOVEDAD { color: var(--e-novedad); background: var(--e-novedad-fondo); }
 .estado--CANCELADO { color: var(--e-cancelado); background: var(--e-cancelado-fondo); }
+/* Entrega del PAE a estudiantes */
+.estado--RECIBIO { color: var(--e-entregado); background: var(--e-entregado-fondo); }
+.estado--PENDIENTE { color: var(--e-asignado); background: var(--e-asignado-fondo); }
 .marca-texto { font-size: var(--t-xs); font-weight: 600; color: var(--error); margin-left: 4px; }
 .marca-texto.ambar { color: var(--aviso); }
 .marca-texto.ok { color: var(--ok); }

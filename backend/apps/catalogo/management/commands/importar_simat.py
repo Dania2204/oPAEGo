@@ -22,12 +22,11 @@ from collections import Counter
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-import openpyxl
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.catalogo.models import Institucion, MatriculaSede
-from apps.catalogo.simat import etiqueta_grado, etiqueta_jornada
+from apps.catalogo.simat import AnexoInvalido, etiqueta_grado, etiqueta_jornada, leer_anexo
 
 # Columnas del Anexo 6A que se usan. El resto (identidad de los estudiantes) se ignora.
 COL_ANIO = "ANO_INF"
@@ -118,24 +117,10 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------ lectura
     def _filas(self, archivo):
         """Itera las filas del xlsx como diccionarios, en streaming."""
-        wb = openpyxl.load_workbook(archivo, read_only=True, data_only=True)
         try:
-            ws = wb.active
-            it = ws.iter_rows(values_only=True)
-            try:
-                cabecera = [str(c).strip() if c is not None else "" for c in next(it)]
-            except StopIteration:
-                raise CommandError("El archivo está vacío.") from None
-            faltan = [c for c in COLUMNAS_REQUERIDAS if c not in cabecera]
-            if faltan:
-                raise CommandError(f"Al archivo le faltan columnas: {', '.join(faltan)}")
-            indices = {c: cabecera.index(c) for c in COLUMNAS_REQUERIDAS}
-            for valores in it:
-                if valores is None:
-                    continue
-                yield {c: valores[i] for c, i in indices.items()}
-        finally:
-            wb.close()
+            yield from leer_anexo(archivo, COLUMNAS_REQUERIDAS)
+        except AnexoInvalido as exc:
+            raise CommandError(str(exc)) from exc
 
     def _leer_catalogo_sedes(self, ruta):
         """CSV consecutivo_sede -> {nombre, sede, direccion, latitud, longitud}."""

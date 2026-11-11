@@ -67,6 +67,8 @@
       {% if alertas_pendientes %}<span class="cuenta aviso" title="Envíos retrasados">{{ alertas_pendientes }}</span>{% endif %}</a>
     <a href="{% url 'envios:lista' %}" {% if ns == 'envios' and nombre != 'programar' %}aria-current="page"{% endif %} title="Envíos">
       <svg class="icono"><use href="#i-envios"/></svg><span class="texto">Envíos</span></a>
+    <a href="{% url 'estudiantes:lista' %}" {% if ns == 'estudiantes' %}aria-current="page"{% endif %} title="Estudiantes PAE">
+      <svg class="icono"><use href="#i-responsables"/></svg><span class="texto">Estudiantes PAE</span></a>
     <a href="{% url 'monitoreo:novedades' %}" {% if ns == 'monitoreo' and nombre == 'novedades' or nombre == 'novedad' %}aria-current="page"{% endif %} title="Novedades">
       <svg class="icono"><use href="#i-novedades"/></svg><span class="texto">Novedades</span>
       {% if novedades_pendientes %}<span class="cuenta" title="Sin atender">{{ novedades_pendientes }}</span>{% endif %}</a>
@@ -80,6 +82,8 @@
       <svg class="icono"><use href="#i-instituciones"/></svg><span class="texto">Instituciones</span></a>
     <a href="{% url 'catalogo:lista' 'responsables' %}" {% if modulo == 'responsables' %}aria-current="page"{% endif %} title="Responsables de recepción">
       <svg class="icono"><use href="#i-responsables"/></svg><span class="texto">Responsables</span></a>
+    <a href="{% url 'catalogo:lista' 'supervisores' %}" {% if modulo == 'supervisores' %}aria-current="page"{% endif %} title="Supervisores PAE">
+      <svg class="icono"><use href="#i-usuarios"/></svg><span class="texto">Supervisores PAE</span></a>
     <a href="{% url 'catalogo:lista' 'conductores' %}" {% if modulo == 'conductores' %}aria-current="page"{% endif %} title="Conductores">
       <svg class="icono"><use href="#i-conductores"/></svg><span class="texto">Conductores</span></a>
     <a href="{% url 'catalogo:lista' 'vehiculos' %}" {% if modulo == 'vehiculos' %}aria-current="page"{% endif %} title="Vehículos">

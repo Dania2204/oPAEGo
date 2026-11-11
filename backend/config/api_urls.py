@@ -14,6 +14,7 @@ from apps.catalogo.api import (
 )
 from apps.cuentas import api as cuentas
 from apps.envios.api import EnvioViewSet
+from apps.estudiantes.api import EstudianteViewSet
 from apps.monitoreo import api as monitoreo
 from apps.nutricion import api as nutricion
 from apps.sincronizacion import api as sincronizacion
@@ -26,6 +27,7 @@ router.register("vehiculos", VehiculoViewSet, basename="vehiculo")
 router.register("responsables", ResponsableRecepcionViewSet, basename="responsable")
 router.register("envios", EnvioViewSet, basename="envio")
 router.register("auditoria", RegistroAuditoriaViewSet, basename="auditoria")
+router.register("estudiantes", EstudianteViewSet, basename="estudiante")
 
 urlpatterns = [
     path("auth/token/", cuentas.InicioSesionView.as_view(), name="token"),

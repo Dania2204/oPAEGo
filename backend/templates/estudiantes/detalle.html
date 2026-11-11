@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}{{ estudiante.nombre_completo }}{% endblock %}
+{% block contenido %}
+<p style="margin-bottom:var(--s3)"><a href="{% url 'estudiantes:lista' %}?institucion={{ estudiante.institucion_id }}&grado={{ estudiante.grado }}&grupo={{ estudiante.grupo }}">← Estudiantes PAE</a></p>
+<div class="bloque" style="max-width:720px;display:flex;flex-direction:column">
+  {% include "estudiantes/_detalle.html" %}
+</div>
+{% endblock %}

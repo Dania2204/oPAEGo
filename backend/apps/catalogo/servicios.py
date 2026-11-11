@@ -45,7 +45,7 @@ def cambiar_activo(usuario, objeto, activo, *, ocurrido_en=None, request=None):
             raise PermissionDenied("No puede desactivar su propio usuario.")
         objeto.is_active = activo
         objeto.save(update_fields=["is_active"])
-        for perfil in ("conductor", "responsable_recepcion"):
+        for perfil in ("conductor", "responsable_recepcion", "supervisor"):
             relacionado = getattr(objeto, perfil, None)
             if relacionado is not None:
                 relacionado.activo = activo

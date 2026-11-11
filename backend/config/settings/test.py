@@ -16,3 +16,5 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
+# Clave Fernet fija solo para pruebas.
+BIOMETRIA_CLAVE = "x2YUvpS3yZb8OyFfHHk3J2CL9w4_8oZy9pDmH5lyGJE="

@@ -42,6 +42,13 @@ param djangoSecretKey string
 @description('Clave de Gemini para el asistente de nutrición (opcional; sin ella responde 503).')
 param geminiApiKey string = ''
 
+@secure()
+@description('Clave Fernet que cifra las plantillas faciales (supervisor PAE). Sin ella no se inscriben rostros (503). Perderla deja ilegibles las plantillas guardadas.')
+param biometriaClave string = ''
+
+@description('Similitud coseno mínima para aceptar un reconocimiento facial (calibrar con el modelo de la app).')
+param umbralSimilitudFacial string = '0.80'
+
 @description('Orígenes permitidos por CORS (p. ej. la app Flutter compilada para web).')
 param corsAllowedOrigins array = []
 
@@ -76,6 +83,8 @@ module recursos 'resources.bicep' = {
     postgresAdminPassword: postgresAdminPassword
     djangoSecretKey: djangoSecretKey
     geminiApiKey: geminiApiKey
+    biometriaClave: biometriaClave
+    umbralSimilitudFacial: umbralSimilitudFacial
     corsAllowedOrigins: corsAllowedOrigins
     seedDemo: seedDemo
     appServiceSku: appServiceSku

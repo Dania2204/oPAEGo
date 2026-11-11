@@ -158,3 +158,22 @@ def web_admin(client, admin):
 
 def items_completos(envio):
     return [{"item": i.pk, "cantidad_recibida": str(i.cantidad)} for i in envio.items.all()]
+
+
+@pytest.fixture
+def supervisor(institucion):
+    """Usuario SUPERVISOR de la institución (entrega del PAE a estudiantes)."""
+    from apps.estudiantes.models import Supervisor
+
+    u = crear_usuario("super@test.co", Rol.SUPERVISOR, nombre="Supervisora")
+    Supervisor.objects.create(usuario=u, institucion=institucion)
+    return u
+
+
+@pytest.fixture
+def supervisor_otra(otra_institucion):
+    from apps.estudiantes.models import Supervisor
+
+    u = crear_usuario("super2@test.co", Rol.SUPERVISOR)
+    Supervisor.objects.create(usuario=u, institucion=otra_institucion)
+    return u

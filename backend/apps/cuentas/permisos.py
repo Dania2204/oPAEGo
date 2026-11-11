@@ -27,6 +27,14 @@ class EsInstitucion(_PorRol):
     roles = (Rol.INSTITUCION,)
 
 
+class EsSupervisor(_PorRol):
+    roles = (Rol.SUPERVISOR,)
+
+
+class EsSupervisorOAdministrador(_PorRol):
+    roles = (Rol.SUPERVISOR, Rol.ADMINISTRADOR)
+
+
 class EsConductorOInstitucion(_PorRol):
     roles = (Rol.CONDUCTOR, Rol.INSTITUCION)
 

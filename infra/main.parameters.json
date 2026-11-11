@@ -9,6 +9,8 @@
     "postgresAdminPassword": { "value": "${POSTGRES_ADMIN_PASSWORD}" },
     "djangoSecretKey": { "value": "${DJANGO_SECRET_KEY}" },
     "geminiApiKey": { "value": "${GEMINI_API_KEY=}" },
+    "biometriaClave": { "value": "${BIOMETRIA_CLAVE=}" },
+    "umbralSimilitudFacial": { "value": "${PAEGO_UMBRAL_SIMILITUD_FACIAL=0.80}" },
     "seedDemo": { "value": "${PAEGO_SEED_DEMO=true}" },
     "appServiceSku": { "value": "${APP_SERVICE_SKU=F1}" }
   }

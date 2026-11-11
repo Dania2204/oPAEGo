@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Wireframes móvil · Supervisor PAE</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --verde:#0D8C78; --verde-osc:#0A5C50; --menta:#00D4AA; --fondo:#f3f6f5; --borde:#e2e8e6;
+          --texto:#1b2624; --tenue:#66736f; --ok:#0b7a33; --ok-f:#e3f4e9; --ambar:#a15c00; --ambar-f:#fdf1dc;
+          --rojo:#b42318; --chip:#dbe5e2; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Nunito',sans-serif; color:var(--texto); background:#fff; }
+  .tel { width:390px; height:844px; border:1px solid #d5dbe5; border-radius:24px; overflow:hidden; background:var(--fondo);
+         display:flex; flex-direction:column; position:relative; margin-bottom:40px; }
+  .estado-sis { height:26px; background:var(--verde-osc); color:#fff; font-size:12px; font-weight:700; display:flex; justify-content:space-between; align-items:center; padding:0 22px; }
+  .barra-app { background:var(--verde); color:#fff; padding:12px 18px 14px; display:flex; align-items:center; gap:12px; }
+  .barra-app .atras { font-size:20px; }
+  .barra-app h1 { font-size:19px; font-weight:800; }
+  .barra-app small { display:block; font-size:12.5px; opacity:.85; font-weight:600; }
+  .barra-app .acc { margin-left:auto; width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,.25); }
+  .sinc { background:var(--ambar-f); color:var(--ambar); font-size:12.5px; font-weight:700; padding:7px 18px; }
+  .sinc.ok { background:var(--ok-f); color:var(--ok); }
+  .contenido { flex:1; padding:14px 16px; overflow:hidden; }
+  .tab-bar { height:64px; background:#fff; border-top:1px solid var(--borde); display:flex; }
+  .tab-bar span { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:11.5px; color:var(--tenue); font-weight:700; }
+  .tab-bar span::before { content:''; width:22px; height:22px; border-radius:6px; background:var(--chip); }
+  .tab-bar span.on { color:var(--verde); }
+  .tab-bar span.on::before { background:var(--verde); }
+  .card { background:#fff; border:1px solid var(--borde); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .fila { display:flex; align-items:center; gap:12px; }
+  .ico { width:40px; height:40px; border-radius:10px; background:#e0f2ee; flex:none; }
+  .ico.redondo { border-radius:50%; }
+  .t { font-weight:800; font-size:15.5px; }
+  .s { color:var(--tenue); font-size:13px; }
+  .der { margin-left:auto; text-align:right; }
+  .barra { height:6px; background:#e3e9e7; border-radius:3px; overflow:hidden; margin-top:8px; }
+  .barra i { display:block; height:100%; background:var(--verde); }
+  .buscar { background:#fff; border:1px solid var(--borde); border-radius:10px; height:42px; display:flex; align-items:center; padding:0 14px; color:#9aa6a2; font-size:14px; margin-bottom:12px; }
+  .chip { white-space:nowrap; display:inline-block; font-size:11.5px; font-weight:800; padding:3px 9px; border-radius:20px; }
+  .chip.ok { background:var(--ok-f); color:var(--ok); }
+  .chip.pend { background:#eef1f0; color:var(--tenue); }
+  .chip.warn { background:var(--ambar-f); color:var(--ambar); }
+  .resumen { background:#fff; border:1px solid var(--borde); border-radius:12px; padding:14px; margin-bottom:12px; }
+  .resumen b { font-size:28px; font-weight:800; }
+  .boton { display:block; text-align:center; border-radius:12px; padding:13px; font-weight:800; font-size:15px; background:var(--verde); color:#fff; }
+  .boton.sec { background:#fff; color:var(--verde); border:1.5px solid var(--verde); }
+  .boton.peligro { background:#fff; color:var(--rojo); border:1.5px solid #e5b4ae; }
+  .fab { position:absolute; right:16px; bottom:80px; background:var(--verde); color:#fff; border-radius:16px; padding:15px 18px; font-weight:800; font-size:15px; box-shadow:0 4px 12px rgba(0,0,0,.18); display:flex; gap:10px; align-items:center; }
+  .fab::before { content:''; width:20px; height:20px; border-radius:5px; background:rgba(255,255,255,.4); }
+  .velo { position:absolute; inset:0; background:rgba(10,20,18,.42); }
+  .hoja { position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:20px 20px 0 0; padding:10px 18px 22px; }
+  .hoja .asa { width:40px; height:4px; background:#cfd8d5; border-radius:2px; margin:0 auto 14px; }
+  .opcion { display:flex; align-items:center; gap:14px; padding:13px 2px; border-bottom:1px solid var(--borde); font-weight:700; font-size:15px; }
+  .opcion:last-child { border-bottom:0; }
+  .opcion::before { content:''; width:24px; height:24px; border-radius:6px; background:var(--chip); flex:none; }
+  .opcion small { display:block; font-weight:600; color:var(--tenue); font-size:12.5px; }
+  .opcion.off { color:#a7b1ae; }
+  .dialogo { position:absolute; left:22px; right:22px; top:50%; transform:translateY(-50%); background:#fff; border-radius:18px; padding:20px; }
+  .dialogo h3 { font-size:18px; font-weight:800; margin-bottom:6px; }
+  .campo { border:1px solid #cdd6d3; border-radius:10px; padding:11px 13px; font-size:14.5px; margin:6px 0 12px; background:#fff; }
+  .campo.vacio { color:#9aa6a2; }
+  label { font-size:12.5px; color:var(--tenue); font-weight:700; }
+  .radio { display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14.5px; font-weight:600; }
+  .radio i { width:18px; height:18px; border-radius:50%; border:2px solid #8b9894; flex:none; }
+  .radio i.si { border:6px solid var(--verde); }
+  .check { display:flex; gap:10px; font-size:13.5px; font-weight:600; margin:4px 0 14px; }
+  .check i { width:18px; height:18px; border-radius:4px; background:var(--verde); flex:none; margin-top:1px; }
+  .aviso { background:#eef6f4; border-left:3px solid var(--verde); border-radius:6px; padding:10px 12px; font-size:12.5px; color:#3d4b47; }
+  .acciones { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; font-weight:800; font-size:14.5px; color:var(--verde); }
+  .acciones span { padding:8px 10px; }
+  .acciones .lleno { background:var(--verde); color:#fff; border-radius:10px; padding:8px 16px; }
+  /* Cámara */
+  .camara { flex:1; background:#1f2a28; position:relative; display:flex; align-items:center; justify-content:center; }
+  .marco { width:230px; height:300px; border:3px solid var(--menta); border-radius:50% / 45%; display:flex; align-items:center; justify-content:center; color:#9fb5af; font-size:13px; text-align:center; }
+  .pie-cam { background:#fff; padding:16px 18px 20px; }
+  .pasos { display:flex; gap:6px; margin:10px 0 14px; }
+  .pasos i { flex:1; height:6px; border-radius:3px; background:#dfe6e4; }
+  .pasos i.si { background:var(--verde); }
+  .grupo-dia { font-size:12.5px; font-weight:800; color:var(--tenue); margin:6px 2px 8px; }
+</style>
+</head>
+<body>
+
+<!-- ═════════ M01 · Cursos del supervisor ═════════ -->
+<section class="tel" id="m01">
+  <div class="estado-sis"><span>9:41</span><span>▮▮▮ 4G</span></div>
+  <div class="barra-app"><div><h1>Cursos</h1><small>Escuela Normal Superior de Pasto</small></div><span class="acc"></span></div>
+  <div class="sinc ok">● Al día · 2.534 estudiantes en el teléfono</div>
+  <div class="contenido">
+    <div class="resumen"><span class="s">Recibieron hoy · martes 10 de noviembre</span><br><b>1.874</b> <span class="s">de 2.534</span><div class="barra"><i style="width:74%"></i></div></div>
+    <div class="buscar">Buscar curso</div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">6° A</div><div class="s">36 estudiantes · 22 con rostro</div></div><div class="der"><div class="t">30/36</div></div></div><div class="barra"><i style="width:83%"></i></div></div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">6° B</div><div class="s">35 estudiantes · 19 con rostro</div></div><div class="der"><div class="t">24/35</div></div></div><div class="barra"><i style="width:69%"></i></div></div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">7° A</div><div class="s">33 estudiantes · 20 con rostro</div></div><div class="der"><div class="t">33/33</div><span class="chip ok">Completo</span></div></div><div class="barra"><i style="width:100%"></i></div></div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">7° B</div><div class="s">34 estudiantes · 25 con rostro</div></div><div class="der"><div class="t">27/34</div></div></div><div class="barra"><i style="width:79%"></i></div></div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">8° A</div><div class="s">33 estudiantes · 18 con rostro</div></div><div class="der"><div class="t">20/33</div></div></div><div class="barra"><i style="width:61%"></i></div></div>
+  </div>
+  <div class="tab-bar"><span class="on">Cursos</span><span>Historial</span><span>Perfil</span></div>
+</section>
+
+<!-- ═════════ M02 · Curso 7°B ═════════ -->
+<section class="tel" id="m02">
+  <div class="estado-sis"><span>9:41</span><span>▮▮▯ sin red</span></div>
+  <div class="barra-app"><span class="atras">←</span><div><h1>7° B</h1><small>27 de 34 recibieron hoy</small></div></div>
+  <div class="sinc">● Sin conexión · 3 registros en cola, se envían al volver la red</div>
+  <div class="contenido">
+    <div class="buscar">Buscar por nombre o documento</div>
+    <div class="card"><div class="fila"><div class="ico redondo"></div><div><div class="t">Ortega Benavides, Laura Sofía</div><div class="s">TI 1085 000 101 · rostro inscrito</div></div><div class="der"><span class="chip ok">✓ Facial</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico redondo"></div><div><div class="t">Pantoja Ruiz, Mateo</div><div class="s">TI 1085 000 102 · sin autorización</div></div><div class="der"><span class="chip ok">✓ Manual</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico redondo"></div><div><div class="t">Quiroz Narváez, Valentina</div><div class="s">TI 1085 000 103 · rostro inscrito</div></div><div class="der"><span class="chip pend">Pendiente</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico redondo"></div><div><div class="t">Rivas Cabrera, Juan Esteban</div><div class="s">TI 1085 000 104 · rostro inscrito</div></div><div class="der"><span class="chip ok">✓ Facial</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico redondo"></div><div><div class="t">Salazar Moncayo, Isabella</div><div class="s">TI 1085 000 105 · sin autorización</div></div><div class="der"><span class="chip pend">Pendiente</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico redondo"></div><div><div class="t">Torres Delgado, Samuel</div><div class="s">TI 1085 000 106 · autorizado, sin rostro</div></div><div class="der"><span class="chip warn">Inscribir</span></div></div></div>
+  </div>
+  <div class="fab">Reconocer</div>
+  <div class="tab-bar"><span class="on">Cursos</span><span>Historial</span><span>Perfil</span></div>
+</section>
+
+<!-- ═════════ M03 · Acciones del estudiante ═════════ -->
+<section class="tel" id="m03" data-fondo="m02">
+  <div class="velo"></div>
+  <div class="hoja">
+    <div class="asa"></div>
+    <div class="t" style="font-size:17px">Torres Delgado, Samuel</div>
+    <div class="s" style="margin-bottom:8px">7° B · TI 1085 000 106 · autorizado por Marta Delgado (madre)</div>
+    <div class="opcion"><div>Inscribir rostro<small>5 fotos guiadas con prueba de vida; no se guardan</small></div></div>
+    <div class="opcion"><div>Registrar entrega sin cámara<small>Con motivo: sin autorización, falla, poca luz…</small></div></div>
+    <div class="opcion off"><div>Registrar autorización del acudiente<small>Ya tiene una autorización vigente</small></div></div>
+    <div class="opcion" style="color:var(--rojo)"><div>Revocar autorización<small>Borra las plantillas faciales del estudiante</small></div></div>
+  </div>
+</section>
+
+<!-- ═════════ M04 · Entrega sin cámara ═════════ -->
+<section class="tel" id="m04" data-fondo="m02">
+  <div class="velo"></div>
+  <div class="dialogo">
+    <h3>Entrega sin cámara</h3>
+    <p class="s" style="margin-bottom:10px">Isabella Salazar Moncayo · 7° B</p>
+    <label>Motivo</label>
+    <div class="radio"><i class="si"></i>Sin autorización del acudiente</div>
+    <div class="radio"><i></i>El reconocimiento falló</div>
+    <div class="radio"><i></i>Poca luz o cámara dañada</div>
+    <div class="radio"><i></i>Otro</div>
+    <div class="campo vacio">Detalle (opcional)</div>
+    <div class="acciones"><span>Cancelar</span><span class="lleno">Registrar entrega</span></div>
+  </div>
+</section>
+
+<!-- ═════════ M05 · Autorización del acudiente ═════════ -->
+<section class="tel" id="m05">
+  <div class="estado-sis"><span>9:41</span><span>▮▮▮ 4G</span></div>
+  <div class="barra-app"><span class="atras">←</span><div><h1>Autorización</h1><small>Salazar Moncayo, Isabella · 7° B</small></div></div>
+  <div class="contenido">
+    <div class="aviso" style="margin-bottom:14px">La cara de un menor es un dato sensible (Ley 1581). Solo se inscribe con la autorización firmada del acudiente. Sin ella, la entrega se registra de forma manual.</div>
+    <label>Nombre del acudiente</label><div class="campo">Rosa Moncayo Erazo</div>
+    <label>Documento del acudiente</label><div class="campo">27 000 555</div>
+    <label>Parentesco</label><div class="campo">Madre</div>
+    <div class="check"><i></i><span>Tengo la autorización firmada por el acudiente (previa, expresa e informada).</span></div>
+    <div class="boton">Guardar e inscribir rostro</div>
+    <p class="s" style="margin-top:12px;text-align:center">Se guarda en el teléfono y se envía al volver la red.</p>
+  </div>
+</section>
+
+<!-- ═════════ M06 · Captura del rostro (inscripción) ═════════ -->
+<section class="tel" id="m06">
+  <div class="estado-sis"><span>9:41</span><span>▮▮▮ 4G</span></div>
+  <div class="barra-app"><span class="atras">←</span><div><h1>Inscribir rostro</h1><small>Torres Delgado, Samuel · 7° B</small></div></div>
+  <div class="camara"><div class="marco">Vista de la cámara<br>frontal</div></div>
+  <div class="pie-cam">
+    <div class="t">Paso 3 de 5 · Gire un poco la cabeza a la izquierda</div>
+    <div class="pasos"><i class="si"></i><i class="si"></i><i class="si"></i><i></i><i></i></div>
+    <div class="s" style="margin-bottom:12px">Prueba de vida: se pide girar la cabeza antes de la foto de frente. Las fotos se borran al analizarlas; solo queda la plantilla cifrada.</div>
+    <div class="boton">Tomar foto</div>
+  </div>
+</section>
+
+<!-- ═════════ M07 · Reconocimiento: confirmar ═════════ -->
+<section class="tel" id="m07">
+  <div class="estado-sis"><span>9:41</span><span>▮▮▯ sin red</span></div>
+  <div class="barra-app"><span class="atras">←</span><div><h1>Reconocer · 7° B</h1><small>Compara solo con los 25 rostros del curso</small></div></div>
+  <div class="camara"><div class="marco">Vista de la cámara</div>
+    <div class="velo"></div>
+    <div class="dialogo">
+      <div class="fila" style="margin-bottom:12px"><div class="ico redondo" style="width:52px;height:52px"></div><div><h3 style="margin:0">Quiroz Narváez, Valentina</h3><div class="s">7° B · TI 1085 000 103</div></div></div>
+      <p class="s" style="margin-bottom:8px">Similitud 0,91 (umbral 0,55). Confirme que es la persona antes de registrar.</p>
+      <div class="acciones"><span>No es</span><span class="lleno">Sí, recibió</span></div>
+    </div>
+  </div>
+  <div class="pie-cam"><div class="s">Si no se reconoce o hay dos parecidos, la app pide registrar sin cámara.</div></div>
+</section>
+
+<!-- ═════════ M08 · Historial ═════════ -->
+<section class="tel" id="m08">
+  <div class="estado-sis"><span>9:41</span><span>▮▮▮ 4G</span></div>
+  <div class="barra-app"><div><h1>Historial</h1><small>Lo que usted registró</small></div></div>
+  <div class="sinc">● 3 registros pendientes de enviar</div>
+  <div class="contenido">
+    <div class="grupo-dia">HOY · MARTES 10 DE NOVIEMBRE</div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">Entrega · Quiroz Narváez, V.</div><div class="s">7° B · facial 0,91 · 10:18</div></div><div class="der"><span class="chip warn">En cola</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">Entrega · Salazar Moncayo, I.</div><div class="s">7° B · manual: sin autorización · 10:17</div></div><div class="der"><span class="chip warn">En cola</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">Inscripción · Torres Delgado, S.</div><div class="s">7° B · 5 muestras · 10:05</div></div><div class="der"><span class="chip warn">En cola</span></div></div></div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">Entrega · Rivas Cabrera, J. E.</div><div class="s">7° B · facial 0,88 · 10:16</div></div><div class="der"><span class="chip ok">Enviado</span></div></div></div>
+    <div class="grupo-dia" style="margin-top:12px">LUNES 9 DE NOVIEMBRE</div>
+    <div class="card"><div class="fila"><div class="ico"></div><div><div class="t">Autorización · Torres Delgado, S.</div><div class="s">7° B · Marta Delgado (madre) · 11:02</div></div><div class="der"><span class="chip ok">Enviado</span></div></div></div>
+  </div>
+  <div class="tab-bar"><span>Cursos</span><span class="on">Historial</span><span>Perfil</span></div>
+</section>
+
+<!-- ═════════ M09 · Institución: Estudiantes hoy ═════════ -->
+<section class="tel" id="m09">
+  <div class="estado-sis"><span>9:41</span><span>▮▮▮ 4G</span></div>
+  <div class="barra-app"><div><h1>Estudiantes</h1><small>Atendidos hoy · solo lectura</small></div></div>
+  <div class="contenido">
+    <div class="resumen"><span class="s">Escuela Normal Superior de Pasto</span><br><b>1.874</b> <span class="s">de 2.534 recibieron el PAE</span><div class="barra"><i style="width:74%"></i></div></div>
+    <div class="card"><div class="fila"><div><div class="t">6° A</div><div class="s">30 de 36</div></div><div class="der t">83 %</div></div><div class="barra"><i style="width:83%"></i></div></div>
+    <div class="card"><div class="fila"><div><div class="t">6° B</div><div class="s">24 de 35</div></div><div class="der t">69 %</div></div><div class="barra"><i style="width:69%"></i></div></div>
+    <div class="card"><div class="fila"><div><div class="t">7° A</div><div class="s">33 de 33</div></div><div class="der t">100 %</div></div><div class="barra"><i style="width:100%"></i></div></div>
+    <div class="card"><div class="fila"><div><div class="t">7° B</div><div class="s">27 de 34</div></div><div class="der t">79 %</div></div><div class="barra"><i style="width:79%"></i></div></div>
+    <div class="card"><div class="fila"><div><div class="t">8° A</div><div class="s">20 de 33</div></div><div class="der t">61 %</div></div><div class="barra"><i style="width:61%"></i></div></div>
+  </div>
+  <div class="tab-bar"><span>Inicio</span><span>Envíos</span><span class="on">Estudiantes</span><span>Perfil</span></div>
+</section>
+
+<script>
+  // Las hojas y diálogos se dibujan sobre la pantalla de fondo.
+  document.querySelectorAll('section.tel[data-fondo]').forEach((s) => {
+    const base = document.getElementById(s.dataset.fondo);
+    [...base.children].reverse().forEach((n) => s.insertBefore(n.cloneNode(true), s.firstChild));
+  });
+</script>
+</body>
+</html>
