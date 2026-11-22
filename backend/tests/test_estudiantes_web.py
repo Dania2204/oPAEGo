@@ -1,6 +1,7 @@
 """Panel web: supervisores PAE (catálogo) y la página Estudiantes PAE."""
 
 import io
+import re
 import uuid
 
 import openpyxl
@@ -10,9 +11,9 @@ from django.urls import reverse
 from apps.auditoria.models import Accion, RegistroAuditoria
 from apps.cuentas.models import Rol, Usuario
 from apps.estudiantes import servicios
-from apps.estudiantes.models import AutorizacionBiometrica, PlantillaFacial, Supervisor
+from apps.estudiantes.models import Supervisor
 
-from .test_estudiantes import ACUDIENTE, MUESTRAS, _estudiante
+from .test_estudiantes import _estudiante
 
 
 @pytest.fixture
@@ -69,30 +70,27 @@ def test_cobertura_y_lista_del_curso(web_admin, supervisor, curso):
     assert "Apellido0" in html and "Recibió" in html and "Pendiente" in html
 
 
-def test_detalle_autorizar_y_revocar(web_admin, supervisor, curso):
+def test_detalle_muestra_datos_y_qr(web_admin, curso):
     est = curso[0]
-    url = reverse("estudiantes:detalle", args=[est.pk])
-    assert web_admin.get(url).status_code == 200
-
-    # Sin la confirmación del documento firmado no se registra.
-    r = web_admin.post(url, {"accion": "autorizar", **ACUDIENTE, "uuid_cliente": str(uuid.uuid4())})
+    r = web_admin.get(reverse("estudiantes:detalle", args=[est.pk]))
     assert r.status_code == 200
-    assert not AutorizacionBiometrica.objects.exists()
+    html = r.content.decode()
+    assert est.numero_documento in html and "Mañana" in html
+    assert '<svg xmlns="http://www.w3.org/2000/svg"' in html
+    assert "Imprimir carné" in html and "Regenerar código" in html
+    # El token no se muestra como texto: solo va dentro del dibujo.
+    assert est.codigo_qr not in re.sub(r"<svg.*?</svg>", "", html, flags=re.S)
 
-    r = web_admin.post(
-        url,
-        {"accion": "autorizar", **ACUDIENTE, "confirmo": "on", "uuid_cliente": str(uuid.uuid4())},
-    )
+
+def test_regenerar_qr_desde_el_panel(web_admin, curso):
+    est = curso[0]
+    anterior = est.codigo_qr
+    url = reverse("estudiantes:detalle", args=[est.pk])
+    r = web_admin.post(url)
     assert r.status_code == 302
     est.refresh_from_db()
-    assert est.autorizacion_vigente is not None
-
-    servicios.inscribir_rostro(supervisor, est, vectores=MUESTRAS, modelo="m")
-    r = web_admin.post(
-        url, {"accion": "revocar", "motivo": "Lo pidió el padre", "uuid_cliente": str(uuid.uuid4())}
-    )
-    assert r.status_code == 302
-    assert not PlantillaFacial.objects.exists()
+    assert est.codigo_qr != anterior
+    assert RegistroAuditoria.objects.filter(accion=Accion.QR_REGENERADO).exists()
 
 
 def test_detalle_por_htmx_en_el_panel(web_admin, curso):
@@ -100,25 +98,49 @@ def test_detalle_por_htmx_en_el_panel(web_admin, curso):
     r = web_admin.get(url, HTTP_HX_REQUEST="true", HTTP_HX_TARGET="panel-contenido")
     html = r.content.decode()
     assert "panel-cabeza" in html and "<html" not in html
-    r = web_admin.post(
-        url,
-        {"accion": "autorizar", **ACUDIENTE, "confirmo": "on", "uuid_cliente": str(uuid.uuid4())},
-        HTTP_HX_REQUEST="true",
-        HTTP_HX_TARGET="panel-contenido",
-    )
+    r = web_admin.post(url, HTTP_HX_REQUEST="true", HTTP_HX_TARGET="panel-contenido")
     assert r.status_code == 200
     assert "estudiantes-actualizado" in r["HX-Trigger"]
 
 
+def test_carnes_del_curso_en_pdf(web_admin, curso, institucion):
+    r = web_admin.get(
+        reverse("estudiantes:carnes"),
+        {"institucion": institucion.pk, "grado": "7", "grupo": "B"},
+    )
+    assert r.status_code == 200
+    assert r["Content-Type"] == "application/pdf"
+    assert r.content.startswith(b"%PDF")
+    assert "carnes-pae-7-b" in r["Content-Disposition"]
+    r = web_admin.get(
+        reverse("estudiantes:carnes"), {"institucion": institucion.pk, "estudiante": curso[0].pk}
+    )
+    assert r.status_code == 200
+    assert RegistroAuditoria.objects.filter(accion=Accion.EXPORTAR_REPORTE).count() == 2
+
+
+def test_carnes_sin_curso_redirige(web_admin, curso):
+    assert web_admin.get(reverse("estudiantes:carnes")).status_code == 302
+
+
+def test_carnes_sin_estudiantes_redirige(web_admin):
+    assert web_admin.get(reverse("estudiantes:carnes")).status_code == 302
+
+
+def test_lista_del_curso_enlaza_los_carnes(web_admin, curso):
+    r = web_admin.get(reverse("estudiantes:lista"), {"grado": "7", "grupo": "B"})
+    assert "Imprimir carnés QR del curso" in r.content.decode()
+
+
 def test_exportar_excel(web_admin, supervisor, curso):
-    servicios.autorizar(supervisor, curso[1], **ACUDIENTE)
-    servicios.registrar_entrega(supervisor, curso[0], metodo="MANUAL", motivo="x")
+    servicios.registrar_entrega(supervisor, curso[0], metodo="QR", codigo=curso[0].codigo_qr)
     r = web_admin.get(reverse("estudiantes:exportar"))
     assert r.status_code == 200
     hoja = openpyxl.load_workbook(io.BytesIO(r.content)).active
     filas = list(hoja.iter_rows(min_row=3, values_only=True))
     assert len(filas) == 3
     assert sum(1 for f in filas if f[4] == "Sí") == 1
+    assert "Código QR" in [f[5] for f in filas]
     assert RegistroAuditoria.objects.filter(accion=Accion.EXPORTAR_REPORTE).exists()
 
 

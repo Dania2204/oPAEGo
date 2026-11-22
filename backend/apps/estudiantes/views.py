@@ -1,42 +1,30 @@
 """Panel web del administrador: entrega del PAE por estudiante.
 
-El supervisor trabaja en la app móvil; aquí el administrador ve la cobertura del
-día por curso y por estudiante, registra o revoca la autorización biométrica que
-entrega el acudiente en papel y exporta la lista del día.
+El supervisor trabaja en la app móvil y registra la entrega escaneando el código QR
+del estudiante. Aquí el administrador ve la cobertura del día por curso y por
+estudiante, consulta la ficha con su QR, imprime los carnés de un curso, regenera
+un código perdido y exporta la lista del día.
 """
 
-from django import forms
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from django.views import View
 from openpyxl import Workbook
 
 from apps.auditoria.models import Accion
 from apps.auditoria.servicios import registrar
 from apps.catalogo.models import Institucion
-from apps.comun import PANEL, disparar, es_htmx, nuevo_uuid, operar, responder
+from apps.catalogo.simat import etiqueta_grado, etiqueta_jornada
+from apps.comun import PANEL, disparar, es_htmx, responder
 from apps.cuentas.permisos import AdministradorRequeridoMixin
 
-from . import consultas
+from . import consultas, qr, servicios
 from .models import Estudiante
-
-
-class AutorizacionForm(forms.Form):
-    acudiente_nombre = forms.CharField(label="Nombre del acudiente", max_length=150)
-    acudiente_documento = forms.CharField(label="Documento del acudiente", max_length=20)
-    parentesco = forms.CharField(max_length=50, help_text="Madre, padre, abuela, tutor…")
-    confirmo = forms.BooleanField(
-        label="Tengo la autorización firmada por el acudiente (previa, expresa e informada).",
-    )
-
-
-class RevocarForm(forms.Form):
-    motivo = forms.CharField(
-        label="Motivo", max_length=300, required=False, widget=forms.Textarea(attrs={"rows": 2})
-    )
 
 
 def _fecha(request):
@@ -76,9 +64,6 @@ class EstudiantesView(AdministradorRequeridoMixin, View):
             base = _estudiantes(f["institucion"])
             contexto["cobertura"] = consultas.cobertura(base, f["fecha"])
             contexto["cursos"] = consultas.resumen_cursos(base, f["fecha"])
-            contexto["con_rostro"] = (
-                base.filter(activo=True, plantillas__isnull=False).distinct().count()
-            )
             if f["grado"]:
                 contexto["estudiantes"] = consultas.con_estado_del_dia(
                     consultas.estudiantes_del_curso(base, f["grado"], f["grupo"]), f["fecha"]
@@ -100,15 +85,12 @@ class EstudiantesView(AdministradorRequeridoMixin, View):
 
 
 class EstudianteDetalleView(AdministradorRequeridoMixin, View):
-    def _responder(self, request, estudiante, form_autorizar=None, form_revocar=None):
+    def _responder(self, request, estudiante):
         contexto = {
             "estudiante": estudiante,
-            "autorizacion": getattr(estudiante, "autorizacion", None),
-            "num_plantillas": estudiante.plantillas.count(),
+            "jornada": etiqueta_jornada(estudiante.jornada) if estudiante.jornada else "",
+            "qr_svg": mark_safe(qr.svg(estudiante)),  # noqa: S308 — SVG generado aquí, sin datos del usuario
             "entregas": estudiante.entregas.select_related("supervisor")[:30],
-            "form_autorizar": form_autorizar or AutorizacionForm(),
-            "form_revocar": form_revocar or RevocarForm(),
-            "uuid_cliente": nuevo_uuid(),
         }
         return responder(
             request,
@@ -122,30 +104,44 @@ class EstudianteDetalleView(AdministradorRequeridoMixin, View):
         return self._responder(request, estudiante)
 
     def post(self, request, pk):
+        """Regenera el código QR (carné perdido): el anterior deja de servir."""
         estudiante = get_object_or_404(Estudiante.objects.select_related("institucion"), pk=pk)
-        accion = request.POST.get("accion")
-        if accion == "autorizar":
-            form = AutorizacionForm(request.POST)
-            if form.is_valid():
-                datos = {k: v for k, v in form.cleaned_data.items() if k != "confirmo"}
-                if operar(request, form, "estudiante.autorizar", {"estudiante": pk, **datos}):
-                    messages.success(request, "Autorización registrada.")
-                    return self._listo(request, pk)
-            return self._responder(request, estudiante, form_autorizar=form)
-        form = RevocarForm(request.POST)
-        if form.is_valid() and operar(
-            request, form, "estudiante.revocar", {"estudiante": pk, **form.cleaned_data}
-        ):
-            messages.success(request, "Autorización revocada y plantillas faciales borradas.")
-            return self._listo(request, pk)
-        return self._responder(request, estudiante, form_revocar=form)
-
-    def _listo(self, request, pk):
+        servicios.regenerar_qr(request.user, estudiante, request=request)
+        messages.success(request, "Código QR regenerado. Imprima el carné nuevo.")
         if es_htmx(request):
-            estudiante = Estudiante.objects.select_related("institucion").get(pk=pk)
-            respuesta = self._responder(request, estudiante)
-            return disparar(respuesta, "estudiantes-actualizado")
+            return disparar(self._responder(request, estudiante), "estudiantes-actualizado")
         return redirect("estudiantes:detalle", pk=pk)
+
+
+class CarnesView(AdministradorRequeridoMixin, View):
+    """PDF con los carnés QR de un curso (o de un estudiante con `?estudiante=`)."""
+
+    def get(self, request):
+        f = _filtros(request)
+        if f["institucion"] is None:
+            messages.error(request, "No hay estudiantes importados.")
+            return redirect("estudiantes:lista")
+        qs = _estudiantes(f["institucion"]).filter(activo=True).select_related("institucion")
+        if request.GET.get("estudiante"):
+            qs = qs.filter(pk=request.GET["estudiante"])
+            nombre = "carne-pae"
+        elif f["grado"]:
+            qs = consultas.estudiantes_del_curso(qs, f["grado"], f["grupo"])
+            nombre = f"carnes-pae-{etiqueta_grado(f['grado'])}-{f['grupo']}".replace("°", "")
+        else:
+            messages.error(request, "Elija un curso para imprimir sus carnés.")
+            return redirect("estudiantes:lista")
+        qs = qs.order_by("apellidos", "nombres")
+        registrar(
+            request.user,
+            Accion.EXPORTAR_REPORTE,
+            f"Carnés QR del PAE ({f['institucion']}, {qs.count()} estudiantes)",
+            request=request,
+            datos={"formato": "pdf", "institucion": f["institucion"].pk},
+        )
+        respuesta = HttpResponse(qr.carnes_pdf(qs), content_type="application/pdf")
+        respuesta["Content-Disposition"] = f'inline; filename="{slugify(nombre)}.pdf"'
+        return respuesta
 
 
 class ExportarView(AdministradorRequeridoMixin, View):
@@ -175,7 +171,7 @@ class ExportarView(AdministradorRequeridoMixin, View):
                     e.curso,
                     e.apellidos,
                     e.nombres,
-                    f"{e.tipo_documento} {e.numero_documento}",
+                    e.documento,
                     "Sí" if entrega else "No",
                     entrega.get_metodo_display() if entrega else "",
                     timezone.localtime(entrega.ocurrido_en).strftime("%H:%M") if entrega else "",

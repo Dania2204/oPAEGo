@@ -5,6 +5,8 @@ from rest_framework import serializers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from apps.estudiantes.models import PREFIJO_QR
+
 from .operaciones import OPERACIONES, ejecutar
 
 MAX_OPERACIONES = 500
@@ -83,10 +85,7 @@ def configuracion(request):
             "tolerancia_entrega_min": settings.PAEGO["TOLERANCIA_ENTREGA_MIN"],
             "max_operaciones_lote": MAX_OPERACIONES,
             "operaciones": sorted(OPERACIONES),
-            # Entrega del PAE a estudiantes (rol SUPERVISOR).
-            "biometria_disponible": bool(settings.BIOMETRIA_CLAVE),
-            "umbral_similitud_facial": settings.PAEGO["UMBRAL_SIMILITUD_FACIAL"],
-            "muestras_rostro_min": settings.PAEGO["MUESTRAS_ROSTRO_MIN"],
-            "muestras_rostro_max": settings.PAEGO["MUESTRAS_ROSTRO_MAX"],
+            # Entrega del PAE a estudiantes: prefijo del contenido del carné QR.
+            "prefijo_qr": PREFIJO_QR,
         }
     )

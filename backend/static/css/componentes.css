@@ -64,6 +64,15 @@
 dl.datos { display: grid; grid-template-columns: 140px 1fr; gap: 6px var(--s3); margin: 0; font-size: var(--t-base); }
 dl.datos dt { color: var(--tinta-3); }
 dl.datos dd { margin: 0; color: var(--tinta); min-width: 0; }
+
+/* Ficha del estudiante con su código QR */
+.ficha-qr { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: var(--s4); align-items: start; }
+.ficha-qr .qr { margin: 0; border: 1px solid var(--borde); border-radius: var(--r-panel); padding: var(--s3); background: #fff; text-align: center; }
+.ficha-qr .qr svg { display: block; width: 100%; height: auto; }
+.ficha-qr .qr figcaption { font-size: var(--t-xs); color: var(--tinta-3); margin-top: var(--s2); }
+.acciones-qr { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
+.acciones-qr form { margin: 0; }
+@media (max-width: 640px) { .ficha-qr { grid-template-columns: 1fr; } .ficha-qr .qr { max-width: 240px; } }
 .codigo-verificacion { font-family: var(--mono); font-size: var(--t-lg); letter-spacing: .25em; color: var(--tinta); }
 .huella { font-family: var(--mono); font-size: var(--t-xs); word-break: break-all; color: var(--tinta-2); }
 

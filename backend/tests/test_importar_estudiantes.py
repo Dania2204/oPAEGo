@@ -5,10 +5,7 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from apps.estudiantes import servicios
-from apps.estudiantes.models import Estudiante, PlantillaFacial
-
-from .test_estudiantes import ACUDIENTE, MUESTRAS
+from apps.estudiantes.models import Estudiante
 
 # Columnas reales del Anexo 6A, incluidas las sensibles (y " NOMBRE1" con espacio,
 # como viene en el archivo de SIMAT), para comprobar que no se importan.
@@ -72,22 +69,24 @@ def test_importa_solo_la_identidad_minima(institucion, tmp_path):
             assert sensible not in valores
 
 
-def test_es_idempotente_y_da_de_baja_a_los_retirados(institucion, tmp_path, supervisor):
+def test_es_idempotente_y_da_de_baja_a_los_retirados(institucion, tmp_path):
     _importar(_xlsx(tmp_path, FILAS))
     _importar(_xlsx(tmp_path, FILAS))
     assert Estudiante.objects.count() == 3
 
+    # Cada estudiante tiene su propio código QR, y reimportar no lo cambia.
+    codigos = dict(Estudiante.objects.values_list("simat_per_id", "codigo_qr"))
+    assert len(set(codigos.values())) == 3
     sara = Estudiante.objects.get(simat_per_id="9003")
-    servicios.autorizar(supervisor, sara, **ACUDIENTE)
-    servicios.inscribir_rostro(supervisor, sara, vectores=MUESTRAS, modelo="m")
 
     # Nuevo corte: Sara ya no aparece y Luis cambió de grupo.
     filas = [FILAS[0], _fila("152001000661", 9002, 1085000002.0, "DÍAZ", "LUIS", "7", "C")]
     _importar(_xlsx(tmp_path, filas, "corte2.xlsx"))
     sara.refresh_from_db()
     assert not sara.activo
-    assert not PlantillaFacial.objects.filter(estudiante=sara).exists()
-    assert Estudiante.objects.get(simat_per_id="9002").grupo == "C"
+    luis = Estudiante.objects.get(simat_per_id="9002")
+    assert luis.grupo == "C"
+    assert luis.codigo_qr == codigos["9002"]
 
 
 def test_dry_run_no_escribe(institucion, tmp_path):

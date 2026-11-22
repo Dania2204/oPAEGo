@@ -4,7 +4,7 @@
 <div class="titulo-pagina">
   <div>
     <h1>Estudiantes PAE</h1>
-    <div class="sub">Quién recibió el PAE cada día. El supervisor lo registra desde la aplicación móvil, con reconocimiento facial o de forma manual.</div>
+    <div class="sub">Quién recibió el PAE cada día. El supervisor lo registra desde la aplicación móvil escaneando el código QR del carné, o de forma manual.</div>
   </div>
   {% if institucion %}
   <div class="acciones">
@@ -38,7 +38,7 @@
   </div>
 </div>
 <p class="tenue" style="font-size:var(--t-xs);margin-top:var(--s2)">
-  Datos de menores (Ley 1581 de 2012): solo se guarda documento, nombre y curso. La cara se registra únicamente con autorización del acudiente, como plantilla cifrada (nunca fotos), y siempre se puede registrar la entrega sin cámara.
+  Datos de menores (Ley 1581 de 2012): solo se guarda documento, nombre y curso. El código QR es un identificador aleatorio que no contiene datos personales, y siempre se puede registrar la entrega sin el carné.
 </p>
 {% endif %}
 {% endblock %}

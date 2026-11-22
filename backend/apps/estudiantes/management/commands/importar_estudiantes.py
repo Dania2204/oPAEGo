@@ -10,7 +10,8 @@ demás (dirección, teléfono, SISBÉN, víctima, discapacidad, etnia, fecha de
 nacimiento, ...). Ley 1581: minimización de datos de menores.
 
 Idempotente por PER_ID: actualiza a quien ya existe, crea a los nuevos y da de
-baja (inactivo y sin plantillas faciales) a quien ya no aparece en el archivo.
+baja (inactivo; su código QR deja de servir) a quien ya no aparece en el archivo.
+Cada estudiante nuevo recibe su código QR único (`Estudiante.codigo_qr`).
 `--grados` limita la importación a esos códigos de grado (p. ej. de transición a
 11°, la población del PAE): quien no es beneficiario no se guarda.
 El archivo de SIMAT nunca se guarda en el repositorio (carpeta bd/ en .gitignore).
