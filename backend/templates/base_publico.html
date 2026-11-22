@@ -1,0 +1,29 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#004884">
+  <title>{% block titulo %}PAEGo{% endblock %}</title>
+  <meta name="description" content="{% block descripcion %}PAEGo: trazabilidad del Programa de Alimentación Escolar de Pasto, del almacén al estudiante.{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:title" content="{% block og_titulo %}PAEGo · Programa de Alimentación Escolar{% endblock %}">
+  <meta property="og:description" content="{% block og_descripcion %}Cada ración del PAE, del almacén al estudiante, con trazabilidad.{% endblock %}">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/landing/reparto-pasto.webp' %}">
+  <link rel="manifest" href="{% url 'manifest' %}">
+  <link rel="icon" href="{% static 'img/icono.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block estilos %}{% endblock %}
+</head>
+<body class="publico">
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
+  {% block cuerpo %}{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

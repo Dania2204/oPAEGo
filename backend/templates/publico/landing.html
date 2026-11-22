@@ -1,0 +1,311 @@
+{% extends "base_publico.html" %}
+{% load static %}
+
+{% block titulo %}PAEGo · Programa de Alimentación Escolar de Pasto{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+{# Oculta lo que se va a animar antes de pintar; landing.js lo quita si GSAP no carga. #}
+<script>if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("l-anima");</script>
+{% endblock %}
+
+{% block cuerpo %}
+<header class="l-cabecera" data-cabecera>
+  <div class="l-contenedor l-cabecera-fila">
+    <a class="l-marca" href="/" aria-label="PAEGo, inicio">
+      <img src="{% static 'img/icono.svg' %}" alt="" width="36" height="36">
+      <span>
+        <strong>PAEGo</strong>
+        <small>{{ paego.ENTIDAD }} · {{ paego.DEPENDENCIA }}</small>
+      </span>
+    </a>
+    <nav class="l-nav" aria-label="Secciones">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#video">Video</a>
+      <a href="#actores">Quiénes participan</a>
+      <a href="#confianza">Confianza</a>
+    </nav>
+    <a class="l-boton" href="{% url 'cuentas:login' %}">Ingresar</a>
+  </div>
+</header>
+
+<main id="contenido">
+
+  {# ---------------------------------------------------------------- hero #}
+  <section class="l-hero" aria-labelledby="hero-titulo">
+    <div class="l-contenedor l-hero-rejilla">
+      <div class="l-hero-cabeza">
+        <p class="l-antetitulo" data-revelar>Programa de Alimentación Escolar · Pasto</p>
+        <h1 id="hero-titulo" class="l-titular" data-lineas>
+          <span class="linea"><span>Cada ración del PAE, del almacén</span></span>
+          <span class="linea"><span>al estudiante, <span class="acento">con trazabilidad.</span></span></span>
+        </h1>
+      </div>
+      <div class="l-hero-texto">
+        <p class="l-entrada" data-revelar>
+          PAEGo une a la Secretaría de Educación, los conductores, las instituciones y los
+          supervisores en una sola plataforma: el envío se programa, se sigue en el mapa, se
+          confirma con evidencia y cada estudiante que recibe queda registrado.
+        </p>
+        <div class="l-acciones" data-revelar>
+          <a class="l-boton grande" href="{% url 'cuentas:login' %}">Ingresar a la plataforma</a>
+          <a class="l-boton secundario grande" href="#como-funciona">Ver cómo funciona</a>
+        </div>
+      </div>
+
+      <div class="l-hero-medios" data-hero-medios>
+        <figure class="l-foto-hero">
+          <img src="{% static 'img/landing/reparto-pasto.webp' %}" width="1200" height="1400"
+               alt="Camión de reparto de alimentos escolares en una calle de Pasto, con el volcán Galeras al fondo"
+               fetchpriority="high" data-parallax>
+        </figure>
+        <figure class="l-ventana" data-revelar>
+          <figcaption class="l-ventana-barra">
+            <span class="punto en-ruta" aria-hidden="true"></span> En ruta · mapa en vivo
+          </figcaption>
+          <video class="l-video-bucle" muted loop playsinline preload="none"
+                 poster="{% static 'video/landing/mapa-en-vivo.jpg' %}" aria-label="Mapa en vivo con un vehículo del PAE avanzando por su ruta">
+            <source data-src="{% static 'video/landing/mapa-en-vivo.webm' %}" type="video/webm">
+            <source data-src="{% static 'video/landing/mapa-en-vivo.mp4' %}" type="video/mp4">
+          </video>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  {# -------------------------------------------------------------- cifras #}
+  <section class="l-cifras" aria-label="PAEGo en cifras">
+    <div class="l-contenedor">
+      <dl class="l-cifras-fila">
+        <div data-revelar>
+          <dt>Instituciones educativas</dt>
+          <dd data-cifra="{{ cifras.instituciones }}">{{ cifras.instituciones|floatformat:"0g" }}</dd>
+        </div>
+        <div data-revelar>
+          <dt>Estudiantes con carné QR</dt>
+          <dd data-cifra="{{ cifras.estudiantes }}">{{ cifras.estudiantes|floatformat:"0g" }}</dd>
+        </div>
+        <div data-revelar>
+          <dt>Envíos registrados</dt>
+          <dd data-cifra="{{ cifras.envios }}">{{ cifras.envios|floatformat:"0g" }}</dd>
+        </div>
+        <div data-revelar>
+          <dt>Raciones entregadas a estudiantes</dt>
+          <dd data-cifra="{{ cifras.entregas }}">{{ cifras.entregas|floatformat:"0g" }}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  {# ------------------------------------------------------- cómo funciona #}
+  <section id="como-funciona" class="l-seccion l-pasos" aria-labelledby="pasos-titulo">
+    <div class="l-contenedor">
+      <header class="l-encabezado" data-revelar>
+        <p class="l-antetitulo">Cómo funciona</p>
+        <h2 id="pasos-titulo">Cuatro momentos, un solo registro.</h2>
+      </header>
+
+      <div class="l-pasos-rejilla" data-pasos>
+        <div class="l-pasos-medios" aria-hidden="true">
+          <div class="l-pasos-marco">
+            <img class="l-paso-medio activo" data-medio="1" src="{% static 'img/landing/panel-hoy.webp' %}" alt="" loading="lazy" width="1440" height="900">
+            <video class="l-paso-medio l-video-bucle" data-medio="2" muted loop playsinline preload="none" poster="{% static 'video/landing/mapa-en-vivo.jpg' %}">
+              <source data-src="{% static 'video/landing/mapa-en-vivo.webm' %}" type="video/webm">
+              <source data-src="{% static 'video/landing/mapa-en-vivo.mp4' %}" type="video/mp4">
+            </video>
+            <video class="l-paso-medio l-video-bucle" data-medio="3" muted loop playsinline preload="none" poster="{% static 'video/landing/envio.jpg' %}">
+              <source data-src="{% static 'video/landing/envio.webm' %}" type="video/webm">
+              <source data-src="{% static 'video/landing/envio.mp4' %}" type="video/mp4">
+            </video>
+            <video class="l-paso-medio l-video-bucle" data-medio="4" muted loop playsinline preload="none" poster="{% static 'video/landing/ficha-qr.jpg' %}">
+              <source data-src="{% static 'video/landing/ficha-qr.webm' %}" type="video/webm">
+              <source data-src="{% static 'video/landing/ficha-qr.mp4' %}" type="video/mp4">
+            </video>
+          </div>
+          <div class="l-progreso"><span data-progreso></span></div>
+        </div>
+
+        <ol class="l-pasos-lista">
+          <li class="l-paso activo" data-paso="1">
+            <span class="l-paso-num">01</span>
+            <h3>Se programa el envío</h3>
+            <p>La Secretaría asigna conductor, vehículo, institución y hora desde el panel web. Cada
+              envío nace con su ruta y su estado: asignado.</p>
+          </li>
+          <li class="l-paso" data-paso="2">
+            <span class="l-paso-num">02</span>
+            <h3>Se sigue en el mapa</h3>
+            <p>El conductor comparte su ubicación desde la app. El panel muestra el recorrido en vivo
+              y avisa cuando un envío va con retraso.</p>
+          </li>
+          <li class="l-paso" data-paso="3">
+            <span class="l-paso-num">03</span>
+            <h3>Se confirma con código y evidencia</h3>
+            <p>La institución entrega un código de seis dígitos; el conductor lo registra con foto y
+              ubicación. Queda una huella digital que nadie puede alterar.</p>
+          </li>
+          <li class="l-paso" data-paso="4">
+            <span class="l-paso-num">04</span>
+            <h3>Cada estudiante recibe con su QR</h3>
+            <p>En el comedor, el supervisor escanea el carné de cada estudiante, incluso sin señal.
+              Una entrega por estudiante y por día, sin duplicados.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------- video principal #}
+  <section id="video" class="l-seccion l-video" aria-labelledby="video-titulo">
+    <div class="l-contenedor">
+      <header class="l-encabezado claro" data-revelar>
+        <p class="l-antetitulo">Video</p>
+        <h2 id="video-titulo">Conozca PAEGo en pocos minutos.</h2>
+        <p>Un recorrido por la plataforma, desde la bodega hasta el comedor escolar.</p>
+      </header>
+      <figure class="l-video-marco" data-video-principal data-revelar>
+        {% if paego.VIDEO_PRINCIPAL_URL %}
+          <video controls preload="none" playsinline poster="{% static 'img/landing/poster-video.webp' %}">
+            <source src="{{ paego.VIDEO_PRINCIPAL_URL }}" type="video/mp4">
+            Su navegador no puede reproducir este video.
+          </video>
+        {% else %}
+          <img src="{% static 'img/landing/poster-video.webp' %}" alt="" loading="lazy" width="1600" height="900">
+          <figcaption class="l-video-pronto">
+            <span class="l-boton-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
+            Video de presentación · próximamente
+          </figcaption>
+        {% endif %}
+      </figure>
+    </div>
+  </section>
+
+  {# ------------------------------------------------------------ actores #}
+  <section id="actores" class="l-seccion" aria-labelledby="actores-titulo">
+    <div class="l-contenedor">
+      <header class="l-encabezado" data-revelar>
+        <p class="l-antetitulo">Quiénes participan</p>
+        <h2 id="actores-titulo">Cada quien hace su parte, todos ven lo mismo.</h2>
+      </header>
+      <ul class="l-actores">
+        <li class="l-actor" data-revelar>
+          <img src="{% static 'img/landing/indicadores.webp' %}" alt="Panel de indicadores de PAEGo" loading="lazy" width="800" height="600">
+          <p class="l-actor-donde">Panel web</p>
+          <h3>Secretaría de Educación</h3>
+          <p>Programa los envíos, sigue el mapa, atiende novedades y saca reportes para la rendición de cuentas.</p>
+        </li>
+        <li class="l-actor" data-revelar>
+          <img src="{% static 'img/landing/conductor.webp' %}" alt="Conductor del PAE revisando su ruta en el celular junto al vehículo" loading="lazy" width="800" height="600">
+          <p class="l-actor-donde">App móvil</p>
+          <h3>Conductor</h3>
+          <p>Ve sus envíos del día, comparte la ubicación y registra la entrega con código y foto.</p>
+        </li>
+        <li class="l-actor" data-revelar>
+          <img src="{% static 'img/landing/cocina-pae.webp' %}" alt="Manipuladoras de alimentos recibiendo y organizando raciones en una cocina escolar" loading="lazy" width="800" height="600">
+          <p class="l-actor-donde">App móvil</p>
+          <h3>Institución educativa</h3>
+          <p>Recibe el envío, entrega el código de verificación y consulta qué estudiantes recibieron hoy.</p>
+        </li>
+        <li class="l-actor" data-revelar>
+          <img src="{% static 'img/landing/supervisor-qr.webp' %}" alt="Supervisor escaneando con el celular el carné QR de un estudiante" loading="lazy" width="800" height="600">
+          <p class="l-actor-donde">App móvil</p>
+          <h3>Supervisor PAE</h3>
+          <p>Escanea el carné QR de cada estudiante en el comedor y lleva la cobertura por curso.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  {# ----------------------------------------------------------- confianza #}
+  <section id="confianza" class="l-seccion l-confianza" aria-labelledby="confianza-titulo">
+    <div class="l-contenedor l-confianza-rejilla">
+      <div>
+        <header class="l-encabezado" data-revelar>
+          <p class="l-antetitulo">Confianza</p>
+          <h2 id="confianza-titulo">Datos que resisten una auditoría.</h2>
+        </header>
+        <ul class="l-garantias">
+          <li data-revelar>
+            <h3>Funciona sin conexión</h3>
+            <p>La app guarda cada acción con su hora real y la sincroniza cuando vuelve la señal, sin duplicar registros.</p>
+          </li>
+          <li data-revelar>
+            <h3>Historial inalterable</h3>
+            <p>Cada cambio queda en una auditoría que no se puede editar ni borrar, ni siquiera desde la base de datos.</p>
+          </li>
+          <li data-revelar>
+            <h3>Datos de menores protegidos</h3>
+            <p>Conforme a la Ley 1581 de 2012: identidad mínima del SIMAT y un QR que no contiene datos personales.</p>
+          </li>
+          <li data-revelar>
+            <h3>Evidencia verificable</h3>
+            <p>Código, foto, ubicación y una huella SHA-256 por entrega: lo que se registró es lo que se puede probar.</p>
+          </li>
+        </ul>
+      </div>
+
+      <figure class="l-telefono" data-revelar aria-label="Maqueta de la ficha del estudiante en la app móvil">
+        <div class="l-telefono-pantalla">
+          <div class="l-app-barra">Ficha del estudiante</div>
+          <div class="l-app-cuerpo">
+            <p class="l-app-nombre">Estudiante de ejemplo</p>
+            <p class="l-app-dato">7° 701 · Jornada única · TI ···3456</p>
+            <div class="l-app-qr">{{ qr_ejemplo }}</div>
+            <p class="l-app-estado"><span class="punto ok" aria-hidden="true"></span> Recibió hoy · 10:42 · QR</p>
+          </div>
+        </div>
+        <figcaption>Maqueta con datos de ejemplo.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  {# ------------------------------------------------------------- llamado #}
+  <section class="l-llamado" aria-label="Ingresar">
+    <div class="l-contenedor l-llamado-fila" data-revelar>
+      <h2>¿Hace parte del PAE en Pasto?</h2>
+      <a class="l-boton grande claro" href="{% url 'cuentas:login' %}">Ingresar a PAEGo</a>
+    </div>
+  </section>
+</main>
+
+<footer class="l-pie">
+  <div class="l-contenedor l-pie-rejilla">
+    <div>
+      <div class="l-marca claro">
+        <img src="{% static 'img/icono.svg' %}" alt="" width="32" height="32">
+        <span><strong>PAEGo</strong><small>Programa de Alimentación Escolar</small></span>
+      </div>
+      <p>{{ paego.ENTIDAD }}<br>{{ paego.DEPENDENCIA }}</p>
+    </div>
+    <nav aria-label="Enlaces del pie">
+      <h2>Enlaces</h2>
+      <ul>
+        <li><a href="{% url 'cuentas:login' %}">Ingresar a la plataforma</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="https://www.gov.co" target="_blank" rel="noopener">Portal del Estado colombiano · GOV.CO</a></li>
+      </ul>
+    </nav>
+    <div>
+      <h2>Tratamiento de datos</h2>
+      <details class="l-politica">
+        <summary>Política de tratamiento de datos personales</summary>
+        <p>PAEGo trata los datos personales de administradores, conductores, responsables de recepción y
+          estudiantes beneficiarios con la única finalidad de gestionar, monitorear y auditar la entrega de
+          alimentos del PAE, conforme a la Ley 1581 de 2012. El acceso está restringido por rol y los datos no
+          se comparten con terceros. Puede solicitar la consulta, corrección o supresión de sus datos ante la
+          entidad administradora.</p>
+      </details>
+    </div>
+  </div>
+  <div class="l-contenedor l-pie-base">
+    <span>PAEGo · Proyecto de grado · {% now "Y" %}</span>
+    <a href="https://www.gov.co" target="_blank" rel="noopener" class="l-govco-pie">GOV.CO</a>
+  </div>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="{% static 'js/landing.js' %}" defer></script>
+{% endblock %}
