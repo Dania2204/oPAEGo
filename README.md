@@ -230,6 +230,21 @@ python manage.py demo_mes --sin-ruteo          # recorridos sintéticos, sin int
   si no puede cargar. OpenFreeMap no ofrece garantía de disponibilidad; para una operación real se
   pueden alojar las teselas propias o contratar un proveedor.
 
+### Página pública (landing)
+
+`/` muestra a los visitantes una página institucional (estilo GOV.CO) que presenta PAEGo: cómo
+funciona en cuatro pasos, quiénes participan, garantías (sin conexión, auditoría, Ley 1581) y
+cifras agregadas (`apps/monitoreo/cifras_publicas.py`, solo conteos, en caché 10 min). Quien ya
+tiene sesión sigue yendo directo a su panel.
+
+- Plantillas `templates/base_publico.html` y `templates/publico/landing.html`; estilos
+  `static/css/landing.css`; animaciones `static/js/landing.js` con GSAP + ScrollTrigger (cdnjs).
+  Mejora progresiva: sin JS o con movimiento reducido se ve completa y estática.
+- Medios en `static/img/landing/` (WebP) y `static/video/landing/` (clips en bucle MP4/WebM del
+  sistema real, cargados al entrar en pantalla).
+- Video de presentación: `PAEGO_VIDEO_PRINCIPAL_URL` (archivo estático o URL). Vacío = póster
+  con "próximamente".
+
 ### Mapa en vivo de conductores (modo de prueba)
 
 Mientras llega la app Flutter, el conductor puede compartir su ubicación desde el navegador del

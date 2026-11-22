@@ -99,6 +99,15 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
 - Evidencia de entrega: código de 6 dígitos + foto opcional + ubicación + huella SHA-256.
 - Contrato para Flutter: OpenAPI en `/api/schema/`, Swagger en `/api/docs/`.
 
+## Página pública
+
+`/` es la landing para visitantes (`cuentas.views.inicio`; con sesión redirige al panel):
+`templates/publico/landing.html` + `static/css/landing.css` + `static/js/landing.js` (GSAP 3.12.5 y
+ScrollTrigger por cdnjs, mejora progresiva). Cifras públicas solo agregadas
+(`monitoreo/cifras_publicas.py`). Video de presentación por `PAEGO_VIDEO_PRINCIPAL_URL`. Todo
+`{% static %}` de la landing debe existir (`tests/test_landing.py`), si no prod da 500. Las fotos de
+escenas son generadas con IA y no muestran rostros de niños.
+
 ## Frontend del panel
 
 Plantillas Django + HTMX + Alpine.js, sin build. PWA con cola offline en IndexedDB
