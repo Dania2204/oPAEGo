@@ -132,6 +132,9 @@ python manage.py importar_estudiantes "../bd/Anexo 6A(Calendario A) 30 septiembr
 # Revisar el conteo por grado (≈2534) y repetir sin --dry-run.
 ```
 
+Si la base ya tenía los estudiantes, basta con desplegar: la migración `estudiantes 0002`
+asigna un código QR a cada uno, sin reimportar.
+
 Los carnés se imprimen desde el panel: «Estudiantes PAE» → curso → «Imprimir carnés QR del curso».
 
 ## 6. Despliegue continuo desde GitHub
