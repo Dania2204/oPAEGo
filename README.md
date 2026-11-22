@@ -19,7 +19,7 @@ oPAEGo/
 │   │   ├── monitoreo/      mapa en tiempo real, alertas, notificaciones, KPIs  RF-29…32
 │   │   ├── auditoria/      registro inmutable, historial, reportes PDF/Excel   RF-33…37
 │   │   ├── sincronizacion/ operaciones sin conexión idempotentes               RF-38
-│   │   └── estudiantes/    supervisor PAE, autorización, rostro, entrega diaria RF-39…42
+│   │   └── estudiantes/    supervisor PAE, código QR, carnés, entrega diaria RF-39…42
 │   ├── templates/ static/  panel web del administrador (PWA, MapLibre)
 │   ├── tests/              pruebas automáticas (pytest)
 │   └── rendimiento/        pruebas de desempeño (locust) para ISO/IEC 25010
@@ -140,23 +140,34 @@ python manage.py importar_simat <anexo6a.xlsx> --dane <CODIGO_DANE> --sedes sede
 ### Supervisor PAE: entrega diaria por estudiante (RF-39…42, propuestos)
 
 Un rol nuevo, **SUPERVISOR**, registra desde la app móvil qué estudiantes reciben el PAE cada día:
-por curso, reconociendo la cara en el teléfono (sin red) o, siempre como alternativa, de forma
-manual con motivo. El administrador lo ve en «Estudiantes PAE» (cobertura del día por curso y por
-estudiante, autorizaciones, exportar a Excel) y crea los supervisores en «Supervisores PAE».
+por curso, **escaneando el código QR del carné** con el teléfono (funciona sin red) o, siempre como
+alternativa, de forma manual con motivo. El administrador lo ve en «Estudiantes PAE» (cobertura del
+día por curso, ficha de cada estudiante con su QR, carnés imprimibles, exportar a Excel) y crea los
+supervisores en «Supervisores PAE».
 
 ```bash
 python manage.py importar_estudiantes <anexo6a.xlsx> --dane <CODIGO_DANE> --institucion "Normal Superior" --dry-run
+# Escuela Normal Superior de Pasto (sede principal), grados 0–11:
+python manage.py importar_estudiantes "../bd/Anexo 6A(Calendario A) 30 septiembre de 2026.xlsx"   --dane 152001000661 --institucion "Normal Superior" --grados 0,1,2,3,4,5,6,7,8,9,10,11
 ```
 
 - **Identidad mínima:** del Anexo 6A solo se guardan documento, nombres, apellidos, grado, grupo
-  y jornada. Idempotente por `PER_ID`; quien ya no aparece queda inactivo y sin biometría.
-- **Biometría (dato sensible, menores):** sin autorización vigente del acudiente no se inscribe
-  un rostro. Se guardan plantillas numéricas (3–5 vectores) **cifradas con Fernet**
-  (`BIOMETRIA_CLAVE`, Key Vault en Azure), nunca fotos. Revocar o dar de baja **borra** las
-  plantillas y queda en la auditoría (que nunca guarda vectores).
-- **Reglas:** una entrega por estudiante y día (restricción en la BD); FACIAL exige similitud ≥
-  `UMBRAL_SIMILITUD_FACIAL` (0,80 por defecto, calibrar en el piloto); MANUAL exige motivo.
-- La app trabaja sin red con la cola RF-38 (`estudiante.autorizar|inscribir|entregar|revocar`).
+  y jornada. Idempotente por `PER_ID`; quien ya no aparece queda inactivo. El tipo de documento
+  SIMAT se muestra como sigla (RC, TI, CC…; `catalogo/simat.py`). `bd/` nunca se commitea.
+- **Código QR único:** cada estudiante recibe `codigo_qr`, un token aleatorio
+  (`secrets.token_urlsafe`) sin datos personales; el QR lleva `PAEGO-E1:<codigo>`. La API solo
+  lo entrega al supervisor y al administrador (la institución recibe `null`). Si un carné se
+  pierde, el administrador **regenera** el código desde la ficha: el anterior deja de servir y
+  queda en la auditoría (`QR_REGENERADO`).
+- **Carnés:** `/estudiantes/carnes/?institucion=&grado=&grupo=` (o `&estudiante=`) genera un PDF
+  carta con 8 carnés por hoja (institución, nombre, curso, jornada, últimos 4 dígitos del
+  documento y QR). No requiere librerías nuevas: reportlab dibuja el QR.
+- **Reglas:** una entrega por estudiante y día (restricción en la BD); QR exige que el código
+  coincida con el del estudiante (`qr_invalido` si no); MANUAL exige motivo. Las entregas
+  FACIAL anteriores se conservan como histórico (son inmutables).
+- La app trabaja sin red con la cola RF-38 (`estudiante.entregar`, `metodo` QR|MANUAL + `codigo`).
+- `seed_demo` crea `supervisor1@paego.local` en la Normal Superior y, si no hay estudiantes
+  reales, 12 ficticios en dos cursos (demo y e2e del CI sin el archivo del SIMAT).
 
 ### Demo de un mes (`demo_mes`)
 
@@ -316,8 +327,8 @@ modo. Las instituciones siguen sin acceso a la web.
 | 36–37 | Reportes y exportación PDF/Excel | `/api/reportes/?formato=pdf\|xlsx` · `/reportes/` | `test_reportes_exportables` |
 | 38 | Operación sin conexión y sincronización | `/api/sincronizacion/lote/` · PWA | `test_sincronizacion.py` |
 | 39* | Rol supervisor PAE por institución | `Rol.SUPERVISOR`, `estudiantes.Supervisor` · `/supervisores/` | `test_admin_crea_un_supervisor`, `test_supervisor_lista_solo_su_institucion` |
-| 40* | Autorización del acudiente e inscripción facial | `estudiante.autorizar`, `estudiante.inscribir` (lote) · detalle en `/estudiantes/` | `test_flujo_completo_por_el_lote`, `test_inscripcion_sin_autorizacion_se_rechaza` |
-| 41* | Entrega diaria por estudiante (facial o manual) | `estudiante.entregar` (lote) · `GET /api/estudiantes/plantillas/` | `test_segunda_entrega_del_dia_se_rechaza`, `test_estudiantes.py` |
+| 40* | Código QR único por estudiante y carnés | `Estudiante.codigo_qr` · ficha en `/estudiantes/<id>/` (regenerar) · `/estudiantes/carnes/` | `test_regenerar_qr_invalida_el_anterior`, `test_carnes_del_curso_en_pdf`, `test_institucion_consulta_pero_no_recibe_el_codigo_qr` |
+| 41* | Entrega diaria por estudiante (QR o manual) | `estudiante.entregar` (lote) | `test_flujo_completo_por_el_lote`, `test_qr_equivocado_por_el_lote_se_rechaza`, `test_segunda_entrega_del_dia_se_rechaza` |
 | 42* | Cobertura por estudiante y exportación | `GET /api/estudiantes/cursos/`, `/historial/` · `/estudiantes/`, `/estudiantes/exportar/` | `test_cobertura_y_lista_del_curso`, `test_exportar_excel` |
 
 \* Requisitos propuestos para integrar en el documento de tesis.
@@ -338,4 +349,4 @@ modo. Las instituciones siguen sin acceso a la web.
 | 19 | OpenAPI/Swagger en `/api/docs/` |
 | 20 | Evidencia con código de verificación y huella SHA-256 |
 | 21 | Sincronización idempotente por `uuid_cliente` |
-| 22* | Biometría de menores: autorización previa, plantillas cifradas, sin fotos, borrado al revocar y alternativa manual |
+| 22* | Datos de menores: identidad mínima del SIMAT, QR sin datos personales, código solo para supervisor/administrador, regeneración auditada y alternativa manual |
