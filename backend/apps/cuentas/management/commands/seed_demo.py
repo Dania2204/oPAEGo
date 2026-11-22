@@ -3,8 +3,10 @@
     python manage.py seed_demo
 
 Crea un administrador, dos conductores, dos instituciones de Pasto con sus
-responsables, vehículos y envíos en distintos estados, y un conductor de prueba
-para el mapa en vivo. Es idempotente.
+responsables, vehículos y envíos en distintos estados, un conductor de prueba
+para el mapa en vivo y un supervisor PAE de la Normal Superior. Si la Normal aún no
+tiene estudiantes importados del SIMAT, crea dos cursos con estudiantes ficticios
+(cada uno con su código QR) para probar la entrega. Es idempotente.
 """
 
 from datetime import timedelta
@@ -19,6 +21,7 @@ from apps.catalogo.models import Conductor, Institucion, ResponsableRecepcion, V
 from apps.cuentas.models import Rol
 from apps.envios import servicios
 from apps.envios.models import Envio, ItemEnvio
+from apps.estudiantes.models import Estudiante, Supervisor
 
 Usuario = get_user_model()
 
@@ -28,6 +31,21 @@ ITEMS = [
     {"producto": "Leche entera UHT", "cantidad": Decimal("320"), "unidad": ItemEnvio.Unidad.UNIDAD},
     {"producto": "Pan integral", "cantidad": Decimal("320"), "unidad": ItemEnvio.Unidad.UNIDAD},
     {"producto": "Fruta (banano)", "cantidad": Decimal("40"), "unidad": ItemEnvio.Unidad.KG},
+]
+
+ESTUDIANTES_DEMO = [
+    ("5", "01", "Valentina", "Ortiz Rosero"),
+    ("5", "01", "Samuel", "Bastidas Paz"),
+    ("5", "01", "Isabella", "Guerrero Insuasty"),
+    ("5", "01", "Mateo", "Benavides Erazo"),
+    ("5", "01", "Mariana", "Delgado Burbano"),
+    ("5", "01", "Juan José", "Narváez Cabrera"),
+    ("6", "02", "Sara", "Muñoz Chamorro"),
+    ("6", "02", "Tomás", "Rosero Villota"),
+    ("6", "02", "Gabriela", "Enríquez Ordóñez"),
+    ("6", "02", "Santiago", "Paz Martínez"),
+    ("6", "02", "Antonella", "Cerón Moncayo"),
+    ("6", "02", "Emiliano", "Jurado Revelo"),
 ]
 
 
@@ -123,11 +141,33 @@ class Command(BaseCommand):
         if not Envio.objects.exists():
             self._envios(admin, conductores, normal, libertad)
 
+        u = usuario("supervisor1@paego.local", "Sofía", "Supervisora", Rol.SUPERVISOR)
+        Supervisor.objects.get_or_create(usuario=u, defaults={"institucion": normal})
+        if not Estudiante.objects.filter(institucion=normal).exists():
+            self._estudiantes(normal)
+
         self.stdout.write(
             self.style.SUCCESS("Datos de demostración listos. Contraseña de todos: " + CLAVE)
         )
         for u in Usuario.objects.filter(email__endswith="@paego.local").order_by("rol", "email"):
             self.stdout.write(f"  {u.get_rol_display():<22} {u.email}")
+
+    def _estudiantes(self, institucion):
+        """Estudiantes ficticios (nombres inventados), nunca datos reales del SIMAT."""
+        for i, (grado, grupo, nombres, apellidos) in enumerate(ESTUDIANTES_DEMO, 1):
+            Estudiante.objects.get_or_create(
+                simat_per_id=f"DEMO-{i:03d}",
+                defaults={
+                    "institucion": institucion,
+                    "tipo_documento": "TI",
+                    "numero_documento": f"10850{i:05d}",
+                    "nombres": nombres,
+                    "apellidos": apellidos,
+                    "grado": grado,
+                    "grupo": grupo,
+                    "jornada": "1",
+                },
+            )
 
     def _envios(self, admin, conductores, normal, libertad):
         ahora = timezone.now()
