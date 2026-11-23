@@ -70,7 +70,10 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
   JWT, permisos), `catalogo` (instituciones, conductores, vehículos, responsables, import SIMAT),
   `envios`, `monitoreo` (mapa, alertas, KPIs, posición en vivo, ruteo OSRM), `auditoria`
   (registro inmutable + reportes PDF/Excel), `sincronizacion` (lotes offline), `estudiantes`
-  (supervisor PAE: estudiantes del SIMAT con identidad mínima vía `importar_estudiantes`;
+  (supervisor PAE: estudiantes del SIMAT con identidad mínima; matrícula en
+  `estudiantes/importacion.py`, usada por el panel —subir Anexo 6A con vista previa y confirmar,
+  modelo `ImportacionEstudiantes`— y por `importar_estudiantes`; agregados a mano llevan
+  `simat_per_id` `MANUAL-…` y la importación los reconoce por documento;
   cada uno con `codigo_qr` aleatorio y único — el QR lleva `PAEGO-E1:<codigo>`, la API solo lo da
   a SUPERVISOR/ADMINISTRADOR, el admin lo regenera si se pierde el carné —; entrega diaria
   QR|MANUAL inmutable, una por día (FACIAL queda solo como histórico); reglas en

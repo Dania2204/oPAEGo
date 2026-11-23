@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}Agregar estudiante{% endblock %}
+{% block contenido %}
+<p style="margin-bottom:var(--s3)"><a href="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}">‹ {{ institucion.nombre }}</a></p>
+<div class="bloque" style="max-width:720px;display:flex;flex-direction:column">
+  {% include "estudiantes/_nuevo.html" %}
+</div>
+{% endblock %}

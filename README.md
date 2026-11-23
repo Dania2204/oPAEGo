@@ -145,6 +145,20 @@ alternativa, de forma manual con motivo. El administrador lo ve en «Estudiantes
 día por curso, ficha de cada estudiante con su QR, carnés imprimibles, exportar a Excel) y crea los
 supervisores en «Supervisores PAE».
 
+«Estudiantes PAE» es multiinstitucional: primero se busca y se elige la institución (solo las
+activas). Desde ahí el administrador mantiene la matrícula sin consola:
+
+- **Actualizar desde SIMAT:** sube el Excel del Anexo 6A (puede ser el de todo el municipio; se
+  filtra por el código DANE de la institución y por los grados 0–11). Antes de cambiar nada muestra
+  un resumen —nuevos, cambios de curso (p. ej. al pasar de año) y quiénes salen de la matrícula
+  (p. ej. los que terminaron 11°)— y solo al confirmar se aplica. Cada estudiante conserva su QR y su
+  historial; la copia leída del archivo se borra al aplicar o descartar.
+- **Agregar estudiante:** quien llega a mitad de año queda de inmediato en su curso con su QR. Cuando
+  el siguiente Anexo lo trae, se reconoce por su documento y recibe su `PER_ID`.
+- **Retirar de la matrícula** desde la ficha del estudiante (su carné deja de servir).
+
+El comando equivalente, con las mismas reglas (`apps/estudiantes/importacion.py`):
+
 ```bash
 python manage.py importar_estudiantes <anexo6a.xlsx> --dane <CODIGO_DANE> --institucion "Normal Superior" --dry-run
 # Escuela Normal Superior de Pasto (sede principal), grados 0–11:

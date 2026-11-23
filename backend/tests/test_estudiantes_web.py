@@ -52,20 +52,49 @@ def test_lista_y_desactivar_supervisor(web_admin, supervisor):
 
 
 # ------------------------------------------------------- Estudiantes PAE
-def test_pagina_sin_estudiantes(web_admin):
+def test_primero_se_elige_la_institucion(web_admin, institucion, otra_institucion, curso):
     r = web_admin.get(reverse("estudiantes:lista"))
     assert r.status_code == 200
-    assert "importar_estudiantes" in r.content.decode()
+    html = r.content.decode()
+    assert "Buscar institución" in html
+    assert institucion.nombre in html and otra_institucion.nombre in html
+    assert "7° B" not in html  # aún no muestra estudiantes
+    # Buscador (HTMX): solo la tabla de instituciones que coinciden.
+    r = web_admin.get(
+        reverse("estudiantes:lista"),
+        {"q": "otra"},
+        HTTP_HX_REQUEST="true",
+        HTTP_HX_TARGET="instituciones",
+    )
+    html = r.content.decode()
+    assert "<html" not in html and "Otra IEM" in html and institucion.nombre not in html
 
 
-def test_cobertura_y_lista_del_curso(web_admin, supervisor, curso):
+def test_institucion_inactiva_no_aparece(web_admin, institucion, otra_institucion):
+    otra_institucion.activo = False
+    otra_institucion.save()
+    html = web_admin.get(reverse("estudiantes:lista")).content.decode()
+    assert institucion.nombre in html and "Otra IEM" not in html
+    r = web_admin.get(reverse("estudiantes:lista"), {"institucion": otra_institucion.pk})
+    assert "Buscar institución" in r.content.decode()
+
+
+def test_institucion_sin_estudiantes_invita_a_cargarlos(web_admin, institucion):
+    r = web_admin.get(reverse("estudiantes:lista"), {"institucion": institucion.pk})
+    assert r.status_code == 200
+    assert "Cargar estudiantes desde SIMAT" in r.content.decode()
+
+
+def test_cobertura_y_lista_del_curso(web_admin, supervisor, curso, institucion):
     servicios.registrar_entrega(supervisor, curso[0], metodo="MANUAL", motivo="Sin cámara")
-    r = web_admin.get(reverse("estudiantes:lista"))
+    r = web_admin.get(reverse("estudiantes:lista"), {"institucion": institucion.pk})
     html = r.content.decode()
     assert "7° B" in html and "Recibieron el PAE" in html
     assert r.context["cobertura"]["recibieron"] == 1
 
-    r = web_admin.get(reverse("estudiantes:lista"), {"grado": "7", "grupo": "B"})
+    r = web_admin.get(
+        reverse("estudiantes:lista"), {"institucion": institucion.pk, "grado": "7", "grupo": "B"}
+    )
     html = r.content.decode()
     assert "Apellido0" in html and "Recibió" in html and "Pendiente" in html
 
@@ -127,14 +156,17 @@ def test_carnes_sin_estudiantes_redirige(web_admin):
     assert web_admin.get(reverse("estudiantes:carnes")).status_code == 302
 
 
-def test_lista_del_curso_enlaza_los_carnes(web_admin, curso):
-    r = web_admin.get(reverse("estudiantes:lista"), {"grado": "7", "grupo": "B"})
-    assert "Imprimir carnés QR del curso" in r.content.decode()
+def test_lista_del_curso_enlaza_los_carnes(web_admin, curso, institucion):
+    r = web_admin.get(
+        reverse("estudiantes:lista"), {"institucion": institucion.pk, "grado": "7", "grupo": "B"}
+    )
+    html = r.content.decode()
+    assert "Imprimir carnés QR del curso" in html and "Agregar estudiante al curso" in html
 
 
-def test_exportar_excel(web_admin, supervisor, curso):
+def test_exportar_excel(web_admin, supervisor, curso, institucion):
     servicios.registrar_entrega(supervisor, curso[0], metodo="QR", codigo=curso[0].codigo_qr)
-    r = web_admin.get(reverse("estudiantes:exportar"))
+    r = web_admin.get(reverse("estudiantes:exportar"), {"institucion": institucion.pk})
     assert r.status_code == 200
     hoja = openpyxl.load_workbook(io.BytesIO(r.content)).active
     filas = list(hoja.iter_rows(min_row=3, values_only=True))

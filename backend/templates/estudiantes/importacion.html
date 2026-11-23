@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block titulo %}Actualización desde SIMAT · {{ imp.institucion.nombre }}{% endblock %}
+{% block contenido %}
+<p style="margin-bottom:var(--s2)"><a href="{% url 'estudiantes:lista' %}?institucion={{ imp.institucion_id }}">‹ {{ imp.institucion.nombre }}</a></p>
+<div class="titulo-pagina">
+  <div>
+    <h1>{% if imp.estado == "PENDIENTE" %}Revise los cambios antes de aplicarlos{% else %}Actualización desde SIMAT{% endif %}</h1>
+    <div class="sub">{{ imp.institucion.nombre }} · {{ imp.nombre_archivo }} · código DANE {{ imp.codigo_dane }} · {{ imp.get_estado_display|lower }}{% if imp.aplicado_en %} el {{ imp.aplicado_en|date:"j \d\e F, H:i" }}{% endif %}</div>
+  </div>
+</div>
+
+{% if imp.estado == "PENDIENTE" and r.activos_antes and r.bajas > 0 %}
+  {% widthratio r.bajas r.activos_antes 100 as pct_bajas %}
+  {% if pct_bajas|add:0 >= 30 %}
+  <p class="nota aviso-amarillo" style="margin-bottom:var(--s3)"><strong>Atención:</strong> {{ r.bajas }} de {{ r.activos_antes }} estudiantes activos ({{ pct_bajas }} %) saldrían de la matrícula. Verifique que el archivo sea el corte completo de la institución y que el código DANE sea el correcto.</p>
+  {% endif %}
+{% endif %}
+
+<div class="bloque">
+  <div class="cifras" style="padding:var(--s4)">
+    <div class="cifra"><span class="nombre">En el archivo</span><span class="valor">{{ r.leidos }}</span><span class="formula">estudiantes de transición a 11°</span></div>
+    <div class="cifra"><span class="nombre">Nuevos</span><span class="valor">{{ r.nuevos }}</span><span class="formula">reciben su código QR{% if r.reactivados %} · {{ r.reactivados }} vuelven{% endif %}</span></div>
+    <div class="cifra"><span class="nombre">Cambian de curso</span><span class="valor">{{ r.cambian_curso }}</span><span class="formula">{{ r.sin_cambios }} sin cambios{% if r.corregidos %} · {{ r.corregidos }} con datos corregidos{% endif %}</span></div>
+    <div class="cifra"><span class="nombre">Salen de la matrícula</span><span class="valor">{{ r.bajas }}</span><span class="formula">su carné deja de servir; el historial se conserva</span></div>
+  </div>
+
+  <div class="resumen-importacion">
+    <section>
+      <h2>Salen de la matrícula</h2>
+      <table><thead><tr><th>Curso actual</th><th class="der">Estudiantes</th></tr></thead><tbody>
+      {% for c in r.bajas_por_curso %}<tr><td>{{ c.curso }}</td><td class="der num">{{ c.cantidad }}</td></tr>
+      {% empty %}<tr><td colspan="2" class="vacio">Nadie sale.</td></tr>{% endfor %}
+      </tbody></table>
+    </section>
+    <section>
+      <h2>Cambian de curso</h2>
+      <table><thead><tr><th>De</th><th>A</th><th class="der">Estudiantes</th></tr></thead><tbody>
+      {% for m in r.movimientos %}<tr><td>{{ m.de }}</td><td>{{ m.a }}</td><td class="der num">{{ m.cantidad }}</td></tr>
+      {% empty %}<tr><td colspan="3" class="vacio">Nadie cambia de curso.</td></tr>{% endfor %}
+      </tbody></table>
+    </section>
+    <section>
+      <h2>Nuevos</h2>
+      <table><thead><tr><th>Curso</th><th class="der">Estudiantes</th></tr></thead><tbody>
+      {% for c in r.nuevos_por_curso %}<tr><td>{{ c.curso }}</td><td class="der num">{{ c.cantidad }}</td></tr>
+      {% empty %}<tr><td colspan="2" class="vacio">No hay estudiantes nuevos.</td></tr>{% endfor %}
+      </tbody></table>
+    </section>
+  </div>
+  {% if r.manuales_conservados %}
+  <p class="tenue" style="padding:0 var(--s4) var(--s3);margin:0">{{ r.manuales_conservados }} estudiante{{ r.manuales_conservados|pluralize }} agregado{{ r.manuales_conservados|pluralize }} a mano no aparece{{ r.manuales_conservados|pluralize:"n" }} en el archivo y se conserva{{ r.manuales_conservados|pluralize:"n" }}. Si ya no está{{ r.manuales_conservados|pluralize:"n" }}, retírelo{{ r.manuales_conservados|pluralize }} desde su ficha.</p>
+  {% endif %}
+
+  {% if imp.estado == "PENDIENTE" %}
+  <div class="panel-pie">
+    <form method="post" style="display:contents">
+      {% csrf_token %}
+      <button class="boton texto" type="submit" name="accion" value="descartar">Descartar</button>
+      <button class="boton" type="submit" name="accion" value="aplicar"
+              onclick="return confirm('¿Aplicar la actualización? {{ r.nuevos }} nuevos, {{ r.cambian_curso }} cambian de curso y {{ r.bajas }} salen de la matrícula.')">Aplicar actualización</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Estudiantes PAE{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Estudiantes PAE</h1>
+    <div class="sub">Elija la institución para ver quién recibió el PAE, sus cursos y sus carnés QR.</div>
+  </div>
+</div>
+
+<div class="bloque">
+  <form class="filtros" method="get" hx-get="{% url 'estudiantes:lista' %}" hx-target="#instituciones" hx-push-url="true"
+        hx-trigger="input from:#buscar-institucion delay:250ms, submit">
+    <div class="campo buscar"><label for="buscar-institucion">Buscar institución</label>
+      <input type="search" id="buscar-institucion" name="q" value="{{ q }}" placeholder="Nombre, sede o código DANE" data-buscar autocomplete="off"></div>
+    <noscript><button class="boton sec chico" type="submit">Buscar</button></noscript>
+  </form>
+  <div id="instituciones">
+    {% include "estudiantes/_instituciones.html" %}
+  </div>
+</div>
+{% endblock %}
