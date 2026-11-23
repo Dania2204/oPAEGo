@@ -258,6 +258,26 @@ tiene sesión sigue yendo directo a su panel.
 - Video de presentación (2:30, HyperFrames): `static/video/landing/paego-presentacion.mp4`
   (H.264, ~18 MB). `PAEGO_VIDEO_PRINCIPAL_URL` lo reemplaza por una URL externa (CDN).
 
+### Asistente de reportes con IA (administrador)
+
+`/asistente/` (menú Control): el administrador pregunta en lenguaje natural ("¿qué conductor
+tuvo más novedades este mes?", "¿qué porcentaje de estudiantes recibió el PAE ayer?") y
+Claude responde con los datos actuales.
+
+- **Cómo funciona:** API de Anthropic con *tool use* (`apps/asistente/servicios.py`). Claude no
+  ve la base de datos: pide herramientas de **solo lectura** (`apps/asistente/herramientas.py`:
+  indicadores, envíos, detalle de envío, novedades, situación actual, entrega PAE, catálogo,
+  matrícula SIMAT, auditoría y enlace al reporte PDF/Excel), que reutilizan las consultas del
+  panel. Cada respuesta dice qué consultó.
+- **Privacidad (Ley 1581):** las herramientas no devuelven nombres ni documentos de
+  estudiantes, solo conteos; en la auditoría se omiten las descripciones sobre estudiantes.
+- **Configuración:** `ANTHROPIC_API_KEY` (console.anthropic.com, solo en el servidor),
+  `ASISTENTE_MODELO` (por defecto `claude-opus-5-5`; `claude-sonnet-5-5` cuesta la mitad),
+  `ASISTENTE_ESFUERZO`, `ASISTENTE_TIMEOUT_SEG` y `LIMITE_ASISTENTE` (30 preguntas/hora por
+  usuario). Sin clave, la pantalla avisa que no está configurado.
+- Cada pregunta queda en la auditoría (`ASISTENTE_CONSULTA`, con herramientas y tokens usados).
+  Costo aproximado: US$0,03–0,06 por pregunta con Opus 5.5 (caché de prompt incluida).
+
 ### Mapa en vivo de conductores (modo de prueba)
 
 Mientras llega la app Flutter, el conductor puede compartir su ubicación desde el navegador del

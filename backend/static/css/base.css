@@ -218,3 +218,38 @@ td.der, th.der { text-align: right; white-space: nowrap; }
   .cabecera .entidad .marca { width: 28px; height: 28px; }
   .campos { grid-template-columns: 1fr; }
 }
+
+/* ---------- asistente de reportes (IA) ---------- */
+.asistente { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: var(--s4); align-items: start; }
+.asistente-chat { display: flex; flex-direction: column; min-height: 60vh; }
+.turnos { flex: 1; padding: var(--s4) var(--s5); display: flex; flex-direction: column; gap: var(--s5); }
+.turno { display: flex; flex-direction: column; gap: var(--s3); max-width: 860px; }
+.turno .quien { display: block; font-size: var(--t-xs); font-weight: 600; color: var(--tinta-3); margin-bottom: 2px; }
+.turno-pregunta { align-self: flex-start; background: var(--superficie-2); border: 1px solid var(--borde); border-radius: var(--r-control); padding: 8px 12px; margin: 0; white-space: pre-wrap; }
+.turno-respuesta { border-left: 3px solid var(--accion); padding-left: var(--s3); }
+.turno.con-aviso .turno-respuesta { border-left-color: var(--aviso); }
+.turno-respuesta .md p, .turno-respuesta .md ul, .turno-respuesta .md ol { margin: 0 0 var(--s2); line-height: 1.55; }
+.turno-respuesta .md ul, .turno-respuesta .md ol { padding-left: 20px; }
+.turno-respuesta .md table { margin: var(--s2) 0 var(--s3); font-size: var(--t-sm); }
+.turno-respuesta .md td { height: auto; padding: 6px 10px; }
+.turno-respuesta .md code { font-family: var(--mono); font-size: .92em; background: var(--superficie-2); padding: 0 4px; border-radius: 3px; }
+.turno-fuentes { font-size: var(--t-xs); color: var(--tinta-3); margin: var(--s2) 0 0; }
+.turno.pendiente .cargando { margin: 0; animation: latido 1.4s ease-in-out infinite; }
+@keyframes latido { 50% { opacity: .45; } }
+.asistente-inicio { color: var(--tinta-2); max-width: 680px; }
+.asistente-inicio .ejemplos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); }
+.asistente-inicio .ejemplos .boton { text-align: left; height: auto; min-height: 30px; padding: 5px 10px; white-space: normal; }
+.asistente-form { position: sticky; bottom: 0; display: flex; gap: var(--s3); align-items: flex-end; padding: var(--s3) var(--s4); border-top: 1px solid var(--borde); background: var(--superficie); border-radius: 0 0 var(--r-panel) var(--r-panel); }
+.asistente-form textarea { flex: 1; min-height: 44px; max-height: 200px; }
+.asistente-historial ul { list-style: none; margin: 0; padding: var(--s2) 0; }
+.asistente-historial li a { display: flex; flex-direction: column; gap: 2px; padding: 8px var(--s4); color: var(--tinta); text-decoration: none; font-size: var(--t-sm); }
+.asistente-historial li a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.asistente-historial li a:hover { background: var(--superficie-2); }
+.asistente-historial li a[aria-current="page"] { background: var(--accion-suave); box-shadow: inset 3px 0 0 var(--accion); }
+.asistente-historial .vacio-chico { padding: 8px var(--s4); font-size: var(--t-sm); }
+.asistente-historial .borrar { padding: 0 var(--s3) var(--s2); }
+.asistente-historial .nota-privacidad { font-size: var(--t-xs); padding: var(--s3) var(--s4); margin: 0; border-top: 1px solid var(--borde); }
+@media (max-width: 980px) {
+  .asistente { grid-template-columns: minmax(0, 1fr); }
+  .turnos { padding: var(--s3); }
+}

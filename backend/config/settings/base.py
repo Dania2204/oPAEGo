@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "apps.sincronizacion",
     "apps.nutricion",
     "apps.estudiantes",
+    "apps.asistente",
 ]
 
 # No se usan sesiones de Django: la autenticación de la web y de la API es
@@ -130,6 +131,8 @@ REST_FRAMEWORK = {
         "restablecer": env("LIMITE_RESTABLECER", default="5/hour"),
         # Consultas al asistente de nutrición, por usuario (gastan cuota de Gemini).
         "nutricion": env("LIMITE_NUTRICION", default="20/hour"),
+        # Preguntas al asistente de reportes del administrador (gastan cuota de Anthropic).
+        "asistente": env("LIMITE_ASISTENTE", default="30/hour"),
     },
 }
 
@@ -142,6 +145,15 @@ CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
 GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
 GEMINI_MODEL = env("GEMINI_MODEL", default="gemini-2.5-flash")
 GEMINI_TIMEOUT_SEG = env.int("GEMINI_TIMEOUT_SEG", default=30)
+
+# Asistente de reportes del administrador (apps/asistente): Claude con
+# herramientas de solo lectura. Sin clave, el panel muestra que no está configurado.
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
+ASISTENTE_MODELO = env("ASISTENTE_MODELO", default="claude-opus-5-5")
+ASISTENTE_ESFUERZO = env("ASISTENTE_ESFUERZO", default="medium")  # low|medium|high
+ASISTENTE_TIMEOUT_SEG = env.int("ASISTENTE_TIMEOUT_SEG", default=90)
+# Reintento automático con otro modelo si el elegido rechaza la petición.
+ASISTENTE_RESPALDO = env.bool("ASISTENTE_RESPALDO", default=True)
 
 # RF-02 / RNF-08: el access token dura poco y el refresh rota en cada uso.
 # Si el usuario pasa JWT_INACTIVIDAD_MIN minutos sin actividad, el refresh

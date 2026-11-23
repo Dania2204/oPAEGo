@@ -96,6 +96,8 @@
       <svg class="icono"><use href="#i-instituciones"/></svg><span class="texto">Cobertura</span></a>
     <a href="{% url 'auditoria:reportes' %}" {% if nombre == 'reportes' %}aria-current="page"{% endif %} title="Reportes">
       <svg class="icono"><use href="#i-reportes"/></svg><span class="texto">Reportes</span></a>
+    <a href="{% url 'asistente:chat' %}" {% if ns == 'asistente' %}aria-current="page"{% endif %} title="Asistente de reportes (IA)">
+      <svg class="icono"><use href="#i-asistente"/></svg><span class="texto">Asistente</span></a>
     <a href="{% url 'auditoria:lista' %}" {% if ns == 'auditoria' and nombre == 'lista' %}aria-current="page"{% endif %} title="Auditoría">
       <svg class="icono"><use href="#i-auditoria"/></svg><span class="texto">Auditoría</span></a>
 

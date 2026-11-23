@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block titulo %}Asistente de reportes{% endblock %}
+{% block contenido %}
+<div class="titulo-pagina">
+  <div>
+    <h1>Asistente de reportes</h1>
+    <div class="sub">Pregunte en palabras sencillas por envíos, novedades, indicadores, cobertura del PAE o auditoría</div>
+  </div>
+  <div class="acciones"><a class="boton sec" href="{% url 'asistente:chat' %}">Nueva conversación</a></div>
+</div>
+
+<div class="asistente">
+  <section class="bloque asistente-chat" aria-label="Conversación">
+    {% if not configurado %}
+    <p class="nota aviso-amarillo" style="margin:var(--s4)">El asistente no está configurado: falta la clave <code>ANTHROPIC_API_KEY</code> en el servidor.</p>
+    {% endif %}
+    <div id="turnos" class="turnos" aria-live="polite">
+      {% for turno in turnos %}{% include "asistente/_turno.html" %}{% endfor %}
+      {% if not turnos %}
+      <div class="asistente-inicio" id="asistente-inicio">
+        <p>Responde con los datos actuales de PAEGo y dice qué consultó. Solo consulta: no cambia nada. No tiene acceso a nombres ni documentos de estudiantes.</p>
+        <p class="tenue" style="margin-bottom:var(--s2)">Por ejemplo:</p>
+        <ul class="ejemplos">
+          {% for e in ejemplos %}<li><button type="button" class="boton sec chico" data-ejemplo>{{ e }}</button></li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    <form class="asistente-form" method="post" action="{% url 'asistente:chat' %}"
+          hx-post="{% url 'asistente:chat' %}" hx-target="#turno-pendiente" hx-swap="outerHTML"
+          hx-disabled-elt="find button[type=submit]">
+      {% csrf_token %}
+      <input type="hidden" name="conversacion" id="campo-conversacion" value="{{ conversacion.pk|default:'' }}">
+      <label for="pregunta" class="oculto-visual">Pregunta</label>
+      <textarea id="pregunta" name="pregunta" rows="2" maxlength="{{ max_pregunta }}" required
+                placeholder="Escriba su pregunta. Enter envía; Mayús+Enter, nueva línea." {% if not configurado %}disabled{% endif %}></textarea>
+      <button class="boton" type="submit" {% if not configurado %}disabled{% endif %}>Preguntar</button>
+    </form>
+  </section>
+
+  <aside class="bloque asistente-historial" aria-label="Conversaciones recientes">
+    <div class="bloque-cabeza"><h2>Recientes</h2></div>
+    <ul>
+      {% for c in recientes %}
+      <li><a href="{% url 'asistente:chat' %}?c={{ c.pk }}" {% if conversacion and c.pk == conversacion.pk %}aria-current="page"{% endif %}>
+        <span>{{ c.titulo }}</span><small class="tenue">{{ c.actualizado_en|date:"j M H:i" }}</small></a></li>
+      {% empty %}
+      <li class="tenue vacio-chico">Aún no hay conversaciones.</li>
+      {% endfor %}
+    </ul>
+    {% if conversacion %}
+    <form method="post" action="{% url 'asistente:chat' %}" onsubmit="return confirm('¿Borrar esta conversación?')" class="borrar">
+      {% csrf_token %}<input type="hidden" name="conversacion" value="{{ conversacion.pk }}"><input type="hidden" name="accion" value="borrar">
+      <button class="boton texto chico" type="submit">Borrar esta conversación</button>
+    </form>
+    {% endif %}
+    <p class="tenue nota-privacidad">Las preguntas y los datos consultados se envían al servicio de IA de Anthropic para generar la respuesta. Cada pregunta queda en la auditoría.</p>
+  </aside>
+</div>
+
+<script>
+(function () {
+  const form = document.querySelector(".asistente-form");
+  const campo = document.getElementById("pregunta");
+  const turnos = document.getElementById("turnos");
+  if (!form || !campo) return;
+  const bajar = () => window.requestAnimationFrame(() => form.scrollIntoView({ block: "end" }));
+  form.addEventListener("htmx:beforeRequest", () => {
+    const inicio = document.getElementById("asistente-inicio");
+    if (inicio) inicio.remove();
+    const art = document.createElement("article");
+    art.className = "turno pendiente";
+    art.id = "turno-pendiente";
+    const p = document.createElement("p");
+    p.className = "turno-pregunta";
+    const quien = document.createElement("span");
+    quien.className = "quien"; quien.textContent = "Usted";
+    p.append(quien, document.createTextNode(campo.value.trim()));
+    const r = document.createElement("div");
+    r.className = "turno-respuesta";
+    r.innerHTML = '<span class="quien">Asistente</span><p class="tenue cargando">Consultando datos…</p>';
+    art.append(p, r);
+    turnos.appendChild(art);
+    bajar();
+  });
+  form.addEventListener("htmx:afterRequest", (e) => {
+    if (e.detail.successful) { campo.value = ""; campo.focus(); bajar(); }
+    else { const p = document.getElementById("turno-pendiente"); if (p) p.remove(); }
+  });
+  campo.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (campo.value.trim()) form.requestSubmit(); }
+  });
+  document.querySelectorAll("[data-ejemplo]").forEach((b) =>
+    b.addEventListener("click", () => { campo.value = b.textContent.trim(); campo.focus(); })
+  );
+  bajar();
+})();
+</script>
+{% endblock %}

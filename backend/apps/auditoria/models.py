@@ -43,6 +43,7 @@ class Accion(models.TextChoices):
     QR_REGENERADO = "QR_REGENERADO", "Código QR de estudiante regenerado"
     ESTUDIANTE_AGREGADO = "ESTUDIANTE_AGREGADO", "Estudiante agregado a un curso"
     MATRICULA_ACTUALIZADA = "MATRICULA_ACTUALIZADA", "Matrícula actualizada desde SIMAT"
+    ASISTENTE_CONSULTA = "ASISTENTE_CONSULTA", "Consulta al asistente de reportes (IA)"
 
 
 class RegistroAuditoria(models.Model):

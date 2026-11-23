@@ -15,5 +15,5 @@ fi
 # App Service enruta al puerto 8000 por defecto.
 exec gunicorn config.wsgi \
   --bind "0.0.0.0:${PORT:-8000}" \
-  --workers 2 --timeout 60 \
+  --workers 2 --timeout 120 \
   --access-logfile -

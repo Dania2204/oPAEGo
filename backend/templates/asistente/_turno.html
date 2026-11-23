@@ -1,0 +1,11 @@
+{% load asistente %}
+<article class="turno{% if turno.aviso %} con-aviso{% endif %}">
+  {% if turno.pregunta %}<p class="turno-pregunta"><span class="quien">Usted</span>{{ turno.pregunta }}</p>{% endif %}
+  <div class="turno-respuesta">
+    <span class="quien">Asistente</span>
+    {% if turno.aviso %}<p class="nota aviso-amarillo" role="alert">{{ turno.respuesta }}</p>
+    {% else %}<div class="md">{{ turno.respuesta|md_seguro }}</div>{% endif %}
+    {% if turno.consultas %}<p class="turno-fuentes">Consultó: {{ turno.consultas }}</p>{% endif %}
+  </div>
+</article>
+{% if oob and conversacion and conversacion.pk %}<input type="hidden" name="conversacion" id="campo-conversacion" value="{{ conversacion.pk }}" hx-swap-oob="true">{% endif %}
