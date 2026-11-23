@@ -173,7 +173,7 @@ table.cursos > tbody > tr.curso-detalle > td { height: auto; padding: 0 var(--s4
 .curso-detalle-cabecera { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: var(--s3) var(--s4) var(--s3) 0; }
 .curso-detalle table { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-control); }
 .curso-detalle th { position: static; }
-#curso-abierto { scroll-margin-top: 120px; }
+table.cursos tr.curso[aria-busy="true"] { cursor: progress; }
 td.der, th.der { text-align: right; white-space: nowrap; }
 .celda-doble { display: flex; flex-direction: column; line-height: 1.25; }
 .celda-doble small { font-size: var(--t-xs); }
