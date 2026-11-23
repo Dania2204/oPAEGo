@@ -34,35 +34,37 @@
   {# ---------------------------------------------------------------- hero #}
   <section class="l-hero" aria-labelledby="hero-titulo">
     <figure class="l-hero-foto">
-      <img src="{% static 'img/landing/banner-pasto.webp' %}" width="1600" height="685"
-           alt="Pasto al amanecer con el volcán Galeras al fondo"
+      <img src="{% static 'img/landing/banner-escuela.webp' %}" width="2400" height="1031"
+           alt="Camión del PAE descargando alimentos frente a una escuela de Pasto, con el volcán Galeras al fondo"
            fetchpriority="high" data-parallax>
     </figure>
 
-    <div class="l-contenedor l-hero-rejilla">
+    <div class="l-contenedor">
       <div class="l-hero-ficha">
-        <p class="l-antetitulo">Programa de Alimentación Escolar · Pasto</p>
-        <h1 id="hero-titulo" class="l-titular" data-lineas>
-          <span class="linea"><span>Cada ración del PAE,</span></span>
-          <span class="linea"><span>del almacén al estudiante.</span></span>
-        </h1>
-        <p class="l-entrada">
-          Una sola plataforma para programar los envíos, seguirlos en el mapa, confirmarlos con
-          evidencia y registrar a cada estudiante que recibe.
-        </p>
-        <div class="l-hero-acciones">
-          <a class="l-boton grande" href="{% url 'cuentas:login' %}">Ingresar a la plataforma</a>
-          <a class="l-enlace-flecha" href="#como-funciona">Conozca cómo funciona
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 3v10m0 0 4-4m-4 4-4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </a>
+        <div class="l-hero-texto">
+          <p class="l-antetitulo">Programa de Alimentación Escolar · Pasto</p>
+          <h1 id="hero-titulo" class="l-titular" data-lineas>
+            <span class="linea"><span>Cada ración del PAE,</span></span>
+            <span class="linea"><span>del almacén al estudiante.</span></span>
+          </h1>
+          <p class="l-entrada">
+            Programe los envíos, sígalos en el mapa, confírmelos con evidencia y registre a cada
+            estudiante que recibe su ración.
+          </p>
+          <div class="l-hero-acciones">
+            <a class="l-boton grande" href="{% url 'cuentas:login' %}">Ingresar a la plataforma</a>
+            <a class="l-enlace-flecha" href="#como-funciona">Conozca cómo funciona
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 3v10m0 0 4-4m-4 4-4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
         </div>
-      </div>
 
-      <dl class="l-hero-datos" data-revelar>
-        <div><dt>Quién lo usa</dt><dd>Secretaría de Educación, conductores, instituciones educativas y supervisores PAE.</dd></div>
-        <div><dt>Cómo se ingresa</dt><dd>Con el usuario que asigna la Secretaría. No requiere registro.</dd></div>
-        <div><dt>Dónde funciona</dt><dd>Panel web y app móvil, también sin conexión a internet.</dd></div>
-      </dl>
+        <dl class="l-hero-datos">
+          <div><dt>Quién lo usa</dt><dd>Secretaría, conductores, instituciones y supervisores.</dd></div>
+          <div><dt>Cómo se ingresa</dt><dd>Con el usuario que asigna la Secretaría.</dd></div>
+          <div><dt>Dónde funciona</dt><dd>Panel web y app móvil, incluso sin conexión.</dd></div>
+        </dl>
+      </div>
     </div>
   </section>
 
@@ -144,22 +146,22 @@
     <div class="l-contenedor">
       <header class="l-encabezado claro" data-revelar>
         <p class="l-antetitulo">Video</p>
-        <h2 id="video-titulo">Conozca PAEGo en pocos minutos.</h2>
+        <h2 id="video-titulo">Conozca PAEGo en dos minutos y medio.</h2>
         <p>Un recorrido por la plataforma, desde la bodega hasta el comedor escolar.</p>
       </header>
       <figure class="l-video-marco" data-video-principal data-revelar>
-        {% if paego.VIDEO_PRINCIPAL_URL %}
-          <video controls preload="none" playsinline poster="{% static 'img/landing/poster-video.webp' %}">
-            <source src="{{ paego.VIDEO_PRINCIPAL_URL }}" type="video/mp4">
-            Su navegador no puede reproducir este video.
-          </video>
-        {% else %}
-          <img src="{% static 'img/landing/poster-video.webp' %}" alt="" loading="lazy" width="1600" height="900">
-          <figcaption class="l-video-pronto">
-            <span class="l-boton-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
-            Video de presentación · próximamente
-          </figcaption>
-        {% endif %}
+        {# PAEGO_VIDEO_PRINCIPAL_URL permite servirlo desde un CDN; si no, va el archivo estático. #}
+        <video controls preload="none" playsinline
+               poster="{% static 'img/landing/video-portada.webp' %}"
+               aria-label="Video de presentación de PAEGo">
+          <source src="{% if paego.VIDEO_PRINCIPAL_URL %}{{ paego.VIDEO_PRINCIPAL_URL }}{% else %}{% static 'video/landing/paego-presentacion.mp4' %}{% endif %}" type="video/mp4">
+          Su navegador no puede reproducir este video.
+        </video>
+        {# Sin JS quedan los controles nativos; landing.js muestra este botón. #}
+        <button type="button" class="l-video-play" data-video-play hidden>
+          <span class="l-video-play-icono" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
+          <span>Ver el video <small>2:30</small></span>
+        </button>
       </figure>
     </div>
   </section>

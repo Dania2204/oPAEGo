@@ -25,6 +25,18 @@
   window.addEventListener("scroll", revisarCabecera, { passive: true });
   revisarCabecera();
 
+  // ------------------------------------------- video: botón de reproducir
+  var video = document.querySelector("[data-video-principal] video");
+  var play = document.querySelector("[data-video-play]");
+  if (video && play) {
+    // Mientras no se reproduce, solo el botón: los controles nativos lo tapaban.
+    play.hidden = false;
+    video.controls = false;
+    play.addEventListener("click", function () { video.controls = true; video.play(); });
+    video.addEventListener("play", function () { play.hidden = true; video.controls = true; });
+    video.addEventListener("ended", function () { play.hidden = false; video.controls = false; });
+  }
+
   // ------------------------------------------- sin GSAP: pasos con observer
   function pasosSinGsap() {
     if (!("IntersectionObserver" in window)) return;

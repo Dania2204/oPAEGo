@@ -240,9 +240,9 @@ tiene sesión sigue yendo directo a su panel.
 - Plantillas `templates/base_publico.html` y `templates/publico/landing.html`; estilos
   `static/css/landing.css`; animaciones `static/js/landing.js` con GSAP + ScrollTrigger (cdnjs).
   Mejora progresiva: sin JS o con movimiento reducido se ve completa y estática.
-- Medios en `static/img/landing/` (WebP): escenas generadas con IA y capturas reales del panel.
-- Video de presentación: `PAEGO_VIDEO_PRINCIPAL_URL` (archivo estático o URL). Vacío = póster
-  con "próximamente".
+- Medios en `static/img/landing/` (WebP): escenas generadas con IA (sin rostros de menores).
+- Video de presentación (2:30, HyperFrames): `static/video/landing/paego-presentacion.mp4`
+  (H.264, ~18 MB). `PAEGO_VIDEO_PRINCIPAL_URL` lo reemplaza por una URL externa (CDN).
 
 ### Mapa en vivo de conductores (modo de prueba)
 

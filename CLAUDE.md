@@ -104,7 +104,7 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
 `/` es la landing para visitantes (`cuentas.views.inicio`; con sesión redirige al panel):
 `templates/publico/landing.html` + `static/css/landing.css` + `static/js/landing.js` (GSAP 3.12.5 y
 ScrollTrigger por cdnjs, mejora progresiva). Cifras públicas solo agregadas
-(`monitoreo/cifras_publicas.py`). Video de presentación por `PAEGO_VIDEO_PRINCIPAL_URL`. Todo
+(`monitoreo/cifras_publicas.py`). Video en `static/video/landing/` (`PAEGO_VIDEO_PRINCIPAL_URL` lo cambia por una URL externa). Todo
 `{% static %}` de la landing debe existir (`tests/test_landing.py`), si no prod da 500. Las fotos de
 escenas son generadas con IA y no muestran rostros de niños.
 

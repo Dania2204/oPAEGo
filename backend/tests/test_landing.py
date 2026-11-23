@@ -48,22 +48,22 @@ def poner_cookies_cliente(client, usuario):
         client.cookies[clave] = valor
 
 
-def test_video_principal_pendiente_muestra_poster(client, settings):
+def test_video_principal_por_defecto_es_el_estatico(client, settings):
     settings.PAEGO = {**settings.PAEGO, "VIDEO_PRINCIPAL_URL": ""}
     html = client.get("/").content.decode()
-    assert "próximamente" in html
-    assert "<video controls" not in html
+    assert "<video controls" in html
+    assert "video/landing/paego-presentacion" in html
 
 
 def test_video_principal_configurado(client, settings):
     settings.PAEGO = {
         **settings.PAEGO,
-        "VIDEO_PRINCIPAL_URL": "/static/video/landing/presentacion.mp4",
+        "VIDEO_PRINCIPAL_URL": "https://cdn.ejemplo.co/presentacion.mp4",
     }
     html = client.get("/").content.decode()
     assert "<video controls" in html
-    assert "/static/video/landing/presentacion.mp4" in html
-    assert "próximamente" not in html
+    assert "https://cdn.ejemplo.co/presentacion.mp4" in html
+    assert "paego-presentacion" not in html
 
 
 def test_cifras_son_agregadas_y_se_cachean(institucion, django_assert_num_queries):
