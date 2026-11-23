@@ -165,6 +165,15 @@ tr.clic:hover td { background: var(--superficie-2); }
 tr.seleccionada td { background: var(--accion-suave); }
 tr.seleccionada td:first-child { box-shadow: inset 3px 0 0 var(--accion); }
 tr.inactivo td { color: var(--tinta-3); }
+/* Acordeón de cursos (Estudiantes PAE): el curso elegido se abre debajo de su fila. */
+table.cursos > tbody > tr > td:first-child a { display: inline-flex; align-items: center; gap: 6px; }
+.curso-flecha { color: var(--tinta-3); transition: transform .2s; flex: none; }
+table.cursos tr.seleccionada .curso-flecha { transform: rotate(90deg); color: var(--accion); }
+table.cursos > tbody > tr.curso-detalle > td { height: auto; padding: 0 var(--s4) var(--s4) var(--s5); background: var(--accion-suave); box-shadow: inset 3px 0 0 var(--accion); }
+.curso-detalle-cabecera { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: var(--s3) var(--s4) var(--s3) 0; }
+.curso-detalle table { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-control); }
+.curso-detalle th { position: static; }
+#curso-abierto { scroll-margin-top: 120px; }
 td.der, th.der { text-align: right; white-space: nowrap; }
 .celda-doble { display: flex; flex-direction: column; line-height: 1.25; }
 .celda-doble small { font-size: var(--t-xs); }
