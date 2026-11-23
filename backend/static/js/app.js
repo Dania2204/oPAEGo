@@ -72,6 +72,66 @@
     })
   );
 
+  /* ---------- acordeón de cursos (Estudiantes PAE) ----------
+     El curso se abre justo debajo de su fila. La fila elegida no se mueve de
+     donde el usuario hizo clic: solo se quita el detalle anterior y se inserta
+     el nuevo, compensando el scroll (antes se repintaba toda la tabla y
+     luego se desplazaba, lo que daba un "rebote"). */
+  function anclar(fila, top) {
+    const delta = fila.getBoundingClientRect().top - top;
+    if (delta) window.scrollBy(0, delta);
+  }
+  function marcarCurso(fila, abierta) {
+    fila.classList.toggle("seleccionada", abierta);
+    const enlace = fila.querySelector("a");
+    if (enlace) {
+      enlace.setAttribute("aria-expanded", abierta ? "true" : "false");
+      enlace.href = abierta ? fila.dataset.cerrarUrl : fila.dataset.cursoUrl;
+    }
+  }
+  function cursoEnFiltros(grado, grupo) {
+    // El filtro de fecha conserva el curso abierto; la exportación también.
+    document.querySelectorAll("form.filtros input[name=grado]").forEach((i) => (i.value = grado));
+    document.querySelectorAll("form.filtros input[name=grupo]").forEach((i) => (i.value = grupo));
+    document.querySelectorAll('a[href*="/estudiantes/exportar"]').forEach((a) => {
+      const u = new URL(a.href, location.href);
+      if (grado) { u.searchParams.set("grado", grado); u.searchParams.set("grupo", grupo); }
+      else { u.searchParams.delete("grado"); u.searchParams.delete("grupo"); }
+      a.href = u.pathname + u.search;
+    });
+  }
+  document.addEventListener("click", (e) => {
+    const fila = e.target.closest("table.cursos tr.curso");
+    if (!fila || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    const tabla = fila.closest("table");
+    const top = fila.getBoundingClientRect().top;
+    const yaAbierta = fila.classList.contains("seleccionada");
+    tabla.querySelectorAll("tr.curso-detalle").forEach((d) => d.remove());
+    tabla.querySelectorAll("tr.curso.seleccionada").forEach((f) => marcarCurso(f, false));
+    anclar(fila, top);
+    if (yaAbierta) {
+      history.replaceState(history.state, "", fila.dataset.cerrarUrl);
+      cursoEnFiltros("", "");
+      return;
+    }
+    marcarCurso(fila, true);
+    fila.setAttribute("aria-busy", "true");
+    fetch(fila.dataset.cursoUrl, { headers: { "HX-Request": "true", "HX-Target": "curso-detalle" } })
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then((html) => {
+        if (!fila.classList.contains("seleccionada")) return; // ya eligió otro
+        const top2 = fila.getBoundingClientRect().top;
+        fila.insertAdjacentHTML("afterend", html);
+        htmx.process(fila.nextElementSibling);
+        anclar(fila, top2);
+        history.replaceState(history.state, "", fila.dataset.cursoUrl);
+        cursoEnFiltros(fila.dataset.grado, fila.dataset.grupo);
+      })
+      .catch(() => { marcarCurso(fila, false); avisar("No se pudo abrir el curso. Intente de nuevo.", "error"); })
+      .finally(() => fila.removeAttribute("aria-busy"));
+  });
+
   /* ---------- avisos ---------- */
   function avisar(texto, tipo) {
     const zona = document.getElementById("avisos");

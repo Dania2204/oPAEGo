@@ -13,12 +13,14 @@
     <table class="cursos">
       <thead><tr><th>Curso</th><th class="der">Activos</th><th class="der">Recibieron</th><th class="der">%</th></tr></thead>
       <tbody>
+      {% url 'estudiantes:lista' as url_lista %}
+      {% comment %}Acordeón: el curso se abre debajo de su fila sin mover la tabla (app.js);
+        sin JS, el enlace recarga la página con el curso abierto (o cerrado).{% endcomment %}
       {% for c in cursos %}
-        {# El curso abierto se cierra con un segundo clic (URL sin grado ni grupo). #}
-        <tr class="clic{% if c.grado == grado and c.grupo == grupo %} seleccionada{% endif %}"
-            {% if c.grado == grado and c.grupo == grupo %}id="curso-abierto"{% endif %}
-            hx-get="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}{% if not c.grado == grado or not c.grupo == grupo %}&grado={{ c.grado }}&grupo={{ c.grupo }}{% endif %}"
-            hx-target="#resultados" hx-push-url="true" hx-swap="innerHTML show:#curso-abierto:top">
+        <tr class="clic curso{% if c.grado == grado and c.grupo == grupo %} seleccionada{% endif %}"
+            data-curso-url="{{ url_lista }}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}&grado={{ c.grado }}&grupo={{ c.grupo }}"
+            data-cerrar-url="{{ url_lista }}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}"
+            data-grado="{{ c.grado }}" data-grupo="{{ c.grupo }}">
           <td>
             <a href="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}{% if not c.grado == grado or not c.grupo == grupo %}&grado={{ c.grado }}&grupo={{ c.grupo }}{% endif %}"
                aria-expanded="{% if c.grado == grado and c.grupo == grupo %}true{% else %}false{% endif %}">
@@ -30,32 +32,7 @@
           <td class="der num">{% if c.activos %}{% widthratio c.recibieron c.activos 100 %}{% endif %}</td>
         </tr>
         {% if c.grado == grado and c.grupo == grupo and estudiantes is not None %}
-        <tr class="curso-detalle">
-          <td colspan="4">
-            <div class="curso-detalle-cabecera">
-              <strong>{{ c.curso }} · {{ fecha|date:"j \d\e F" }}</strong>
-              <a class="boton sec chico" target="_blank" rel="noopener"
-                 href="{% url 'estudiantes:carnes' %}?institucion={{ institucion.pk }}&grado={{ grado }}&grupo={{ grupo }}">Imprimir carnés QR del curso</a>
-            </div>
-            <table>
-              <thead><tr><th>Estudiante</th><th>Documento</th><th>Entrega del día</th></tr></thead>
-              <tbody>
-              {% for e in estudiantes %}
-                {% with entrega=e.entregas_del_dia.0 %}
-                <tr class="clic" hx-get="{% url 'estudiantes:detalle' e.pk %}" hx-target="#panel-contenido" hx-push-url="true">
-                  <td><strong style="font-weight:500">{{ e.apellidos }}</strong>, {{ e.nombres }}</td>
-                  <td class="tenue num">{{ e.documento }}</td>
-                  <td>{% if entrega %}<span class="estado estado--RECIBIO">Recibió</span> <span class="tenue">{{ entrega.get_metodo_display|lower }} · {{ entrega.ocurrido_en|time:"H:i" }}</span>
-                      {% else %}<span class="estado estado--PENDIENTE">Pendiente</span>{% endif %}</td>
-                </tr>
-                {% endwith %}
-              {% empty %}
-                <tr><td colspan="3" class="vacio">No hay estudiantes en este curso.</td></tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          </td>
-        </tr>
+          {% include "estudiantes/_curso_detalle.html" %}
         {% endif %}
       {% empty %}
         <tr><td colspan="4" class="vacio">No hay estudiantes activos.</td></tr>

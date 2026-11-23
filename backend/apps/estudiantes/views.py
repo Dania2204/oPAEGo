@@ -80,7 +80,11 @@ class EstudiantesView(AdministradorRequeridoMixin, View):
             request,
             "estudiantes/lista.html",
             contexto,
-            {"resultados": "estudiantes/_contenido.html"},
+            {
+                "resultados": "estudiantes/_contenido.html",
+                # Solo los estudiantes del curso, para abrirlo bajo su fila.
+                "curso-detalle": "estudiantes/_curso_detalle.html",
+            },
         )
 
 
