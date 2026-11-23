@@ -240,8 +240,7 @@ tiene sesión sigue yendo directo a su panel.
 - Plantillas `templates/base_publico.html` y `templates/publico/landing.html`; estilos
   `static/css/landing.css`; animaciones `static/js/landing.js` con GSAP + ScrollTrigger (cdnjs).
   Mejora progresiva: sin JS o con movimiento reducido se ve completa y estática.
-- Medios en `static/img/landing/` (WebP) y `static/video/landing/` (clips en bucle MP4/WebM del
-  sistema real, cargados al entrar en pantalla).
+- Medios en `static/img/landing/` (WebP): escenas generadas con IA y capturas reales del panel.
 - Video de presentación: `PAEGO_VIDEO_PRINCIPAL_URL` (archivo estático o URL). Vacío = póster
   con "próximamente".
 

@@ -11,7 +11,7 @@
   --l-ancho: 1200px;
   --l-gutter: clamp(16px, 4vw, 40px);
   --l-seccion: clamp(72px, 10vw, 128px);
-  --l-titular: clamp(2.5rem, 4.6vw, 4rem);
+  --l-titular: clamp(2.125rem, 3.5vw, 3.25rem);
   --l-h2: clamp(1.875rem, 3.6vw, 3rem);
   --l-alto-cabecera: 72px;
   background: var(--superficie);
@@ -82,37 +82,41 @@
 .punto.ok { background: var(--ok); }
 
 /* ---------- hero ---------- */
-.l-hero { padding: clamp(40px, 6vw, 88px) 0 clamp(56px, 7vw, 96px); }
+/* Banner institucional: foto a lo ancho y una ficha blanca que la monta por abajo,
+   como los portales GOV.CO; al lado, datos del servicio en lista (no tarjetas). */
+.l-hero { padding-bottom: clamp(48px, 6vw, 80px); }
+.l-hero-foto { margin: 0; height: clamp(360px, 58vh, 600px); overflow: hidden; background: var(--govco-azul-claro); }
+.l-hero-foto img { width: 100%; height: 114%; object-fit: cover; object-position: 60% 45%; display: block; will-change: transform; }
 .l-hero-rejilla {
-  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  column-gap: clamp(32px, 5vw, 72px); row-gap: clamp(32px, 4vw, 48px); align-items: end;
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  gap: clamp(32px, 5vw, 72px); align-items: end;
 }
-.l-hero-cabeza { grid-column: 1 / -1; }
-.l-hero-texto { padding-bottom: 72px; }
-.l-titular { font-size: var(--l-titular); line-height: 1.04; font-weight: 600; margin: 0; max-width: 18ch; }
-@media (min-width: 901px) { .l-titular { max-width: none; } .l-titular .linea > span { white-space: nowrap; } }
+.l-hero-ficha {
+  position: relative; z-index: 1; margin-top: clamp(-200px, -14vw, -96px);
+  background: var(--superficie); border-top: 4px solid var(--accion); border-radius: 0 0 var(--r-panel) var(--r-panel);
+  padding: clamp(24px, 3.4vw, 44px) clamp(20px, 3.4vw, 48px) clamp(24px, 3vw, 40px);
+  box-shadow: 0 -12px 32px rgba(16, 24, 40, .08);
+}
+.l-titular { font-size: var(--l-titular); line-height: 1.08; font-weight: 600; margin: 0 0 var(--s4); }
 .l-titular .linea { display: block; overflow: hidden; padding-bottom: .06em; }
 .l-titular .linea > span { display: inline-block; }
-.l-titular .acento { color: var(--accion); }
-.l-entrada { font-size: clamp(17px, 1.5vw, 19px); line-height: 1.6; color: var(--tinta-2); max-width: 560px; margin-bottom: var(--s6); }
-.l-acciones { display: flex; flex-wrap: wrap; gap: var(--s3); }
+.l-entrada { font-size: clamp(17px, 1.4vw, 19px); line-height: 1.6; color: var(--tinta-2); max-width: 540px; margin-bottom: var(--s5); }
+.l-hero-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s5); }
+.l-enlace-flecha { display: inline-flex; align-items: center; gap: var(--s2); font-weight: 600; color: var(--accion); text-underline-offset: 3px; }
+.l-enlace-flecha svg { transition: transform .2s; }
+.l-enlace-flecha:hover svg { transform: translateY(3px); }
 
-.l-hero-medios { position: relative; padding-bottom: 56px; }
-.l-foto-hero { margin: 0; border-radius: var(--r-panel); overflow: hidden; aspect-ratio: 4 / 3; background: var(--govco-azul-claro); }
-.l-foto-hero img { width: 100%; height: 112%; object-fit: cover; object-position: 50% 30%; display: block; will-change: transform; }
-.l-ventana {
-  position: absolute; left: -8%; bottom: 0; width: 56%; margin: 0;
-  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-panel);
-  box-shadow: 0 18px 40px rgba(16, 24, 40, .18); overflow: hidden;
-}
-.l-ventana-barra { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s3); font-size: 13px; font-weight: 500; color: var(--tinta-2); border-bottom: 1px solid var(--borde); }
-.l-ventana video { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--superficie-2); }
+.l-hero-datos { margin: 0; display: grid; gap: var(--s4); }
+.l-hero-datos > div { border-left: 2px solid var(--borde); padding-left: var(--s4); }
+.l-hero-datos dt { font-size: 14px; font-weight: 600; color: var(--tinta); margin-bottom: 2px; }
+.l-hero-datos dd { margin: 0; font-size: 15px; line-height: 1.5; color: var(--tinta-2); }
 
 @media (max-width: 900px) {
+  .l-hero-foto { height: clamp(260px, 48vh, 380px); }
+  .l-hero-foto img { object-position: 22% 45%; }
+  .l-titular { font-size: clamp(1.75rem, 7.6vw, 2.25rem); }
   .l-hero-rejilla { grid-template-columns: 1fr; }
-  .l-hero-texto { padding-bottom: 0; }
-  .l-hero-medios { padding-bottom: 72px; }
-  .l-ventana { left: auto; right: var(--s3); width: 70%; }
+  .l-hero-ficha { margin: -56px calc(var(--l-gutter) * -.5) 0; }
 }
 
 /* ---------- cifras ---------- */
@@ -168,18 +172,26 @@
 .l-boton-play { width: 56px; height: 56px; border-radius: 50%; background: #fff; color: var(--govco-azul-oscuro); display: grid; place-items: center; flex: none; }
 
 /* ---------- actores ---------- */
-.l-actores { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s5); }
-.l-actor img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: top left; border-radius: var(--r-panel); background: var(--govco-azul-claro); display: block; margin-bottom: var(--s4); }
+/* Acordeón horizontal: la tarjeta bajo el cursor (o con foco) se abre y deja ver
+   la foto completa; las demás se angostan. En pantallas táctiles, carrusel. */
+.l-actores { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--s4); }
+.l-actor { flex: 1 1 0; min-width: 0; transition: flex-grow .55s cubic-bezier(.2, .7, .2, 1); }
+.l-actor-foto { height: clamp(300px, 30vw, 400px); border-radius: var(--r-panel); overflow: hidden; background: var(--govco-azul-claro); margin-bottom: var(--s4); }
+.l-actor-foto img { width: 100%; height: 100%; object-fit: cover; object-position: var(--foco, 50% 40%); display: block; transition: transform .55s cubic-bezier(.2, .7, .2, 1); }
 .l-actor-donde { font-size: 13px; font-weight: 600; color: var(--accion); margin-bottom: var(--s1); }
 .l-actor h3 { font-size: 20px; margin-bottom: var(--s2); }
-.l-actor p:last-child { color: var(--tinta-2); line-height: 1.55; margin: 0; }
+.l-actor p:last-child { color: var(--tinta-2); line-height: 1.55; margin: 0; max-width: 34ch; }
+@media (hover: hover) and (min-width: 1001px) {
+  .l-actor:hover, .l-actor:focus-within { flex-grow: 2.2; }
+  .l-actor:hover .l-actor-foto img { transform: scale(1.03); }
+}
 @media (max-width: 1000px) {
   .l-actores {
-    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: min(78%, 320px);
     overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--s3);
     margin-right: calc(var(--l-gutter) * -1);
   }
-  .l-actor { scroll-snap-align: start; }
+  .l-actor { flex: 0 0 min(78%, 320px); scroll-snap-align: start; }
+  .l-actor-foto { height: 240px; }
 }
 
 /* ---------- confianza ---------- */

@@ -33,43 +33,36 @@
 
   {# ---------------------------------------------------------------- hero #}
   <section class="l-hero" aria-labelledby="hero-titulo">
+    <figure class="l-hero-foto">
+      <img src="{% static 'img/landing/banner-pasto.webp' %}" width="1600" height="685"
+           alt="Pasto al amanecer con el volcán Galeras al fondo"
+           fetchpriority="high" data-parallax>
+    </figure>
+
     <div class="l-contenedor l-hero-rejilla">
-      <div class="l-hero-cabeza">
-        <p class="l-antetitulo" data-revelar>Programa de Alimentación Escolar · Pasto</p>
+      <div class="l-hero-ficha">
+        <p class="l-antetitulo">Programa de Alimentación Escolar · Pasto</p>
         <h1 id="hero-titulo" class="l-titular" data-lineas>
-          <span class="linea"><span>Cada ración del PAE, del almacén</span></span>
-          <span class="linea"><span>al estudiante, <span class="acento">con trazabilidad.</span></span></span>
+          <span class="linea"><span>Cada ración del PAE,</span></span>
+          <span class="linea"><span>del almacén al estudiante.</span></span>
         </h1>
-      </div>
-      <div class="l-hero-texto">
-        <p class="l-entrada" data-revelar>
-          PAEGo une a la Secretaría de Educación, los conductores, las instituciones y los
-          supervisores en una sola plataforma: el envío se programa, se sigue en el mapa, se
-          confirma con evidencia y cada estudiante que recibe queda registrado.
+        <p class="l-entrada">
+          Una sola plataforma para programar los envíos, seguirlos en el mapa, confirmarlos con
+          evidencia y registrar a cada estudiante que recibe.
         </p>
-        <div class="l-acciones" data-revelar>
+        <div class="l-hero-acciones">
           <a class="l-boton grande" href="{% url 'cuentas:login' %}">Ingresar a la plataforma</a>
-          <a class="l-boton secundario grande" href="#como-funciona">Ver cómo funciona</a>
+          <a class="l-enlace-flecha" href="#como-funciona">Conozca cómo funciona
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 3v10m0 0 4-4m-4 4-4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
         </div>
       </div>
 
-      <div class="l-hero-medios" data-hero-medios>
-        <figure class="l-foto-hero">
-          <img src="{% static 'img/landing/reparto-pasto.webp' %}" width="1200" height="1400"
-               alt="Camión de reparto de alimentos escolares en una calle de Pasto, con el volcán Galeras al fondo"
-               fetchpriority="high" data-parallax>
-        </figure>
-        <figure class="l-ventana" data-revelar>
-          <figcaption class="l-ventana-barra">
-            <span class="punto en-ruta" aria-hidden="true"></span> En ruta · mapa en vivo
-          </figcaption>
-          <video class="l-video-bucle" muted loop playsinline preload="none"
-                 poster="{% static 'video/landing/mapa-en-vivo.jpg' %}" aria-label="Mapa en vivo con un vehículo del PAE avanzando por su ruta">
-            <source data-src="{% static 'video/landing/mapa-en-vivo.webm' %}" type="video/webm">
-            <source data-src="{% static 'video/landing/mapa-en-vivo.mp4' %}" type="video/mp4">
-          </video>
-        </figure>
-      </div>
+      <dl class="l-hero-datos" data-revelar>
+        <div><dt>Quién lo usa</dt><dd>Secretaría de Educación, conductores, instituciones educativas y supervisores PAE.</dd></div>
+        <div><dt>Cómo se ingresa</dt><dd>Con el usuario que asigna la Secretaría. No requiere registro.</dd></div>
+        <div><dt>Dónde funciona</dt><dd>Panel web y app móvil, también sin conexión a internet.</dd></div>
+      </dl>
     </div>
   </section>
 
@@ -109,18 +102,9 @@
         <div class="l-pasos-medios" aria-hidden="true">
           <div class="l-pasos-marco">
             <img class="l-paso-medio activo" data-medio="1" src="{% static 'img/landing/panel-hoy.webp' %}" alt="" loading="lazy" width="1440" height="900">
-            <video class="l-paso-medio l-video-bucle" data-medio="2" muted loop playsinline preload="none" poster="{% static 'video/landing/mapa-en-vivo.jpg' %}">
-              <source data-src="{% static 'video/landing/mapa-en-vivo.webm' %}" type="video/webm">
-              <source data-src="{% static 'video/landing/mapa-en-vivo.mp4' %}" type="video/mp4">
-            </video>
-            <video class="l-paso-medio l-video-bucle" data-medio="3" muted loop playsinline preload="none" poster="{% static 'video/landing/envio.jpg' %}">
-              <source data-src="{% static 'video/landing/envio.webm' %}" type="video/webm">
-              <source data-src="{% static 'video/landing/envio.mp4' %}" type="video/mp4">
-            </video>
-            <video class="l-paso-medio l-video-bucle" data-medio="4" muted loop playsinline preload="none" poster="{% static 'video/landing/ficha-qr.jpg' %}">
-              <source data-src="{% static 'video/landing/ficha-qr.webm' %}" type="video/webm">
-              <source data-src="{% static 'video/landing/ficha-qr.mp4' %}" type="video/mp4">
-            </video>
+            <img class="l-paso-medio" data-medio="2" src="{% static 'img/landing/paso-mapa.webp' %}" alt="" loading="lazy" width="1016" height="636">
+            <img class="l-paso-medio" data-medio="3" src="{% static 'img/landing/paso-envio.webp' %}" alt="" loading="lazy" width="1280" height="800">
+            <img class="l-paso-medio" data-medio="4" src="{% static 'img/landing/paso-carnes.webp' %}" alt="" loading="lazy" width="1045" height="653">
           </div>
           <div class="l-progreso"><span data-progreso></span></div>
         </div>
@@ -189,25 +173,25 @@
       </header>
       <ul class="l-actores">
         <li class="l-actor" data-revelar>
-          <img src="{% static 'img/landing/indicadores.webp' %}" alt="Panel de indicadores de PAEGo" loading="lazy" width="800" height="600">
+          <div class="l-actor-foto" style="--foco: 0% 0%"><img src="{% static 'img/landing/indicadores.webp' %}" alt="Panel de indicadores de PAEGo" loading="lazy" width="800" height="600"></div>
           <p class="l-actor-donde">Panel web</p>
           <h3>Secretaría de Educación</h3>
           <p>Programa los envíos, sigue el mapa, atiende novedades y saca reportes para la rendición de cuentas.</p>
         </li>
         <li class="l-actor" data-revelar>
-          <img src="{% static 'img/landing/conductor.webp' %}" alt="Conductor del PAE revisando su ruta en el celular junto al vehículo" loading="lazy" width="800" height="600">
+          <div class="l-actor-foto" style="--foco: 62% 40%"><img src="{% static 'img/landing/conductor.webp' %}" alt="Conductor del PAE revisando su ruta en el celular junto al vehículo" loading="lazy" width="800" height="600"></div>
           <p class="l-actor-donde">App móvil</p>
           <h3>Conductor</h3>
           <p>Ve sus envíos del día, comparte la ubicación y registra la entrega con código y foto.</p>
         </li>
         <li class="l-actor" data-revelar>
-          <img src="{% static 'img/landing/cocina-pae.webp' %}" alt="Manipuladoras de alimentos recibiendo y organizando raciones en una cocina escolar" loading="lazy" width="800" height="600">
+          <div class="l-actor-foto" style="--foco: 55% 35%"><img src="{% static 'img/landing/cocina-pae.webp' %}" alt="Manipuladoras de alimentos recibiendo y organizando raciones en una cocina escolar" loading="lazy" width="800" height="600"></div>
           <p class="l-actor-donde">App móvil</p>
           <h3>Institución educativa</h3>
           <p>Recibe el envío, entrega el código de verificación y consulta qué estudiantes recibieron hoy.</p>
         </li>
         <li class="l-actor" data-revelar>
-          <img src="{% static 'img/landing/supervisor-qr.webp' %}" alt="Supervisor escaneando con el celular el carné QR de un estudiante" loading="lazy" width="800" height="600">
+          <div class="l-actor-foto" style="--foco: 60% 50%"><img src="{% static 'img/landing/supervisor-qr.webp' %}" alt="Supervisor escaneando con el celular el carné QR de un estudiante" loading="lazy" width="800" height="600"></div>
           <p class="l-actor-donde">App móvil</p>
           <h3>Supervisor PAE</h3>
           <p>Escanea el carné QR de cada estudiante en el comedor y lleva la cobertura por curso.</p>

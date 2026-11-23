@@ -1,47 +1,12 @@
 /* PAEGo — animaciones de la página pública.
  *
  * Mejora progresiva: sin este script (o sin GSAP, o con movimiento reducido) la
- * página se ve completa y estática. Los videos en bucle se cargan solo cuando
- * entran en pantalla y se pausan al salir.
+ * página se ve completa y estática.
  */
 (function () {
   "use strict";
 
   var reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // ---------------------------------------------------------- videos en bucle
-  function cargar(video) {
-    if (video.dataset.cargado) return;
-    video.querySelectorAll("source[data-src]").forEach(function (s) {
-      s.src = s.dataset.src;
-    });
-    video.dataset.cargado = "1";
-    video.load();
-  }
-
-  function reproducir(video) {
-    if (reducido) return; // con movimiento reducido se queda el póster
-    cargar(video);
-    var p = video.play();
-    if (p && p.catch) p.catch(function () {});
-  }
-
-  var videos = document.querySelectorAll(".l-video-bucle");
-  if ("IntersectionObserver" in window) {
-    var observador = new IntersectionObserver(
-      function (entradas) {
-        entradas.forEach(function (e) {
-          var v = e.target;
-          // En "cómo funciona" solo suena (visualmente) el medio activo.
-          if (v.classList.contains("l-paso-medio") && !v.classList.contains("activo")) return;
-          if (e.isIntersecting) reproducir(v);
-          else v.pause();
-        });
-      },
-      { rootMargin: "200px 0px" }
-    );
-    videos.forEach(function (v) { observador.observe(v); });
-  }
 
   // --------------------------------------------------- pasos: medio activo
   var pasos = Array.prototype.slice.call(document.querySelectorAll("[data-paso]"));
@@ -49,14 +14,7 @@
 
   function activar(n) {
     pasos.forEach(function (p) { p.classList.toggle("activo", p.dataset.paso === n); });
-    medios.forEach(function (m) {
-      var activo = m.dataset.medio === n;
-      m.classList.toggle("activo", activo);
-      if (m.tagName === "VIDEO") {
-        if (activo) reproducir(m);
-        else m.pause();
-      }
-    });
+    medios.forEach(function (m) { m.classList.toggle("activo", m.dataset.medio === n); });
   }
 
   // ------------------------------------------------- cabecera que se compacta
