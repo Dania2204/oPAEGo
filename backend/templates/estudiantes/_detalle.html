@@ -33,6 +33,12 @@
       {% csrf_token %}
       <button class="boton chico peligro" type="submit">Regenerar código (carné perdido)</button>
     </form>
+    <form method="post" action="{% url 'estudiantes:detalle' estudiante.pk %}"
+          {% if en_panel %}hx-post="{% url 'estudiantes:detalle' estudiante.pk %}" hx-target="#panel-contenido"{% endif %}
+          hx-confirm="¿Retirar a {{ estudiante.nombre_completo }} de la matrícula? Su carné dejará de servir; sus entregas anteriores se conservan.">
+      {% csrf_token %}<input type="hidden" name="accion" value="retirar">
+      <button class="boton chico texto" type="submit">Retirar de la matrícula</button>
+    </form>
   </div>
   {% endif %}
 

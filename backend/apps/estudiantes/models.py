@@ -160,3 +160,54 @@ class EntregaEstudiante(models.Model):
 
     def delete(self, *args, **kwargs):
         raise EntregaInmutableError("Una entrega registrada no se puede eliminar.")
+
+
+# Estudiantes agregados a mano (llegan a mitad de año, antes del siguiente corte de
+# SIMAT) llevan este prefijo en lugar del PER_ID. Cuando el Anexo 6A los trae, la
+# importación los reconoce por su documento y les pone el PER_ID real (conservan
+# su QR y sus entregas).
+PREFIJO_MANUAL = "MANUAL-"
+
+
+def nuevo_per_id_manual():
+    return f"{PREFIJO_MANUAL}{secrets.token_hex(6)}"
+
+
+class EstadoImportacion(models.TextChoices):
+    PENDIENTE = "PENDIENTE", "Pendiente de confirmar"
+    APLICADA = "APLICADA", "Aplicada"
+    DESCARTADA = "DESCARTADA", "Descartada"
+
+
+class ImportacionEstudiantes(models.Model):
+    """Actualización de la matrícula de una institución desde el Anexo 6A.
+
+    Se hace en dos pasos: al subir el archivo se lee y se muestra qué va a
+    cambiar (nuevos, cambios de curso, retirados); al confirmar se aplica. Entre
+    un paso y otro las filas leídas (solo identidad mínima) quedan en `filas`;
+    al aplicar o descartar se borran y solo queda el resumen (Ley 1581).
+    """
+
+    institucion = models.ForeignKey(
+        Institucion, on_delete=models.PROTECT, related_name="importaciones_estudiantes"
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    nombre_archivo = models.CharField(max_length=200)
+    codigo_dane = models.CharField(max_length=20)
+    estado = models.CharField(
+        max_length=10, choices=EstadoImportacion.choices, default=EstadoImportacion.PENDIENTE
+    )
+    filas = models.JSONField(default=dict, blank=True)
+    resumen = models.JSONField(default=dict, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    aplicado_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "importación de estudiantes"
+        verbose_name_plural = "importaciones de estudiantes"
+        ordering = ["-creado_en"]
+
+    def __str__(self):
+        return f"{self.institucion} — {self.nombre_archivo} ({self.get_estado_display()})"

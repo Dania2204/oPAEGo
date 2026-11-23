@@ -63,7 +63,7 @@
 
   // Zonas que se recargan con la URL actual de la página cuando el servidor
   // avisa un cambio (p. ej. data-refrescar="envios-actualizados").
-  ["envios-actualizados", "catalogo-actualizado", "usuarios-actualizados"].forEach((evento) =>
+  ["envios-actualizados", "catalogo-actualizado", "usuarios-actualizados", "estudiantes-actualizado"].forEach((evento) =>
     document.body.addEventListener(evento, () => {
       document.querySelectorAll('[data-refrescar="' + evento + '"]').forEach((zona) => {
         const url = document.body.dataset.urlBase || location.pathname + location.search;
@@ -112,6 +112,7 @@
     anclar(fila, top);
     if (yaAbierta) {
       history.replaceState(history.state, "", fila.dataset.cerrarUrl);
+      document.body.dataset.urlBase = fila.dataset.cerrarUrl;
       cursoEnFiltros("", "");
       return;
     }
@@ -126,6 +127,7 @@
         htmx.process(fila.nextElementSibling);
         anclar(fila, top2);
         history.replaceState(history.state, "", fila.dataset.cursoUrl);
+        document.body.dataset.urlBase = fila.dataset.cursoUrl; // al refrescar, el curso sigue abierto
         cursoEnFiltros(fila.dataset.grado, fila.dataset.grupo);
       })
       .catch(() => { marcarCurso(fila, false); avisar("No se pudo abrir el curso. Intente de nuevo.", "error"); })

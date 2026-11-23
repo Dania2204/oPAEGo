@@ -41,6 +41,8 @@ class Accion(models.TextChoices):
     ROSTRO_BORRADO = "ROSTRO_BORRADO", "Plantillas faciales borradas"
     ENTREGA_ESTUDIANTE = "ENTREGA_ESTUDIANTE", "Entrega del PAE a estudiante"
     QR_REGENERADO = "QR_REGENERADO", "Código QR de estudiante regenerado"
+    ESTUDIANTE_AGREGADO = "ESTUDIANTE_AGREGADO", "Estudiante agregado a un curso"
+    MATRICULA_ACTUALIZADA = "MATRICULA_ACTUALIZADA", "Matrícula actualizada desde SIMAT"
 
 
 class RegistroAuditoria(models.Model):

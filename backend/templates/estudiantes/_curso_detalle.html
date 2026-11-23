@@ -3,8 +3,12 @@
   <td colspan="4">
     <div class="curso-detalle-cabecera">
       <strong>{{ curso_elegido.curso }} · {{ fecha|date:"j \d\e F" }}</strong>
-      <a class="boton sec chico" target="_blank" rel="noopener"
-         href="{% url 'estudiantes:carnes' %}?institucion={{ institucion.pk }}&grado={{ grado }}&grupo={{ grupo }}">Imprimir carnés QR del curso</a>
+      <span class="curso-detalle-acciones">
+        <a class="boton sec chico" href="{% url 'estudiantes:nuevo' %}?institucion={{ institucion.pk }}&grado={{ grado }}&grupo={{ grupo }}"
+           hx-get="{% url 'estudiantes:nuevo' %}?institucion={{ institucion.pk }}&grado={{ grado }}&grupo={{ grupo }}" hx-target="#panel-contenido">Agregar estudiante al curso</a>
+        <a class="boton sec chico" target="_blank" rel="noopener"
+           href="{% url 'estudiantes:carnes' %}?institucion={{ institucion.pk }}&grado={{ grado }}&grupo={{ grupo }}">Imprimir carnés QR del curso</a>
+      </span>
     </div>
     <table>
       <thead><tr><th>Estudiante</th><th>Documento</th><th>Entrega del día</th></tr></thead>

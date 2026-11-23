@@ -24,6 +24,7 @@ from .models import (
     MetodoEntrega,
     Supervisor,
     nuevo_codigo_qr,
+    nuevo_per_id_manual,
 )
 
 
@@ -68,11 +69,72 @@ def _exigir_acceso(usuario, estudiante):
         raise ValidationError({"estudiante": "El estudiante no está activo en la matrícula."})
 
 
-def dar_de_baja(estudiante, *, usuario=None):
-    """El estudiante salió de la matrícula: queda inactivo y su QR deja de servir."""
-    if estudiante.activo:
-        estudiante.activo = False
-        estudiante.save(update_fields=["activo", "actualizado_en"])
+def dar_de_baja(estudiante, *, usuario=None, request=None):
+    """El estudiante salió de la matrícula: queda inactivo y su QR deja de servir.
+
+    Con `usuario` (retiro a mano desde el panel) queda en la auditoría; las bajas
+    de una importación se auditan juntas en el resumen de la importación.
+    """
+    if not estudiante.activo:
+        return
+    estudiante.activo = False
+    estudiante.save(update_fields=["activo", "actualizado_en"])
+    if usuario is not None:
+        registrar(
+            usuario,
+            Accion.DESACTIVAR,
+            f"{estudiante.nombre_completo} salió de la matrícula ({estudiante.curso}).",
+            objeto=estudiante,
+            request=request,
+        )
+
+
+@transaction.atomic
+def agregar_estudiante(usuario, institucion, datos, *, request=None):
+    """Estudiante que llega a mitad de año, antes del siguiente corte de SIMAT.
+
+    Queda en su curso con su código QR y desde ese momento el supervisor le puede
+    registrar la entrega. Si ya estuvo en la institución (mismo documento) y se
+    había retirado, vuelve a la matrícula con su mismo QR e historial.
+    Devuelve (estudiante, reactivado).
+    """
+    if usuario.rol != Rol.ADMINISTRADOR:
+        raise PermissionDenied("Solo el administrador agrega estudiantes.")
+    datos = {k: (v or "").strip() for k, v in datos.items()}
+    previo = (
+        Estudiante.objects.select_for_update()
+        .filter(institucion=institucion, numero_documento=datos["numero_documento"])
+        .order_by("-activo", "-actualizado_en")
+        .first()
+    )
+    if previo is not None and previo.activo:
+        raise ValidationError(
+            {
+                "numero_documento": f"Ya está en la matrícula: {previo.nombre_completo}, "
+                f"{previo.curso}."
+            }
+        )
+    if previo is not None:
+        for campo, valor in datos.items():
+            setattr(previo, campo, valor)
+        previo.activo = True
+        previo.save()
+        estudiante, reactivado = previo, True
+    else:
+        estudiante = Estudiante.objects.create(
+            institucion=institucion, simat_per_id=nuevo_per_id_manual(), **datos
+        )
+        reactivado = False
+    registrar(
+        usuario,
+        Accion.ESTUDIANTE_AGREGADO,
+        f"{estudiante.nombre_completo} {'volvió a' if reactivado else 'ingresó a'} "
+        f"{estudiante.curso} ({institucion}).",
+        objeto=estudiante,
+        datos={"grado": estudiante.grado, "grupo": estudiante.grupo, "reactivado": reactivado},
+        request=request,
+    )
+    return estudiante, reactivado
 
 
 # --------------------------------------------------------------------------

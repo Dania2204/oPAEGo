@@ -1,0 +1,31 @@
+<form method="post" class="formulario" novalidate style="display:contents"
+      action="{% url 'estudiantes:nuevo' %}?institucion={{ institucion.pk }}"
+      {% if en_panel %}hx-post="{% url 'estudiantes:nuevo' %}?institucion={{ institucion.pk }}" hx-target="#panel-contenido"{% endif %}>
+  <div class="panel-cabeza">
+    <div>
+      <h2>Agregar estudiante</h2>
+      <div class="sub">{{ institucion.nombre }} · para quien llega a mitad de año. Los campos con * son obligatorios.</div>
+    </div>
+    {% if en_panel %}<button type="button" class="boton texto chico cerrar" onclick="Alpine.store('panel').cerrar()" aria-label="Cerrar panel">
+      <svg class="icono" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.8"><use href="#i-cerrar"/></svg></button>{% endif %}
+  </div>
+  <div class="panel-cuerpo">
+    {% csrf_token %}
+    {% include "_errores.html" %}
+    <div class="campos">
+      {% include "_campo.html" with campo=form.tipo_documento %}
+      {% include "_campo.html" with campo=form.numero_documento %}
+      {% include "_campo.html" with campo=form.nombres %}
+      {% include "_campo.html" with campo=form.apellidos %}
+      {% include "_campo.html" with campo=form.grado %}
+      {% include "_campo.html" with campo=form.grupo %}
+      {% include "_campo.html" with campo=form.jornada %}
+    </div>
+    <p class="nota info separado">Queda de inmediato en su curso con su código QR: el supervisor ya le puede registrar la entrega del PAE. Cuando llegue el siguiente Anexo 6A de SIMAT se reconoce por su documento. Solo se guarda la identidad mínima (Ley 1581).</p>
+  </div>
+  <div class="panel-pie">
+    {% if en_panel %}<button type="button" class="boton texto" onclick="Alpine.store('panel').cerrar()">Cancelar</button>
+    {% else %}<a class="boton texto" href="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}">Cancelar</a>{% endif %}
+    <button class="boton" type="submit">Agregar al curso</button>
+  </div>
+</form>

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Actualizar desde SIMAT · {{ institucion.nombre }}{% endblock %}
+{% block contenido %}
+<p style="margin-bottom:var(--s2)"><a href="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}">‹ {{ institucion.nombre }}</a></p>
+<div class="titulo-pagina">
+  <div>
+    <h1>Actualizar estudiantes desde SIMAT</h1>
+    <div class="sub">{{ institucion.nombre }}. Úselo al cambiar de año o de corte de matrícula: quien pasa de curso queda en su curso nuevo, quien ya no está (por ejemplo, los que terminaron 11°) sale de la matrícula y los nuevos reciben su código QR.</div>
+  </div>
+</div>
+
+<div class="bloque" style="max-width:760px">
+  <form method="post" enctype="multipart/form-data" class="formulario" novalidate
+        action="{% url 'estudiantes:importar' %}?institucion={{ institucion.pk }}"
+        onsubmit="const b=this.querySelector('[type=submit]');b.disabled=true;b.textContent='Leyendo el archivo…';this.querySelector('.leyendo').hidden=false">
+    <div class="panel-cuerpo">
+      {% csrf_token %}
+      {% include "_errores.html" %}
+      <div class="campos">
+        {% include "_campo.html" with campo=form.archivo ancho=True %}
+        {% include "_campo.html" with campo=form.codigo_dane %}
+      </div>
+      <ol class="pasos-importar separado">
+        <li>Se leen del archivo solo los estudiantes de esta institución, de transición a 11°, y solo su identidad mínima (documento, nombre y curso). Dirección, teléfono, SISBÉN y demás columnas del Anexo nunca se guardan.</li>
+        <li>Antes de cambiar nada verá un resumen: nuevos, cambios de curso y quiénes salen de la matrícula.</li>
+        <li>Al confirmar se aplica. Cada estudiante conserva su código QR y su historial de entregas.</li>
+      </ol>
+      <p class="nota info leyendo" hidden>Leyendo el archivo. Con el Anexo de todo el municipio puede tardar hasta un minuto; no cierre la página.</p>
+    </div>
+    <div class="panel-pie">
+      <a class="boton texto" href="{% url 'estudiantes:lista' %}?institucion={{ institucion.pk }}">Cancelar</a>
+      <button class="boton" type="submit">Revisar cambios</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
