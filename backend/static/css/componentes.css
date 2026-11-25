@@ -219,15 +219,28 @@ kbd { font-family: var(--mono); font-size: var(--t-xs); border: 1px solid var(--
 
 /* ---------- acceso (login) ---------- */
 .acceso-pagina { min-height: calc(100vh - var(--alto-govco)); display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 460px); }
-.acceso-info { background: var(--govco-azul-oscuro); color: #dce6f5; padding: 64px 56px; display: flex; flex-direction: column; justify-content: space-between; }
-.acceso-info .marca-acceso { display: flex; align-items: center; gap: 12px; color: #fff; font-size: var(--t-xl); font-weight: 600; margin-bottom: var(--s6); }
-.acceso-info .marca-acceso img { width: 44px; height: 44px; border-radius: var(--r-panel); background: #fff; padding: 4px; }
-.acceso-info li::marker { color: #9db8e3; }
-.acceso-info h1 { color: #fff; font-size: 30px; font-weight: 600; max-width: 18ch; margin: var(--s3) 0 var(--s4); }
-.acceso-info p { max-width: 46ch; font-size: var(--t-md); }
-.acceso-info .entidad-nombre { font-size: var(--t-sm); color: #b9cbe8; }
-.acceso-info ul { margin: var(--s5) 0 0; padding-left: 18px; max-width: 46ch; }
-.acceso-info li { margin-bottom: 6px; }
+/* Columna izquierda: fotos a sangre que se desvanecen una por una (acceso.js). */
+.acceso-info { position: relative; overflow: hidden; isolation: isolate; background: var(--govco-azul-oscuro); color: #dce6f5; padding: 40px 48px 48px; display: flex; flex-direction: column; justify-content: space-between; gap: var(--s5); min-height: 520px; }
+.acceso-galeria { position: absolute; inset: 0; z-index: -1; background: var(--govco-azul-oscuro); }
+.acceso-galeria::after { content: ""; position: absolute; inset: 0; background: rgba(0, 34, 68, .18); }
+.acceso-foto { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1.4s ease; }
+.acceso-foto.activa { opacity: 1; }
+.acceso-foto img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.07); transition: transform 7.5s linear; }
+.acceso-foto.activa img { transform: scale(1); }
+.acceso-info .marca-acceso { align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: var(--r-panel); background: #fff; color: var(--govco-azul-oscuro); text-decoration: none; font-size: var(--t-lg); font-weight: 600; line-height: 1.1; box-shadow: 0 6px 20px rgba(0, 20, 50, .18); }
+.acceso-info .marca-acceso img { width: 40px; height: 40px; }
+.acceso-info .marca-acceso small { display: block; font-size: var(--t-xs); font-weight: 500; color: var(--tinta-3); }
+.acceso-texto { max-width: 560px; padding: 28px 32px 24px; border-radius: var(--r-panel); background: rgba(0, 56, 107, .9); box-shadow: 0 16px 40px rgba(0, 20, 50, .28); }
+.acceso-info h1 { color: #fff; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.2; font-weight: 600; max-width: 20ch; margin: var(--s2) 0 var(--s4); }
+.acceso-info .entidad-nombre { font-size: var(--t-sm); color: #b9cbe8; margin: 0; }
+.acceso-leyenda { display: flex; gap: 12px; align-items: baseline; margin: 0; padding-top: var(--s3); border-top: 1px solid rgba(255, 255, 255, .2); font-size: var(--t-md); color: #fff; min-height: 3.2em; transition: opacity .35s ease; }
+.acceso-leyenda.cambiando { opacity: 0; }
+.acceso-num { font-variant-numeric: tabular-nums; font-size: var(--t-sm); font-weight: 600; color: #9db8e3; }
+.acceso-puntos { display: flex; gap: 6px; margin-top: var(--s3); }
+.acceso-puntos button { width: 22px; height: 4px; padding: 0; border: 0; border-radius: 2px; background: rgba(255, 255, 255, .35); cursor: pointer; transition: width .3s ease, background .3s ease; }
+.acceso-puntos button[aria-current="true"] { width: 40px; background: #fff; }
+.acceso-puntos button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.acceso-pie { margin-top: var(--s6); font-size: var(--t-xs); color: var(--tinta-3); }
 .acceso-form { background: var(--superficie); padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; }
 .acceso-form > * { width: 100%; max-width: 380px; }
 .acceso-form h2 { font-size: var(--t-xl); margin-bottom: var(--s1); }
@@ -244,8 +257,10 @@ kbd { font-family: var(--mono); font-size: var(--t-xs); border: 1px solid var(--
 }
 @media (max-width: 860px) {
   .acceso-pagina { grid-template-columns: 1fr; }
-  .acceso-info { padding: var(--s5); }
-  .acceso-info ul { display: none; }
+  .acceso-info { padding: var(--s4); min-height: 250px; }
+  .acceso-texto { padding: var(--s4); }
+  .acceso-info h1, .acceso-info .entidad-nombre { display: none; }
+  .acceso-leyenda { border-top: 0; padding-top: 0; font-size: var(--t-base); min-height: 0; }
   .acceso-form { padding: var(--s5); }
   .bandeja { grid-template-columns: 1fr; }
   .bandeja .lista { max-height: none; border-right: 0; }
