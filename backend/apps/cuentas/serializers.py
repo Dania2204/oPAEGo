@@ -10,6 +10,8 @@ Usuario = get_user_model()
 
 class PerfilSerializer(serializers.ModelSerializer):
     nombre = serializers.CharField(source="get_full_name", read_only=True)
+    telefono = serializers.SerializerMethodField()
+    numero_documento = serializers.SerializerMethodField()
     conductor_id = serializers.SerializerMethodField()
     institucion_id = serializers.SerializerMethodField()
 
@@ -23,11 +25,25 @@ class PerfilSerializer(serializers.ModelSerializer):
             "nombre",
             "rol",
             "telefono",
+            "numero_documento",
             "acepto_tratamiento_datos_en",
             "conductor_id",
             "institucion_id",
         ]
         read_only_fields = fields
+
+    def get_telefono(self, obj) -> str:
+        # El conductor y el responsable de recepción guardan su teléfono en su
+        # ficha; el del usuario queda como respaldo.
+        for perfil in ("conductor", "responsable_recepcion"):
+            vinculo = getattr(obj, perfil, None)
+            if vinculo is not None and vinculo.telefono:
+                return vinculo.telefono
+        return obj.telefono
+
+    def get_numero_documento(self, obj) -> str:
+        conductor = getattr(obj, "conductor", None)
+        return conductor.numero_documento if conductor else ""
 
     def get_conductor_id(self, obj) -> int | None:
         conductor = getattr(obj, "conductor", None)
