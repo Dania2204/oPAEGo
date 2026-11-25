@@ -15,13 +15,10 @@ def _orden_grado(grado):
 
 
 def con_estado_del_dia(qs, fecha):
-    """Anota plantillas y precarga la entrega de `fecha` (sin consultas N+1)."""
+    """Precarga la entrega de `fecha` (sin consultas N+1)."""
     return (
-        qs.select_related("autorizacion")
-        .annotate(num_plantillas=Count("plantillas", distinct=True))
-        # Con agregados Django ignora Meta.ordering: orden explícito para paginar.
-        .order_by("grado", "grupo", "apellidos", "nombres", "id")
-        .prefetch_related(
+        # Orden explícito y estable para paginar.
+        qs.order_by("grado", "grupo", "apellidos", "nombres", "id").prefetch_related(
             Prefetch(
                 "entregas",
                 queryset=EntregaEstudiante.objects.filter(fecha=fecha),
@@ -32,13 +29,12 @@ def con_estado_del_dia(qs, fecha):
 
 
 def resumen_cursos(estudiantes, fecha):
-    """Por curso: activos, con rostro inscrito y cuántos recibieron en `fecha`."""
+    """Por curso: activos y cuántos recibieron en `fecha`."""
     filas = (
         estudiantes.filter(activo=True)
         .values("institucion_id", "institucion__nombre", "grado", "grupo")
         .annotate(
             activos=Count("id", distinct=True),
-            con_rostro=Count("id", filter=Q(plantillas__isnull=False), distinct=True),
             recibieron=Count("id", filter=Q(entregas__fecha=fecha), distinct=True),
         )
     )
@@ -52,7 +48,6 @@ def resumen_cursos(estudiantes, fecha):
                 "grupo": f["grupo"],
                 "curso": f"{etiqueta_grado(f['grado'])} {f['grupo']}".strip(),
                 "activos": f["activos"],
-                "con_rostro": f["con_rostro"],
                 "recibieron": f["recibieron"],
             }
         )

@@ -45,7 +45,7 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
   `respaldo.yml`: pg_dump diario (02:00 Colombia) de producción, verificado con `pg_restore --list`,
   cifrado con GPG AES-256 y guardado 30 días como artefacto; necesita `RESPALDO_DATABASE_URL`
   (DATABASE_PUBLIC_URL de Railway) y `RESPALDO_CLAVE` (sin ellos se salta). Local: `scripts/respaldo_bd.*`.
-- Credenciales demo: `admin@paego.local`, `conductor1..6@paego.local`, `institucion1..10@paego.local`, `supervisor1@paego.local` (Azure),
+- Credenciales demo: `admin@paego.local`, `conductor1..6@paego.local`, `institucion1..10@paego.local`, `supervisor1@paego.local`,
   `conductor.prueba@paego.local`; contraseña `Paego2026!`.
 - Despliegue en Azure (producción actual, https://azwafmsbgbksw4m22.azurewebsites.net): `azure.yaml` + `infra/*.bicep`
   (App Service Linux F1 por defecto, región `chilecentral` — F1 sin cuota en northcentralus —
@@ -70,11 +70,16 @@ python manage.py makemigrations --check --dry-run  # el CI falla si faltan migra
   JWT, permisos), `catalogo` (instituciones, conductores, vehículos, responsables, import SIMAT),
   `envios`, `monitoreo` (mapa, alertas, KPIs, posición en vivo, ruteo OSRM), `auditoria`
   (registro inmutable + reportes PDF/Excel), `sincronizacion` (lotes offline), `estudiantes`
-  (supervisor PAE: estudiantes del SIMAT con identidad mínima vía `importar_estudiantes`,
-  autorización biométrica del acudiente, plantillas faciales cifradas con Fernet
-  `BIOMETRIA_CLAVE` — en dev se deriva de `SECRET_KEY`, sin ella la API responde 503 al inscribir —,
-  entrega diaria FACIAL|MANUAL inmutable, una por día; reglas en `estudiantes/servicios.py`,
-  panel `/estudiantes/`, catálogo `/supervisores/`; el reconocimiento ocurre en la app).
+  (supervisor PAE: estudiantes del SIMAT con identidad mínima; matrícula en
+  `estudiantes/importacion.py`, usada por el panel —subir Anexo 6A con vista previa y confirmar,
+  modelo `ImportacionEstudiantes`— y por `importar_estudiantes`; agregados a mano llevan
+  `simat_per_id` `MANUAL-…` y la importación los reconoce por documento;
+  cada uno con `codigo_qr` aleatorio y único — el QR lleva `PAEGO-E1:<codigo>`, la API solo lo da
+  a SUPERVISOR/ADMINISTRADOR, el admin lo regenera si se pierde el carné —; entrega diaria
+  QR|MANUAL inmutable, una por día (FACIAL queda solo como histórico); reglas en
+  `estudiantes/servicios.py`, QR/carnés PDF en `estudiantes/qr.py` (reportlab), panel
+  `/estudiantes/` con ficha + QR y `/estudiantes/carnes/`, catálogo `/supervisores/`; el escaneo
+  ocurre en la app).
   `nutricion` (solo API: `POST /api/nutricion/asistente/` reenvía el chat de la app a Gemini con
   `GEMINI_API_KEY` del servidor, para que la clave no viaje en el APK; 503 sin clave, 502 si Gemini
   falla; cupo por usuario `LIMITE_NUTRICION`, clase `LimitePorUsuario` de `cuentas/limite.py`).

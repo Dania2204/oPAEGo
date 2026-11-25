@@ -1,33 +1,39 @@
 {% extends "base.html" %}
-{% block titulo %}Estudiantes PAE{% endblock %}
+{% block titulo %}Estudiantes PAE · {{ institucion.nombre }}{% endblock %}
 {% block contenido %}
+<p style="margin-bottom:var(--s2)"><a href="{% url 'estudiantes:lista' %}">‹ Cambiar institución</a></p>
 <div class="titulo-pagina">
   <div>
-    <h1>Estudiantes PAE</h1>
-    <div class="sub">Quién recibió el PAE cada día. El supervisor lo registra desde la aplicación móvil, con reconocimiento facial o de forma manual.</div>
+    <h1>{{ institucion.nombre }}</h1>
+    <div class="sub">Estudiantes PAE{% if institucion.sede %} · Sede {{ institucion.sede }}{% endif %}{% if institucion.codigo_dane %} · DANE {{ institucion.codigo_dane }}{% endif %}</div>
   </div>
-  {% if institucion %}
   <div class="acciones">
+    <a class="boton sec" href="{% url 'estudiantes:importar' %}?institucion={{ institucion.pk }}">Actualizar desde SIMAT</a>
+    {% if cursos %}
     <a class="boton sec" href="{% url 'estudiantes:exportar' %}?institucion={{ institucion.pk }}&fecha={{ fecha|date:'Y-m-d' }}{% if grado %}&grado={{ grado }}&grupo={{ grupo }}{% endif %}">Exportar a Excel</a>
+    {% endif %}
+    <a class="boton" href="{% url 'estudiantes:nuevo' %}?institucion={{ institucion.pk }}"
+       hx-get="{% url 'estudiantes:nuevo' %}?institucion={{ institucion.pk }}" hx-target="#panel-contenido">Agregar estudiante</a>
   </div>
-  {% endif %}
 </div>
 
-{% if not instituciones %}
+{% if pendiente %}
+<p class="nota info" style="margin-bottom:var(--s3)">Hay una actualización desde SIMAT sin confirmar ({{ pendiente.nombre_archivo }}, {{ pendiente.creado_en|date:"j M H:i" }}).
+  <a href="{% url 'estudiantes:importacion' pendiente.pk %}">Revisarla y aplicarla</a></p>
+{% endif %}
+
+{% if not cursos %}
   <div class="bloque">
-    <p class="nota">Aún no hay estudiantes importados. Cárguelos desde el Anexo 6A de SIMAT con
-      <code>python manage.py importar_estudiantes &lt;archivo.xlsx&gt; --dane &lt;CODIGO_DANE&gt; --institucion "&lt;nombre&gt;"</code>.
-      Solo se importa la identidad mínima (documento, nombre y curso).</p>
+    <div class="vacio">
+      <p style="margin:0 0 var(--s3)">{{ institucion.nombre }} aún no tiene estudiantes cargados.</p>
+      <p style="margin:0 0 var(--s4)">Súbalos con el Excel del Anexo 6A de SIMAT. Solo se guarda la identidad mínima (documento, nombre y curso).</p>
+      <a class="boton" href="{% url 'estudiantes:importar' %}?institucion={{ institucion.pk }}">Cargar estudiantes desde SIMAT</a>
+    </div>
   </div>
 {% else %}
 <div class="bloque">
   <form class="filtros" method="get" hx-get="{% url 'estudiantes:lista' %}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
-    {% if instituciones|length > 1 %}
-    <div class="campo"><label for="institucion">Institución</label>
-      <select id="institucion" name="institucion">
-        {% for i in instituciones %}<option value="{{ i.pk }}" {% if i.pk == institucion.pk %}selected{% endif %}>{{ i }}</option>{% endfor %}
-      </select></div>
-    {% else %}<input type="hidden" name="institucion" value="{{ institucion.pk }}">{% endif %}
+    <input type="hidden" name="institucion" value="{{ institucion.pk }}">
     <div class="campo"><label for="fecha">Día</label>
       <input type="date" id="fecha" name="fecha" value="{{ fecha|date:'Y-m-d' }}" max="{{ hoy|date:'Y-m-d' }}"></div>
     <input type="hidden" name="grado" value="{{ grado }}"><input type="hidden" name="grupo" value="{{ grupo }}">
@@ -37,8 +43,8 @@
     {% include "estudiantes/_contenido.html" %}
   </div>
 </div>
-<p class="tenue" style="font-size:var(--t-xs);margin-top:var(--s2)">
-  Datos de menores (Ley 1581 de 2012): solo se guarda documento, nombre y curso. La cara se registra únicamente con autorización del acudiente, como plantilla cifrada (nunca fotos), y siempre se puede registrar la entrega sin cámara.
-</p>
 {% endif %}
+<p class="tenue" style="font-size:var(--t-xs);margin-top:var(--s2)">
+  Datos de menores (Ley 1581 de 2012): solo se guarda documento, nombre y curso. El código QR es un identificador aleatorio que no contiene datos personales, y siempre se puede registrar la entrega sin el carné.
+</p>
 {% endblock %}

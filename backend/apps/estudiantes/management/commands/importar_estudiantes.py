@@ -3,56 +3,20 @@
     python manage.py importar_estudiantes <archivo.xlsx> --dane 152001000661 \\
             --institucion "Normal Superior" [--grados 0,1,...,11] [--dry-run]
 
-Para registrar la entrega del PAE por estudiante se necesita saber quiénes son.
-Del Anexo solo se leen las columnas de identidad mínima (PER_ID, documento,
-nombres, apellidos, grado, grupo, jornada y sede): `leer_anexo` nunca entrega las
-demás (dirección, teléfono, SISBÉN, víctima, discapacidad, etnia, fecha de
-nacimiento, ...). Ley 1581: minimización de datos de menores.
-
-Idempotente por PER_ID: actualiza a quien ya existe, crea a los nuevos y da de
-baja (inactivo y sin plantillas faciales) a quien ya no aparece en el archivo.
-`--grados` limita la importación a esos códigos de grado (p. ej. de transición a
-11°, la población del PAE): quien no es beneficiario no se guarda.
+Mismas reglas que «Actualizar desde SIMAT» del panel web (ver
+`apps/estudiantes/importacion.py`): solo identidad mínima, idempotente por PER_ID,
+crea a los nuevos con su código QR y da de baja a quien ya no aparece.
+`--grados` limita la importación a esos códigos de grado; por defecto, todos.
 El archivo de SIMAT nunca se guarda en el repositorio (carpeta bd/ en .gitignore).
 """
 
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
 
 from apps.catalogo.models import Institucion
-from apps.catalogo.simat import AnexoInvalido, etiqueta_grado, leer_anexo
-from apps.estudiantes import servicios
-from apps.estudiantes.models import Estudiante
-
-COLUMNAS = [
-    "PER_ID",
-    "CODIGO_DANE",
-    "CONS_SEDE",
-    "TIPO_DOCUMENTO",
-    "NRO_DOCUMENTO",
-    "APELLIDO1",
-    "APELLIDO2",
-    "NOMBRE1",
-    "NOMBRE2",
-    "GRADO",
-    "GRUPO",
-    "TIPO_JORNADA",
-]
-
-
-def _texto(valor):
-    """Celda de Excel como texto: 1085123456.0 → «1085123456»."""
-    if valor is None:
-        return ""
-    if isinstance(valor, float) and valor.is_integer():
-        valor = int(valor)
-    return str(valor).strip()
-
-
-def _nombre(*partes):
-    return " ".join(_texto(p).title() for p in partes if _texto(p))
+from apps.catalogo.simat import AnexoInvalido
+from apps.estudiantes import importacion
 
 
 class Command(BaseCommand):
@@ -88,48 +52,27 @@ class Command(BaseCommand):
         if not archivo.exists():
             raise CommandError(f"No existe el archivo: {archivo}")
         institucion = self._institucion(opciones["institucion"])
-        danes = {str(d).strip() for d in opciones["dane"]}
         grados = (
             {g.strip() for g in opciones["grados"].split(",") if g.strip()}
             if opciones.get("grados")
             else None
         )
-
-        leidos = {}
         try:
-            for fila in leer_anexo(archivo, COLUMNAS):
-                if _texto(fila["CODIGO_DANE"]) not in danes:
-                    continue
-                if grados is not None and _texto(fila["GRADO"]) not in grados:
-                    continue
-                per_id = _texto(fila["PER_ID"])
-                if not per_id:
-                    continue
-                leidos[per_id] = {
-                    "tipo_documento": _texto(fila["TIPO_DOCUMENTO"])[:10],
-                    "numero_documento": _texto(fila["NRO_DOCUMENTO"])[:20],
-                    "nombres": _nombre(fila["NOMBRE1"], fila["NOMBRE2"])[:100],
-                    "apellidos": _nombre(fila["APELLIDO1"], fila["APELLIDO2"])[:100],
-                    "grado": _texto(fila["GRADO"])[:4],
-                    "grupo": _texto(fila["GRUPO"])[:10],
-                    "jornada": _texto(fila["TIPO_JORNADA"])[:2],
-                    "sede_simat": _texto(fila["CONS_SEDE"])[:20],
-                }
+            leidos = importacion.leer(archivo, opciones["dane"], grados)
         except AnexoInvalido as exc:
             raise CommandError(str(exc)) from exc
 
-        if not leidos:
-            raise CommandError(
-                f"No se encontraron estudiantes para los CODIGO_DANE {', '.join(sorted(danes))}."
-            )
-        self._resumen(institucion, leidos)
         if opciones["dry_run"]:
+            self._resumen(institucion, importacion.planear(institucion, leidos))
             self.stdout.write(self.style.WARNING("Simulación (--dry-run): no se escribió nada."))
             return
-        nuevos, actualizados, bajas = self._guardar(institucion, leidos)
+        r = importacion.aplicar(institucion, leidos, nombre_archivo=archivo.name)
+        self._resumen(institucion, r)
+        actualizados = r["cambian_curso"] + r["reactivados"] + r["corregidos"]
         self.stdout.write(
             self.style.SUCCESS(
-                f"Listo: {nuevos} nuevos, {actualizados} actualizados, {bajas} dados de baja."
+                f"Listo: {r['nuevos']} nuevos, {actualizados} actualizados, "
+                f"{r['bajas']} dados de baja."
             )
         )
 
@@ -142,40 +85,14 @@ class Command(BaseCommand):
             )
         return coincidencias[0]
 
-    def _resumen(self, institucion, leidos):
-        por_grado = {}
-        for datos in leidos.values():
-            por_grado[datos["grado"]] = por_grado.get(datos["grado"], 0) + 1
-        self.stdout.write(f"{len(leidos)} estudiantes para {institucion}:")
-        for grado in sorted(por_grado, key=lambda g: int(g) if g.lstrip("-").isdigit() else 99):
-            self.stdout.write(f"  {etiqueta_grado(grado)}: {por_grado[grado]}")
-
-    @transaction.atomic
-    def _guardar(self, institucion, leidos):
-        existentes = {e.simat_per_id: e for e in Estudiante.objects.filter(simat_per_id__in=leidos)}
-        nuevos = actualizados = 0
-        for per_id, datos in leidos.items():
-            estudiante = existentes.get(per_id)
-            if estudiante is None:
-                Estudiante.objects.create(simat_per_id=per_id, institucion=institucion, **datos)
-                nuevos += 1
-                continue
-            cambios = {k: v for k, v in datos.items() if getattr(estudiante, k) != v}
-            if estudiante.institucion_id != institucion.pk:
-                cambios["institucion"] = institucion
-            if not estudiante.activo:
-                cambios["activo"] = True
-            if cambios:
-                for campo, valor in cambios.items():
-                    setattr(estudiante, campo, valor)
-                estudiante.save()
-                actualizados += 1
-
-        bajas = 0
-        retirados = Estudiante.objects.filter(institucion=institucion, activo=True).exclude(
-            simat_per_id__in=leidos
-        )
-        for estudiante in retirados:
-            servicios.dar_de_baja(estudiante)
-            bajas += 1
-        return nuevos, actualizados, bajas
+    def _resumen(self, institucion, r):
+        self.stdout.write(f"{r['leidos']} estudiantes en el archivo para {institucion}:")
+        for clave, texto in [
+            ("nuevos", "nuevos"),
+            ("cambian_curso", "cambian de curso"),
+            ("reactivados", "vuelven a la matrícula"),
+            ("corregidos", "con datos corregidos"),
+            ("sin_cambios", "sin cambios"),
+            ("bajas", "salen de la matrícula"),
+        ]:
+            self.stdout.write(f"  {texto}: {r[clave]}")

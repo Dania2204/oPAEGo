@@ -9,10 +9,10 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from apps.estudiantes import servicios
-from apps.estudiantes.models import EntregaEstudiante, PlantillaFacial
+from apps.estudiantes.models import EntregaEstudiante
 
 from .conftest import cliente_api
-from .test_estudiantes import ACUDIENTE, MUESTRAS, _estudiante, _vector
+from .test_estudiantes import _estudiante
 
 URL = "/api/estudiantes/"
 LOTE = "/api/sincronizacion/lote/"
@@ -46,7 +46,10 @@ def test_supervisor_lista_solo_su_institucion(api_supervisor, curso):
     assert r.status_code == 200
     assert r.data["count"] == 4
     fila = r.data["results"][0]
-    assert {"curso", "autorizacion_vigente", "rostro_inscrito", "entrega_del_dia"} <= set(fila)
+    assert {"curso", "jornada", "codigo_qr", "entrega_del_dia"} <= set(fila)
+    assert not {"autorizacion_vigente", "rostro_inscrito"} & set(fila)
+    por_id = {e.pk: e for e in curso}
+    assert fila["codigo_qr"] == por_id[fila["id"]].codigo_qr
 
 
 def test_filtros_por_curso_y_busqueda(api_supervisor, curso):
@@ -56,8 +59,7 @@ def test_filtros_por_curso_y_busqueda(api_supervisor, curso):
 
 
 def test_lista_sin_consultas_n_mas_1(api_supervisor, supervisor, curso):
-    servicios.autorizar(supervisor, curso[0], **ACUDIENTE)
-    servicios.inscribir_rostro(supervisor, curso[0], vectores=MUESTRAS, modelo="m")
+    servicios.registrar_entrega(supervisor, curso[0], metodo="MANUAL", motivo="x")
     with CaptureQueriesContext(connection) as pocas:
         api_supervisor.get(URL)
     for i in range(20):
@@ -67,9 +69,14 @@ def test_lista_sin_consultas_n_mas_1(api_supervisor, supervisor, curso):
     assert len(muchas) == len(pocas)
 
 
-def test_institucion_consulta_pero_no_descarga_plantillas(api_institucion, curso):
-    assert api_institucion.get(URL).data["count"] == 4
-    assert api_institucion.get(URL + "plantillas/", {"grado": "7"}).status_code == 403
+def test_institucion_consulta_pero_no_recibe_el_codigo_qr(api_institucion, curso):
+    r = api_institucion.get(URL)
+    assert r.data["count"] == 4
+    assert all(fila["codigo_qr"] is None for fila in r.data["results"])
+
+
+def test_ya_no_hay_plantillas(api_supervisor, curso):
+    assert api_supervisor.get(URL + "plantillas/", {"grado": "7"}).status_code == 404
 
 
 def test_conductor_no_ve_estudiantes(api_conductor, curso):
@@ -89,17 +96,6 @@ def test_resumen_de_cursos(api_supervisor, supervisor, curso):
     assert api_supervisor.get(URL + "cursos/", {"fecha": "ayer"}).status_code == 400
 
 
-def test_plantillas_del_curso(api_supervisor, supervisor, curso):
-    servicios.autorizar(supervisor, curso[0], **ACUDIENTE)
-    servicios.inscribir_rostro(supervisor, curso[0], vectores=MUESTRAS, modelo="m")
-    assert api_supervisor.get(URL + "plantillas/").status_code == 400
-    r = api_supervisor.get(URL + "plantillas/", {"grado": "7", "grupo": "B"})
-    assert r.status_code == 200
-    assert [p["estudiante"] for p in r.data["plantillas"]] == [curso[0].pk]
-    assert len(r.data["plantillas"][0]["vectores"]) == 3
-    assert r.data["plantillas"][0]["vectores"][0] == pytest.approx(MUESTRAS[0], abs=1e-6)
-
-
 def test_historial_del_supervisor(api_supervisor, supervisor, admin, curso):
     servicios.registrar_entrega(supervisor, curso[0], metodo="MANUAL", motivo="x")
     servicios.registrar_entrega(admin, curso[1], metodo="MANUAL", motivo="lo marcó el admin")
@@ -111,24 +107,34 @@ def test_historial_del_supervisor(api_supervisor, supervisor, admin, curso):
 
 # ------------------------------------------------------------ lote offline
 def test_flujo_completo_por_el_lote(api_supervisor, curso):
-    est = curso[0].pk
     operaciones = [
-        op("estudiante.autorizar", {"estudiante": est, **ACUDIENTE}, 30),
-        op("estudiante.inscribir", {"estudiante": est, "vectores": MUESTRAS, "modelo": "m"}, 29),
-        op("estudiante.entregar", {"estudiante": est, "metodo": "FACIAL", "similitud": 0.91}, 5),
+        op(
+            "estudiante.entregar",
+            {"estudiante": curso[0].pk, "metodo": "QR", "codigo": curso[0].contenido_qr},
+            5,
+        ),
         op(
             "estudiante.entregar", {"estudiante": curso[1].pk, "metodo": "MANUAL", "motivo": "x"}, 4
         ),
     ]
     r = api_supervisor.post(LOTE, {"operaciones": operaciones}, format="json")
     assert r.status_code == 200
-    assert [x["resultado"] for x in r.data["resultados"]] == ["ok"] * 4
-    assert PlantillaFacial.objects.filter(estudiante_id=est).count() == 3
+    assert [x["resultado"] for x in r.data["resultados"]] == ["ok"] * 2
     assert EntregaEstudiante.objects.count() == 2
+    assert EntregaEstudiante.objects.get(estudiante=curso[0]).diferido
     # Reenviar el mismo lote no duplica nada.
     r = api_supervisor.post(LOTE, {"operaciones": operaciones}, format="json")
-    assert [x["resultado"] for x in r.data["resultados"]] == ["duplicado"] * 4
+    assert [x["resultado"] for x in r.data["resultados"]] == ["duplicado"] * 2
     assert EntregaEstudiante.objects.count() == 2
+
+
+def test_qr_equivocado_por_el_lote_se_rechaza(api_supervisor, curso):
+    datos = {"estudiante": curso[0].pk, "metodo": "QR", "codigo": curso[1].contenido_qr}
+    r = api_supervisor.post(
+        LOTE, {"operaciones": [op("estudiante.entregar", datos)]}, format="json"
+    )
+    assert r.data["resultados"][0]["resultado"] == "rechazado"
+    assert not EntregaEstudiante.objects.exists()
 
 
 def test_segunda_entrega_del_dia_se_rechaza(api_supervisor, curso):
@@ -141,21 +147,14 @@ def test_segunda_entrega_del_dia_se_rechaza(api_supervisor, curso):
     assert [x["resultado"] for x in r.data["resultados"]] == ["ok", "rechazado"]
 
 
-def test_inscripcion_sin_autorizacion_se_rechaza(api_supervisor, curso):
-    datos = {"estudiante": curso[0].pk, "vectores": [_vector(i) for i in range(3)], "modelo": "m"}
+@pytest.mark.parametrize(
+    "tipo", ["estudiante.autorizar", "estudiante.inscribir", "estudiante.revocar"]
+)
+def test_operaciones_biometricas_ya_no_existen(api_supervisor, curso, tipo):
     r = api_supervisor.post(
-        LOTE, {"operaciones": [op("estudiante.inscribir", datos)]}, format="json"
+        LOTE, {"operaciones": [op(tipo, {"estudiante": curso[0].pk})]}, format="json"
     )
-    assert r.data["resultados"][0]["resultado"] == "rechazado"
-
-
-def test_revocar_por_el_lote(api_supervisor, supervisor, curso):
-    servicios.autorizar(supervisor, curso[0], **ACUDIENTE)
-    servicios.inscribir_rostro(supervisor, curso[0], vectores=MUESTRAS, modelo="m")
-    datos = {"estudiante": curso[0].pk, "motivo": "Lo pidió el acudiente"}
-    r = api_supervisor.post(LOTE, {"operaciones": [op("estudiante.revocar", datos)]}, format="json")
-    assert r.data["resultados"][0]["resultado"] == "ok"
-    assert not PlantillaFacial.objects.exists()
+    assert r.status_code == 400  # tipo de operación desconocido
 
 
 def test_estudiante_inexistente(api_supervisor, curso):
@@ -169,9 +168,9 @@ def test_estudiante_inexistente(api_supervisor, curso):
 def test_configuracion_publica_los_parametros(api_supervisor):
     r = api_supervisor.get("/api/sincronizacion/configuracion/")
     assert "estudiante.entregar" in r.data["operaciones"]
-    assert r.data["biometria_disponible"] is True
-    assert r.data["umbral_similitud_facial"] == 0.80
-    assert (r.data["muestras_rostro_min"], r.data["muestras_rostro_max"]) == (3, 5)
+    assert r.data["prefijo_qr"] == "PAEGO-E1:"
+    assert "estudiante.inscribir" not in r.data["operaciones"]
+    assert "umbral_similitud_facial" not in r.data
 
 
 def test_perfil_del_supervisor_trae_su_institucion(api_supervisor, institucion):

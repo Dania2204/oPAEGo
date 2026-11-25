@@ -1,41 +1,31 @@
 """Reglas de la entrega del PAE a estudiantes (rol SUPERVISOR).
 
 API, panel web y sincronización sin conexión pasan por estas funciones: permisos
-por institución, consentimiento del acudiente, cifrado de plantillas y auditoría
-se aplican siempre igual.
+por institución, verificación del código QR y auditoría se aplican siempre igual.
 """
 
+import secrets
 from datetime import timedelta
-from decimal import Decimal
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
-from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from apps.auditoria.models import Accion
 from apps.auditoria.servicios import registrar
 from apps.cuentas.models import Rol
 from apps.envios.servicios import normalizar_ocurrido_en
 
-from . import cifrado
 from .models import (
-    AutorizacionBiometrica,
+    PREFIJO_QR,
     EntregaEstudiante,
     Estudiante,
     MetodoEntrega,
-    PlantillaFacial,
     Supervisor,
+    nuevo_codigo_qr,
+    nuevo_per_id_manual,
 )
-
-
-class BiometriaNoDisponible(APIException):
-    status_code = 503
-    default_detail = (
-        "El reconocimiento facial no está disponible en el servidor. "
-        "Registre la entrega de forma manual."
-    )
-    default_code = "biometria_no_disponible"
 
 
 # --------------------------------------------------------------------------
@@ -79,169 +69,100 @@ def _exigir_acceso(usuario, estudiante):
         raise ValidationError({"estudiante": "El estudiante no está activo en la matrícula."})
 
 
-def _texto(valor, campo, etiqueta):
-    valor = (valor or "").strip()
-    if not valor:
-        raise ValidationError({campo: f"{etiqueta} es obligatorio."})
-    return valor
+def dar_de_baja(estudiante, *, usuario=None, request=None):
+    """El estudiante salió de la matrícula: queda inactivo y su QR deja de servir.
 
-
-# --------------------------------------------------------------------------
-# Autorización del acudiente
-# --------------------------------------------------------------------------
-@transaction.atomic
-def autorizar(
-    usuario,
-    estudiante,
-    *,
-    acudiente_nombre,
-    acudiente_documento,
-    parentesco,
-    ocurrido_en=None,
-    request=None,
-):
-    """Registra la autorización previa, expresa e informada del acudiente."""
-    _exigir_acceso(usuario, estudiante)
-    ocurrido_en = normalizar_ocurrido_en(ocurrido_en)
-    datos = {
-        "acudiente_nombre": _texto(acudiente_nombre, "acudiente_nombre", "El nombre del acudiente"),
-        "acudiente_documento": _texto(
-            acudiente_documento, "acudiente_documento", "El documento del acudiente"
-        ),
-        "parentesco": _texto(parentesco, "parentesco", "El parentesco"),
-    }
-    actual = (
-        AutorizacionBiometrica.objects.select_for_update().filter(estudiante=estudiante).first()
-    )
-    if actual is not None and actual.vigente:
-        raise ValidationError({"estudiante": "El estudiante ya tiene una autorización vigente."})
-    if actual is None:
-        actual = AutorizacionBiometrica(estudiante=estudiante)
-    for campo, valor in datos.items():
-        setattr(actual, campo, valor)
-    actual.otorgada_en = ocurrido_en
-    actual.registrada_por = usuario
-    actual.revocada_en = None
-    actual.revocada_por = None
-    actual.save()
-    registrar(
-        usuario,
-        Accion.AUTORIZACION_BIOMETRICA,
-        f"Autorización del acudiente ({datos['parentesco']}) para {estudiante.nombre_completo}.",
-        objeto=estudiante,
-        ocurrido_en=ocurrido_en,
-        request=request,
-    )
-    return actual
-
-
-@transaction.atomic
-def revocar_autorizacion(usuario, estudiante, *, motivo="", ocurrido_en=None, request=None):
-    """El acudiente retira la autorización: se borran las plantillas faciales."""
-    _exigir_acceso(usuario, estudiante)
-    ocurrido_en = normalizar_ocurrido_en(ocurrido_en)
-    autorizacion = (
-        AutorizacionBiometrica.objects.select_for_update().filter(estudiante=estudiante).first()
-    )
-    if autorizacion is None or not autorizacion.vigente:
-        raise ValidationError({"estudiante": "El estudiante no tiene una autorización vigente."})
-    autorizacion.revocada_en = ocurrido_en
-    autorizacion.revocada_por = usuario
-    autorizacion.save(update_fields=["revocada_en", "revocada_por"])
-    registrar(
-        usuario,
-        Accion.AUTORIZACION_REVOCADA,
-        f"Autorización revocada para {estudiante.nombre_completo}. {motivo}".strip(),
-        objeto=estudiante,
-        ocurrido_en=ocurrido_en,
-        request=request,
-    )
-    borrar_plantillas(estudiante, usuario=usuario, motivo="autorización revocada", request=request)
-    return autorizacion
-
-
-def borrar_plantillas(estudiante, *, usuario=None, motivo="", request=None):
-    """Borrado real de las plantillas (no lógico) y constancia en la auditoría."""
-    borradas, _ = PlantillaFacial.objects.filter(estudiante=estudiante).delete()
-    if borradas:
+    Con `usuario` (retiro a mano desde el panel) queda en la auditoría; las bajas
+    de una importación se auditan juntas en el resumen de la importación.
+    """
+    if not estudiante.activo:
+        return
+    estudiante.activo = False
+    estudiante.save(update_fields=["activo", "actualizado_en"])
+    if usuario is not None:
         registrar(
             usuario,
-            Accion.ROSTRO_BORRADO,
-            f"Se borraron {borradas} plantillas faciales de {estudiante.nombre_completo} "
-            f"({motivo}).",
+            Accion.DESACTIVAR,
+            f"{estudiante.nombre_completo} salió de la matrícula ({estudiante.curso}).",
             objeto=estudiante,
-            datos={"plantillas": borradas},
             request=request,
         )
-    return borradas
 
 
-def dar_de_baja(estudiante, *, usuario=None):
-    """El estudiante salió de la matrícula: queda inactivo y sin biometría."""
-    if estudiante.activo:
-        estudiante.activo = False
-        estudiante.save(update_fields=["activo", "actualizado_en"])
-    return borrar_plantillas(estudiante, usuario=usuario, motivo="retirado de la matrícula")
-
-
-# --------------------------------------------------------------------------
-# Inscripción facial
-# --------------------------------------------------------------------------
 @transaction.atomic
-def inscribir_rostro(usuario, estudiante, *, vectores, modelo, ocurrido_en=None, request=None):
-    """Guarda (cifradas) las muestras de la cara del estudiante, como un Face ID.
+def agregar_estudiante(usuario, institucion, datos, *, request=None):
+    """Estudiante que llega a mitad de año, antes del siguiente corte de SIMAT.
 
-    Reemplaza una inscripción anterior. Exige autorización vigente del acudiente.
+    Queda en su curso con su código QR y desde ese momento el supervisor le puede
+    registrar la entrega. Si ya estuvo en la institución (mismo documento) y se
+    había retirado, vuelve a la matrícula con su mismo QR e historial.
+    Devuelve (estudiante, reactivado).
     """
-    _exigir_acceso(usuario, estudiante)
-    if usuario.rol != Rol.SUPERVISOR:
-        raise PermissionDenied("Solo el supervisor inscribe rostros.")
-    ocurrido_en = normalizar_ocurrido_en(ocurrido_en)
-    if estudiante.autorizacion_vigente is None:
+    if usuario.rol != Rol.ADMINISTRADOR:
+        raise PermissionDenied("Solo el administrador agrega estudiantes.")
+    datos = {k: (v or "").strip() for k, v in datos.items()}
+    previo = (
+        Estudiante.objects.select_for_update()
+        .filter(institucion=institucion, numero_documento=datos["numero_documento"])
+        .order_by("-activo", "-actualizado_en")
+        .first()
+    )
+    if previo is not None and previo.activo:
         raise ValidationError(
-            {"estudiante": "Falta la autorización del acudiente para registrar el rostro."}
+            {
+                "numero_documento": f"Ya está en la matrícula: {previo.nombre_completo}, "
+                f"{previo.curso}."
+            }
         )
-    minimo = settings.PAEGO["MUESTRAS_ROSTRO_MIN"]
-    maximo = settings.PAEGO["MUESTRAS_ROSTRO_MAX"]
-    if not isinstance(vectores, (list, tuple)) or not minimo <= len(vectores) <= maximo:
-        raise ValidationError({"vectores": f"Se necesitan entre {minimo} y {maximo} muestras."})
-    modelo = _texto(modelo, "modelo", "El modelo")[:40]
-    try:
-        limpios = [cifrado.validar_vector(v) for v in vectores]
-    except cifrado.VectorInvalido as exc:
-        raise ValidationError({"vectores": str(exc)}) from exc
-    if len({len(v) for v in limpios}) != 1:
-        raise ValidationError({"vectores": "Las muestras tienen dimensiones distintas."})
-
-    PlantillaFacial.objects.filter(estudiante=estudiante).delete()
-    try:
-        for vector in limpios:
-            plantilla = PlantillaFacial(estudiante=estudiante, modelo=modelo)
-            plantilla.vector = vector
-            plantilla.save()
-    except cifrado.BiometriaNoConfigurada as exc:
-        raise BiometriaNoDisponible() from exc
+    if previo is not None:
+        for campo, valor in datos.items():
+            setattr(previo, campo, valor)
+        previo.activo = True
+        previo.save()
+        estudiante, reactivado = previo, True
+    else:
+        estudiante = Estudiante.objects.create(
+            institucion=institucion, simat_per_id=nuevo_per_id_manual(), **datos
+        )
+        reactivado = False
     registrar(
         usuario,
-        Accion.ROSTRO_INSCRITO,
-        f"Rostro inscrito para {estudiante.nombre_completo} ({len(limpios)} muestras).",
+        Accion.ESTUDIANTE_AGREGADO,
+        f"{estudiante.nombre_completo} {'volvió a' if reactivado else 'ingresó a'} "
+        f"{estudiante.curso} ({institucion}).",
         objeto=estudiante,
-        datos={"muestras": len(limpios), "modelo": modelo},
-        ocurrido_en=ocurrido_en,
+        datos={"grado": estudiante.grado, "grupo": estudiante.grupo, "reactivado": reactivado},
         request=request,
     )
-    return len(limpios)
+    return estudiante, reactivado
 
 
-def plantillas_de(estudiantes):
-    """{estudiante_id: [vector, ...]} descifrados, para reconocer en la app."""
-    resultado = {}
-    try:
-        for plantilla in PlantillaFacial.objects.filter(estudiante__in=estudiantes):
-            resultado.setdefault(plantilla.estudiante_id, []).append(plantilla.vector)
-    except cifrado.BiometriaNoConfigurada as exc:
-        raise BiometriaNoDisponible() from exc
-    return resultado
+# --------------------------------------------------------------------------
+# Código QR
+# --------------------------------------------------------------------------
+def codigo_de(texto):
+    """Código del estudiante a partir del texto leído (con o sin el prefijo)."""
+    texto = (texto or "").strip()
+    if texto.startswith(PREFIJO_QR):
+        texto = texto[len(PREFIJO_QR) :]
+    return texto
+
+
+@transaction.atomic
+def regenerar_qr(usuario, estudiante, *, request=None):
+    """Carné perdido o expuesto: nuevo código; el anterior deja de servir."""
+    if usuario.rol != Rol.ADMINISTRADOR:
+        raise PermissionDenied("Solo el administrador regenera el código QR.")
+    estudiante.codigo_qr = nuevo_codigo_qr()
+    estudiante.save(update_fields=["codigo_qr", "actualizado_en"])
+    registrar(
+        usuario,
+        Accion.QR_REGENERADO,
+        f"Se regeneró el código QR de {estudiante.nombre_completo}.",
+        objeto=estudiante,
+        request=request,
+    )
+    return estudiante.codigo_qr
 
 
 # --------------------------------------------------------------------------
@@ -253,12 +174,12 @@ def registrar_entrega(
     *,
     metodo,
     fecha=None,
-    similitud=None,
+    codigo="",
     motivo="",
     ocurrido_en=None,
     request=None,
 ):
-    """El estudiante recibió el PAE. Una sola vez por día; facial o manual."""
+    """El estudiante recibió el PAE. Una sola vez por día; con su QR o manual."""
     if usuario.rol not in (Rol.SUPERVISOR, Rol.ADMINISTRADOR):
         raise PermissionDenied("Solo el supervisor registra entregas a estudiantes.")
     _exigir_acceso(usuario, estudiante)
@@ -266,25 +187,17 @@ def registrar_entrega(
     fecha = fecha or timezone.localdate(ocurrido_en)
     motivo = (motivo or "").strip()
 
-    if metodo == MetodoEntrega.FACIAL:
-        if estudiante.autorizacion_vigente is None:
+    if metodo == MetodoEntrega.QR:
+        leido = codigo_de(codigo)
+        if not leido:
+            raise ValidationError({"codigo": "Falta el código QR leído."})
+        if not secrets.compare_digest(leido, estudiante.codigo_qr):
             raise ValidationError(
-                {"metodo": "El estudiante no tiene autorización biométrica vigente."}
-            )
-        if not estudiante.plantillas.exists():
-            raise ValidationError({"metodo": "El estudiante no tiene el rostro inscrito."})
-        if similitud is None:
-            raise ValidationError({"similitud": "Falta la similitud del reconocimiento."})
-        similitud = Decimal(str(similitud)).quantize(Decimal("0.0001"))
-        umbral = Decimal(str(settings.PAEGO["UMBRAL_SIMILITUD_FACIAL"]))
-        if not umbral <= similitud <= 1:
-            raise ValidationError(
-                {"similitud": "El reconocimiento no alcanza el umbral; registre la entrega manual."}
+                {"codigo": "El código QR no corresponde a este estudiante."}, code="qr_invalido"
             )
     elif metodo == MetodoEntrega.MANUAL:
         if not motivo:
-            raise ValidationError({"motivo": "Indique por qué se registra sin cámara."})
-        similitud = None
+            raise ValidationError({"motivo": "Indique por qué se registra sin el código QR."})
     else:
         raise ValidationError({"metodo": "Método de entrega no válido."})
 
@@ -302,7 +215,6 @@ def registrar_entrega(
                 supervisor=usuario,
                 metodo=metodo,
                 motivo=motivo,
-                similitud=similitud,
                 ocurrido_en=ocurrido_en,
                 diferido=(timezone.now() - ocurrido_en) > umbral_diferido,
             )

@@ -119,6 +119,24 @@ python manage.py demo_mes --institucion "Normal Superior"
 az webapp restart -g rg-paego-prod -n (azd env get-value WEB_APP_NAME)   # conexiones viejas → 500
 ```
 
+### Cargar los estudiantes de la Normal Superior (supervisor PAE)
+
+El Anexo 6A del SIMAT (`bd/`) tiene datos de menores: nunca se sube al repo ni al App Service.
+Se importa desde el PC contra la base de Azure (misma regla temporal de firewall). Es idempotente
+por `PER_ID` y cada estudiante nuevo recibe su código QR único; los existentes lo conservan.
+
+```powershell
+# Desde backend/, con DATABASE_URL apuntando a la base de Azure:
+python manage.py migrate
+python manage.py importar_estudiantes "../bd/Anexo 6A(Calendario A) 30 septiembre de 2026.xlsx" --dane 152001000661 --institucion "Normal Superior" --grados 0,1,2,3,4,5,6,7,8,9,10,11 --dry-run
+# Revisar el conteo por grado (≈2534) y repetir sin --dry-run.
+```
+
+Si la base ya tenía los estudiantes, basta con desplegar: la migración `estudiantes 0002`
+asigna un código QR a cada uno, sin reimportar.
+
+Los carnés se imprimen desde el panel: «Estudiantes PAE» → curso → «Imprimir carnés QR del curso».
+
 ## 6. Despliegue continuo desde GitHub
 
 ```powershell

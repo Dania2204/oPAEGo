@@ -1,7 +1,7 @@
 """API de estudiantes PAE para la app móvil (supervisor e institución).
 
-Solo lectura: las escrituras (autorizar, inscribir rostro, entregar, revocar)
-viajan por la cola sin conexión, `POST /api/sincronizacion/lote/` (RF-38).
+Solo lectura: la escritura (registrar la entrega por QR o manual) viaja por la
+cola sin conexión, `POST /api/sincronizacion/lote/` (RF-38).
 """
 
 from django.db.models import Q
@@ -14,7 +14,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from apps.cuentas.models import Rol
-from apps.cuentas.permisos import EsSupervisor, _PorRol
+from apps.cuentas.permisos import _PorRol
 
 from . import consultas, servicios
 from .models import EntregaEstudiante
@@ -75,7 +75,7 @@ class EstudianteViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False)
     def cursos(self, request):
-        """Avance por curso: activos, con rostro y cuántos recibieron (en `fecha`)."""
+        """Avance por curso: activos y cuántos recibieron (en `fecha`)."""
         fecha = _fecha(request)
         base = self._base()
         return Response(
@@ -84,33 +84,6 @@ class EstudianteViewSet(viewsets.ReadOnlyModelViewSet):
                 "cobertura": consultas.cobertura(base, fecha),
                 "cursos": consultas.resumen_cursos(base, fecha),
             }
-        )
-
-    @action(detail=False, permission_classes=[EsSupervisor])
-    def plantillas(self, request):
-        """Plantillas faciales de un curso para reconocer sin red (solo supervisor).
-
-        Viajan por HTTPS; la app las guarda cifradas y las borra al cerrar sesión.
-        """
-        grado = request.query_params.get("grado")
-        if not grado:
-            raise ValidationError({"grado": "Indique el grado del curso."})
-        estudiantes = consultas.estudiantes_del_curso(
-            self._base(), grado, request.query_params.get("grupo")
-        )
-        vectores = servicios.plantillas_de(estudiantes)
-        datos = [
-            {
-                "estudiante": e.pk,
-                "nombre_completo": e.nombre_completo,
-                "curso": e.curso,
-                "vectores": vectores[e.pk],
-            }
-            for e in estudiantes
-            if e.pk in vectores
-        ]
-        return Response(
-            {"grado": grado, "grupo": request.query_params.get("grupo", ""), "plantillas": datos}
         )
 
     @action(detail=False)

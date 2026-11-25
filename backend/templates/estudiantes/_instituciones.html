@@ -1,0 +1,19 @@
+<div class="tabla-scroll">
+  <table>
+    <thead><tr><th>Institución</th><th>Sede</th><th>Código DANE</th><th class="der">Estudiantes activos</th><th></th></tr></thead>
+    <tbody>
+    {% for i in instituciones %}
+      {% url 'estudiantes:lista' as url_lista %}
+      <tr class="clic" onclick="location.href='{{ url_lista }}?institucion={{ i.pk }}'">
+        <td><a href="{{ url_lista }}?institucion={{ i.pk }}"><strong style="font-weight:500">{{ i.nombre }}</strong></a></td>
+        <td>{{ i.sede }}</td>
+        <td class="num tenue">{{ i.codigo_dane|default:"—" }}</td>
+        <td class="der num">{% if i.estudiantes_activos %}{{ i.estudiantes_activos }}{% else %}<span class="tenue">Sin cargar</span>{% endif %}</td>
+        <td class="der"><span class="tenue">Ver estudiantes ›</span></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="vacio">{% if q %}Ninguna institución coincide con «{{ q }}».{% else %}No hay instituciones activas. Regístrelas en <a href="{% url 'catalogo:lista' 'instituciones' %}">Instituciones</a>.{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

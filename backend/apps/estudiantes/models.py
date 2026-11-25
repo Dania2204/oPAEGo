@@ -1,25 +1,31 @@
 """Estudiantes que reciben el PAE y su entrega diaria.
 
-Protección de datos (Ley 1581, art. 5-7): son datos de menores y la plantilla facial
-es un dato sensible. Por eso:
+Protección de datos (Ley 1581, art. 5-7): son datos de menores. Por eso:
 - Del Anexo 6A de SIMAT solo se guarda la identidad mínima (documento, nombre y
   curso). Dirección, teléfono, SISBÉN, víctima, discapacidad, etnia, fecha de
   nacimiento, etc. nunca entran a la base de datos.
-- Las plantillas faciales solo existen con una autorización vigente del acudiente,
-  se guardan cifradas (`cifrado.py`), nunca se guardan fotos y se borran al revocar
-  la autorización o dar de baja al estudiante.
-- La entrega siempre se puede registrar sin biometría (método MANUAL): la cara no
-  es el único mecanismo.
+- Cada estudiante se identifica con un código QR propio (`codigo_qr`): un token
+  aleatorio que no contiene datos personales. Si el carné se pierde, el código se
+  regenera y el anterior deja de servir.
+- La entrega siempre se puede registrar sin el carné (método MANUAL, con motivo).
 """
+
+import secrets
 
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
 from apps.catalogo.models import Institucion
-from apps.catalogo.simat import etiqueta_grado
+from apps.catalogo.simat import etiqueta_documento, etiqueta_grado
 
-from . import cifrado
+# Prefijo versionado: la app rechaza cualquier QR que no sea de PAEGo.
+PREFIJO_QR = "PAEGO-E1:"
+
+
+def nuevo_codigo_qr():
+    """Token aleatorio de 22 caracteres (128 bits): imposible de adivinar."""
+    return secrets.token_urlsafe(16)
 
 
 class Supervisor(models.Model):
@@ -58,6 +64,9 @@ class Estudiante(models.Model):
     grupo = models.CharField(max_length=10, blank=True)
     jornada = models.CharField(max_length=2, blank=True)
     sede_simat = models.CharField("consecutivo de sede (SIMAT)", max_length=20, blank=True)
+    codigo_qr = models.CharField(
+        "código QR", max_length=32, unique=True, default=nuevo_codigo_qr, editable=False
+    )
     activo = models.BooleanField(default=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
@@ -79,71 +88,17 @@ class Estudiante(models.Model):
         return f"{grado} {self.grupo}".strip()
 
     @property
-    def autorizacion_vigente(self):
-        autorizacion = getattr(self, "autorizacion", None)
-        return autorizacion if autorizacion and autorizacion.vigente else None
-
-
-class AutorizacionBiometrica(models.Model):
-    """Autorización previa, expresa e informada del acudiente (Ley 1581, art. 7)."""
-
-    estudiante = models.OneToOneField(
-        Estudiante, on_delete=models.PROTECT, related_name="autorizacion"
-    )
-    acudiente_nombre = models.CharField(max_length=150)
-    acudiente_documento = models.CharField(max_length=20)
-    parentesco = models.CharField(max_length=50)
-    otorgada_en = models.DateTimeField()
-    registrada_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
-    )
-    revocada_en = models.DateTimeField(null=True, blank=True)
-    revocada_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.PROTECT,
-        related_name="+",
-    )
-
-    class Meta:
-        verbose_name = "autorización biométrica"
-        verbose_name_plural = "autorizaciones biométricas"
-
-    def __str__(self):
-        estado = "vigente" if self.vigente else "revocada"
-        return f"{self.estudiante} — {estado}"
+    def tipo_documento_etiqueta(self):
+        return etiqueta_documento(self.tipo_documento)
 
     @property
-    def vigente(self):
-        return self.revocada_en is None
-
-
-class PlantillaFacial(models.Model):
-    """Vector de la cara (no una foto), cifrado con BIOMETRIA_CLAVE."""
-
-    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE, related_name="plantillas")
-    vector_cifrado = models.TextField(editable=False)
-    dimension = models.PositiveSmallIntegerField()
-    modelo = models.CharField(max_length=40, help_text="Modelo que generó el vector.")
-    creada_en = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = "plantilla facial"
-        verbose_name_plural = "plantillas faciales"
-        ordering = ["estudiante", "id"]
-
-    def __str__(self):
-        return f"Plantilla de {self.estudiante} ({self.modelo})"
+    def documento(self):
+        return f"{self.tipo_documento_etiqueta} {self.numero_documento}".strip()
 
     @property
-    def vector(self):
-        return cifrado.descifrar_vector(self.vector_cifrado)
-
-    @vector.setter
-    def vector(self, valores):
-        self.vector_cifrado = cifrado.cifrar_vector(valores)
-        self.dimension = len(valores)
+    def contenido_qr(self):
+        """Texto que lleva el QR impreso; la app lo escanea."""
+        return f"{PREFIJO_QR}{self.codigo_qr}"
 
 
 class EntregaInmutableError(Exception):
@@ -159,8 +114,10 @@ class _EntregaQuerySet(models.QuerySet):
 
 
 class MetodoEntrega(models.TextChoices):
-    FACIAL = "FACIAL", "Reconocimiento facial"
+    QR = "QR", "Código QR"
     MANUAL = "MANUAL", "Registro manual"
+    # Histórico: entregas registradas antes del cambio a QR (son inmutables).
+    FACIAL = "FACIAL", "Reconocimiento facial"
 
 
 class EntregaEstudiante(models.Model):
@@ -173,9 +130,8 @@ class EntregaEstudiante(models.Model):
     )
     metodo = models.CharField(max_length=10, choices=MetodoEntrega.choices)
     motivo = models.TextField(
-        blank=True, help_text="Obligatorio en el registro manual (por qué sin cámara)."
+        blank=True, help_text="Obligatorio en el registro manual (por qué sin el código QR)."
     )
-    similitud = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
     ocurrido_en = models.DateTimeField()
     registrado_en = models.DateTimeField(auto_now_add=True)
     diferido = models.BooleanField(default=False)
@@ -204,3 +160,54 @@ class EntregaEstudiante(models.Model):
 
     def delete(self, *args, **kwargs):
         raise EntregaInmutableError("Una entrega registrada no se puede eliminar.")
+
+
+# Estudiantes agregados a mano (llegan a mitad de año, antes del siguiente corte de
+# SIMAT) llevan este prefijo en lugar del PER_ID. Cuando el Anexo 6A los trae, la
+# importación los reconoce por su documento y les pone el PER_ID real (conservan
+# su QR y sus entregas).
+PREFIJO_MANUAL = "MANUAL-"
+
+
+def nuevo_per_id_manual():
+    return f"{PREFIJO_MANUAL}{secrets.token_hex(6)}"
+
+
+class EstadoImportacion(models.TextChoices):
+    PENDIENTE = "PENDIENTE", "Pendiente de confirmar"
+    APLICADA = "APLICADA", "Aplicada"
+    DESCARTADA = "DESCARTADA", "Descartada"
+
+
+class ImportacionEstudiantes(models.Model):
+    """Actualización de la matrícula de una institución desde el Anexo 6A.
+
+    Se hace en dos pasos: al subir el archivo se lee y se muestra qué va a
+    cambiar (nuevos, cambios de curso, retirados); al confirmar se aplica. Entre
+    un paso y otro las filas leídas (solo identidad mínima) quedan en `filas`;
+    al aplicar o descartar se borran y solo queda el resumen (Ley 1581).
+    """
+
+    institucion = models.ForeignKey(
+        Institucion, on_delete=models.PROTECT, related_name="importaciones_estudiantes"
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    nombre_archivo = models.CharField(max_length=200)
+    codigo_dane = models.CharField(max_length=20)
+    estado = models.CharField(
+        max_length=10, choices=EstadoImportacion.choices, default=EstadoImportacion.PENDIENTE
+    )
+    filas = models.JSONField(default=dict, blank=True)
+    resumen = models.JSONField(default=dict, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    aplicado_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "importación de estudiantes"
+        verbose_name_plural = "importaciones de estudiantes"
+        ordering = ["-creado_en"]
+
+    def __str__(self):
+        return f"{self.institucion} — {self.nombre_archivo} ({self.get_estado_display()})"

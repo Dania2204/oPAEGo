@@ -76,6 +76,24 @@ JORNADAS = {
     "6": "Única",
 }
 
+# Tipo de documento (columna TIPO_DOCUMENTO). Solo los códigos verificados; el
+# resto se muestra como "Doc. <código>" en vez de adivinar.
+TIPOS_DOCUMENTO = {
+    "1": "CC",
+    "2": "TI",
+    "3": "CE",
+    "5": "RC",
+    "7": "NUIP",
+    "8": "NES",
+}
+
+
+def etiqueta_documento(codigo):
+    codigo = str(codigo or "").strip()
+    if not codigo or not codigo.isdigit():
+        return codigo  # ya viene como sigla (p. ej. datos demo "TI")
+    return TIPOS_DOCUMENTO.get(codigo, f"Doc. {codigo}")
+
 
 def etiqueta_grado(codigo):
     codigo = str(codigo)

@@ -1,44 +1,46 @@
 <div class="panel-cabeza">
   <div>
     <h2>{{ estudiante.nombre_completo }}</h2>
-    <div class="sub">{{ estudiante.curso }} · {{ estudiante.tipo_documento }} {{ estudiante.numero_documento }}{% if not estudiante.activo %} · retirado de la matrícula{% endif %}</div>
+    <div class="sub">{{ estudiante.curso }} · {{ estudiante.documento }}{% if not estudiante.activo %} · retirado de la matrícula{% endif %}</div>
   </div>
   {% if en_panel %}<button type="button" class="boton texto chico cerrar" onclick="Alpine.store('panel').cerrar()" aria-label="Cerrar panel">
     <svg class="icono" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.8"><use href="#i-cerrar"/></svg></button>{% endif %}
 </div>
 <div class="panel-cuerpo">
   {% if en_panel %}{% include "_avisos.html" with oob=True %}{% endif %}
-  <section>
-    <h3 style="font-size:var(--t-s);margin-bottom:var(--s2)">Autorización biométrica del acudiente</h3>
-    {% if autorizacion and autorizacion.vigente %}
-      <p><span class="marca-texto ok" style="margin:0">Vigente</span> desde {{ autorizacion.otorgada_en|date:"j \d\e F \d\e Y" }} ·
-        {{ autorizacion.acudiente_nombre }} ({{ autorizacion.parentesco|lower }}, documento {{ autorizacion.acudiente_documento }}).</p>
-      <p class="tenue">{% if num_plantillas %}Rostro inscrito: {{ num_plantillas }} plantillas cifradas.{% else %}El supervisor aún no ha inscrito el rostro desde la aplicación.{% endif %}</p>
-      <form method="post" action="{% url 'estudiantes:detalle' estudiante.pk %}" class="formulario separado"
-            {% if en_panel %}hx-post="{% url 'estudiantes:detalle' estudiante.pk %}" hx-target="#panel-contenido"{% endif %}
-            hx-confirm="¿Revocar la autorización? Se borran las plantillas faciales y el estudiante seguirá recibiendo con registro manual.">
-        {% csrf_token %}
-        <input type="hidden" name="accion" value="revocar"><input type="hidden" name="uuid_cliente" value="{{ uuid_cliente }}">
-        {% include "_errores.html" with form=form_revocar %}
-        <div class="campos">{% include "_campo.html" with campo=form_revocar.motivo ancho=True %}</div>
-        <button class="boton chico peligro" type="submit">Revocar autorización</button>
-      </form>
-    {% else %}
-      <p class="tenue">{% if autorizacion %}Revocada el {{ autorizacion.revocada_en|date:"j \d\e F \d\e Y" }}. {% endif %}Sin autorización vigente: el rostro no se puede inscribir y la entrega se registra de forma manual.</p>
-      {% if estudiante.activo %}
-      <form method="post" action="{% url 'estudiantes:detalle' estudiante.pk %}" class="formulario separado"
-            {% if en_panel %}hx-post="{% url 'estudiantes:detalle' estudiante.pk %}" hx-target="#panel-contenido"{% endif %}>
-        {% csrf_token %}
-        <input type="hidden" name="accion" value="autorizar"><input type="hidden" name="uuid_cliente" value="{{ uuid_cliente }}">
-        {% include "_errores.html" with form=form_autorizar %}
-        <div class="campos">
-          {% for campo in form_autorizar %}{% if campo.name == "confirmo" %}{% include "_campo.html" with campo=campo ancho=True %}{% else %}{% include "_campo.html" with campo=campo %}{% endif %}{% endfor %}
-        </div>
-        <button class="boton chico" type="submit">Registrar autorización</button>
-      </form>
-      {% endif %}
-    {% endif %}
+  <section class="ficha-qr">
+    <dl class="datos">
+      <dt>Nombres</dt><dd>{{ estudiante.nombres }}</dd>
+      <dt>Apellidos</dt><dd>{{ estudiante.apellidos }}</dd>
+      <dt>Documento</dt><dd class="num">{{ estudiante.documento }}</dd>
+      <dt>Curso</dt><dd>{{ estudiante.curso }}</dd>
+      {% if jornada %}<dt>Jornada</dt><dd>{{ jornada }}</dd>{% endif %}
+      <dt>Institución</dt><dd>{{ estudiante.institucion }}</dd>
+      <dt>Estado</dt><dd>{% if estudiante.activo %}<span class="marca-texto ok" style="margin:0">Activo en la matrícula</span>{% else %}<span class="marca-texto" style="margin:0">Retirado</span>{% endif %}</dd>
+    </dl>
+    <figure class="qr">
+      {{ qr_svg }}
+      <figcaption>Código único del estudiante. El supervisor lo escanea al entregar el PAE.</figcaption>
+    </figure>
   </section>
+  {% if estudiante.activo %}
+  <div class="acciones-qr separado">
+    <a class="boton sec chico" target="_blank" rel="noopener"
+       href="{% url 'estudiantes:carnes' %}?institucion={{ estudiante.institucion_id }}&estudiante={{ estudiante.pk }}">Imprimir carné</a>
+    <form method="post" action="{% url 'estudiantes:detalle' estudiante.pk %}"
+          {% if en_panel %}hx-post="{% url 'estudiantes:detalle' estudiante.pk %}" hx-target="#panel-contenido"{% endif %}
+          hx-confirm="¿Regenerar el código QR? El carné actual dejará de servir y habrá que imprimir uno nuevo.">
+      {% csrf_token %}
+      <button class="boton chico peligro" type="submit">Regenerar código (carné perdido)</button>
+    </form>
+    <form method="post" action="{% url 'estudiantes:detalle' estudiante.pk %}"
+          {% if en_panel %}hx-post="{% url 'estudiantes:detalle' estudiante.pk %}" hx-target="#panel-contenido"{% endif %}
+          hx-confirm="¿Retirar a {{ estudiante.nombre_completo }} de la matrícula? Su carné dejará de servir; sus entregas anteriores se conservan.">
+      {% csrf_token %}<input type="hidden" name="accion" value="retirar">
+      <button class="boton chico texto" type="submit">Retirar de la matrícula</button>
+    </form>
+  </div>
+  {% endif %}
 
   <section class="separado">
     <h3 style="font-size:var(--t-s);margin-bottom:var(--s2)">Entregas recientes</h3>
