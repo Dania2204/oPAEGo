@@ -28,7 +28,7 @@
     </div>
 
     <form class="asistente-form" method="post" action="{% url 'asistente:chat' %}"
-          hx-post="{% url 'asistente:chat' %}" hx-target="#turno-pendiente" hx-swap="outerHTML"
+          hx-post="{% url 'asistente:chat' %}" hx-target="#turnos" hx-swap="beforeend"
           hx-disabled-elt="find button[type=submit]">
       {% csrf_token %}
       <input type="hidden" name="conversacion" id="campo-conversacion" value="{{ conversacion.pk|default:'' }}">
@@ -83,6 +83,11 @@
     art.append(p, r);
     turnos.appendChild(art);
     bajar();
+  });
+  // El globo provisional se quita justo antes de agregar el turno que devuelve el servidor.
+  document.body.addEventListener("htmx:beforeSwap", (e) => {
+    if (e.detail.requestConfig && e.detail.requestConfig.elt !== form) return;
+    const p = document.getElementById("turno-pendiente"); if (p) p.remove();
   });
   form.addEventListener("htmx:afterRequest", (e) => {
     if (e.detail.successful) { campo.value = ""; campo.focus(); bajar(); }
