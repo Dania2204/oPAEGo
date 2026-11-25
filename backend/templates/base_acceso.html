@@ -18,25 +18,32 @@
   <div class="govco"><a href="https://www.gov.co" target="_blank" rel="noopener">GOV.CO</a></div>
   <main class="acceso-pagina">
     <section class="acceso-info" aria-label="Sobre PAEGo">
-      <div>
-        <div class="marca-acceso"><img src="{% static 'img/icono.svg' %}" alt="" width="44" height="44">PAEGo</div>
-        <p class="entidad-nombre">{{ paego.ENTIDAD }} · {{ paego.DEPENDENCIA }}</p>
-        <h1>Gestión y monitoreo del Programa de Alimentación Escolar</h1>
-        <p>PAEGo registra cada envío de alimentos desde la bodega hasta la institución educativa: quién lo lleva, por dónde va y quién lo recibe.</p>
-        <ul>
-          <li>Seguimiento de los vehículos en tiempo real.</li>
-          <li>Confirmación de recepción con código de verificación y evidencia.</li>
-          <li>Historial completo e inalterable para auditoría y rendición de cuentas.</li>
-        </ul>
+      {% comment %}Fotos de la landing que se desvanecen una tras otra (acceso.js). Escenas
+         generadas con IA, sin rostros de niños. Sin JS se queda la primera.{% endcomment %}
+      <div class="acceso-galeria" data-galeria aria-hidden="true">
+        <figure class="acceso-foto activa" data-leyenda="Del almacén a la institución educativa, cada ración con trazabilidad."><img src="{% static 'img/landing/banner-escuela.webp' %}" alt="" style="object-position:30% 50%" fetchpriority="high"></figure>
+        <figure class="acceso-foto" data-leyenda="La Secretaría programa los envíos desde el panel web."><img src="{% static 'img/landing/paso-qr.webp' %}" alt="" decoding="async"></figure>
+        <figure class="acceso-foto" data-leyenda="El conductor sigue su ruta y se ve en el mapa en tiempo real."><img src="{% static 'img/landing/paso-programar.webp' %}" alt="" decoding="async"></figure>
+        <figure class="acceso-foto" data-leyenda="La institución confirma la recepción con código y evidencia."><img src="{% static 'img/landing/paso-ruta.webp' %}" alt="" decoding="async"></figure>
+        <figure class="acceso-foto" data-leyenda="Los alimentos llegan completos a la cocina escolar."><img src="{% static 'img/landing/cocina-pae.webp' %}" alt="" decoding="async"></figure>
+        <figure class="acceso-foto" data-leyenda="Cada estudiante recibe su ración con su carné QR."><img src="{% static 'img/landing/paso-entrega.webp' %}" alt="" decoding="async"></figure>
       </div>
-      <p class="entidad-nombre">Plataforma de uso exclusivo de la entidad administradora del PAE.</p>
+      <a class="marca-acceso" href="{% url 'cuentas:inicio' %}"><img src="{% static 'img/icono.svg' %}" alt="" width="40" height="40"><span>PAEGo<small>{{ paego.ENTIDAD }}</small></span></a>
+      <div class="acceso-texto">
+        <p class="entidad-nombre">{{ paego.DEPENDENCIA }}</p>
+        <h1>Gestión y monitoreo del Programa de Alimentación Escolar</h1>
+        <p class="acceso-leyenda"><span class="acceso-num" data-num>01</span><span data-leyenda-texto>Del almacén a la institución educativa, cada ración con trazabilidad.</span></p>
+        <div class="acceso-puntos" data-puntos hidden></div>
+      </div>
     </section>
     <section class="acceso-form">
       {% if messages %}
         <div style="margin-bottom:var(--s4);display:grid;gap:var(--s2)">{% for m in messages %}<div class="nota {% if m.tags == 'error' %}error{% elif m.tags == 'success' %}ok{% else %}info{% endif %}">{{ m }}</div>{% endfor %}</div>
       {% endif %}
       {% block contenido %}{% endblock %}
+      <p class="acceso-pie">Plataforma de uso exclusivo de la entidad administradora del PAE · <a href="{% url 'cuentas:inicio' %}">Conocer PAEGo</a></p>
     </section>
   </main>
+  <script src="{% static 'js/acceso.js' %}" defer></script>
 </body>
 </html>
