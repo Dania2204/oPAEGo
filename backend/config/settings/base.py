@@ -196,6 +196,9 @@ PAEGO = {
     "UMBRAL_DIFERIDO_MIN": env.int("PAEGO_UMBRAL_DIFERIDO_MIN", default=5),
     # RF-38: tolerancia al reloj adelantado del dispositivo.
     "TOLERANCIA_RELOJ_MIN": env.int("PAEGO_TOLERANCIA_RELOJ_MIN", default=5),
+    # Landing pública: URL del video de presentación (archivo estático o externo).
+    # Vacío = se muestra el póster con "próximamente".
+    "VIDEO_PRINCIPAL_URL": env("PAEGO_VIDEO_PRINCIPAL_URL", default=""),
 }
 
 # Registros por consola (config/registro.py). LOG_FORMATO=json en producción.

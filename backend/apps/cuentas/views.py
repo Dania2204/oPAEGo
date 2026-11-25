@@ -14,6 +14,7 @@ from apps.auditoria.models import Accion
 from apps.auditoria.servicios import registrar
 from apps.catalogo import servicios as catalogo
 from apps.comun import PANEL, aplicar_errores, datos_formulario, disparar, es_htmx, responder
+from apps.monitoreo.cifras_publicas import cifras, qr_de_ejemplo
 from apps.monitoreo.en_vivo import desconectar
 
 from . import limite, restablecimiento
@@ -48,7 +49,16 @@ def _pagina_inicial(usuario):
 
 
 def inicio(request):
-    return redirect(_pagina_inicial(request.user) or "cuentas:login")
+    """Página pública (landing) para visitantes; con sesión, a su página de trabajo."""
+    destino = _pagina_inicial(request.user)
+    if destino:
+        return redirect(destino)
+    if request.user.is_authenticated:
+        # Rol sin web (institución, supervisor): usan la app móvil.
+        return redirect("cuentas:login")
+    return render(
+        request, "publico/landing.html", {"cifras": cifras(), "qr_ejemplo": qr_de_ejemplo()}
+    )
 
 
 class InicioSesionView(View):
