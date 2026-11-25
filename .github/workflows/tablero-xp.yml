@@ -1,0 +1,38 @@
+name: Tablero de control XP
+
+# Genera el tablero de gestión del proyecto (antes en monday.com) desde los issues y
+# milestones de los dos repositorios: indicadores, etapas XP, velocidad, Gantt, QA y
+# pendientes. Lo publica en el resumen de la ejecución y en el issue fijado
+# "Tablero de control (dashboard XP)".
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 11 * * *" # 06:00 en Colombia
+  issues:
+    types: [opened, closed, reopened, edited, milestoned, demilestoned, labeled, unlabeled]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: tablero-xp
+  cancel-in-progress: true
+
+jobs:
+  tablero:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Generar el tablero
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOS: Dania2204/oPAEGo,Dania2204/paego-mobile
+          REPO_TABLERO: ${{ github.repository }}
+          ACTUALIZAR_ISSUE: "1"
+        run: python .github/scripts/tablero_xp.py
