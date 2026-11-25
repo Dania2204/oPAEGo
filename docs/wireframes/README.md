@@ -31,7 +31,14 @@ insertar en el documento de grado como figuras.
 | 15 | `15-reportes.png` | Reportes | Reporte operativo exportable (Excel/PDF). |
 | 16 | `16-auditoria.png` | Auditoría | Registro inmutable de operaciones (incluye «sin conexión»). |
 | 17 | `17-conductor-en-vivo.png` | Conductor en vivo | Pantalla móvil del conductor (compartir ubicación). |
+| 18 | `18-asistente.png` | Asistente de reportes | Chat del administrador con Claude: preguntas en lenguaje natural sobre envíos e indicadores, con la línea «Consultó: …» de trazabilidad. |
+| 19 | `19-estudiantes-instituciones.png` | Estudiantes PAE · institución | Elegir la institución para ver sus estudiantes, cursos y carnés QR. |
+| 20 | `20-estudiantes-cursos.png` | Estudiantes PAE · cursos | Entregas del día por curso; el curso se abre y muestra a sus estudiantes con el método de entrega (QR o manual). |
+| 21 | `21-ficha-estudiante-qr.png` | Ficha del estudiante | Identidad mínima, código QR del carné, regenerar si se pierde y entregas recientes. |
+| 22 | `22-agregar-estudiante.png` | Agregar estudiante | Alta manual de quien llega a mitad de año; la siguiente importación SIMAT lo reconoce por documento. |
+| 23 | `23-actualizar-simat.png` | Actualizar desde SIMAT | Vista previa del Anexo 6A antes de aplicarlo: nuevos, cambios de curso y retiros. |
+| 24 | `24-supervisores.png` | Supervisores PAE | Catálogo de supervisores que registran la entrega diaria en la app móvil. |
 
 > Los datos mostrados son de demostración (instituciones y conductores reales de
-> Pasto). No contienen datos personales de estudiantes: la cobertura usa solo
+> Pasto). Los estudiantes de las figuras 20–22 son ficticios. No contienen datos personales de estudiantes: la cobertura usa solo
 > conteos agregados (minimización de datos, Ley 1581 de 2012).
