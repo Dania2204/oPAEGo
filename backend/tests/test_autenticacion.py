@@ -24,7 +24,18 @@ def test_inicio_sesion_api_devuelve_jwt_y_rol(conductor):
     assert {"access", "refresh"} <= set(r.data)
     assert r.data["usuario"]["rol"] == Rol.CONDUCTOR
     assert r.data["usuario"]["conductor_id"] == conductor.pk
+    # El teléfono y el documento salen de la ficha del conductor (perfil de la app).
+    assert r.data["usuario"]["telefono"] == "300"
+    assert r.data["usuario"]["numero_documento"] == "1001"
     assert RegistroAuditoria.objects.filter(accion=Accion.INICIO_SESION).exists()
+
+
+def test_perfil_sin_ficha_usa_el_telefono_del_usuario(admin):
+    admin.telefono = "3001234567"
+    admin.save()
+    r = cliente_api(admin).get("/api/auth/yo/")
+    assert r.status_code == 200
+    assert (r.data["telefono"], r.data["numero_documento"]) == ("3001234567", "")
 
 
 def test_credenciales_invalidas(conductor):
